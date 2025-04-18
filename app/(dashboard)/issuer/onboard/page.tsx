@@ -26,10 +26,12 @@ export default async function IssuerOnboardPage() {
   /* Server‑action wrappers (single‑param)                              */
   /* ------------------------------------------------------------------ */
   const createAction = async (formData: FormData): Promise<void> => {
+    'use server'
     await createIssuerAction({}, formData)
   }
 
   const linkDidAction = async (formData: FormData): Promise<void> => {
+    'use server'
     await updateIssuerDidAction({}, formData)
   }
 
