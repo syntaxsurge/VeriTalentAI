@@ -1,20 +1,28 @@
 import { redirect } from 'next/navigation'
 import { and, eq, desc } from 'drizzle-orm'
 
+import {
+  BadgeCheck,
+  Award,
+  FolderKanban,
+  Users,
+  Mail,
+  CheckCircle,
+  User2,
+  Building2,
+} from 'lucide-react'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RoleBadge } from '@/components/dashboard/role-badge'
-import { QuickActions, type QuickAction } from '@/components/dashboard/quick-actions'
 import CandidateCharts from '@/components/dashboard/candidate-charts'
 import RecruiterCharts from '@/components/dashboard/recruiter-charts'
+import IssuerCharts from '@/components/dashboard/issuer-charts'
 
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { users, teams } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
-import {
-  recruiterPipelines,
-  pipelineCandidates,
-} from '@/lib/db/schema/recruiter'
+import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 import {
   candidates,
   candidateCredentials,
@@ -50,9 +58,7 @@ export default async function DashboardPage() {
     if (candidateRow) {
       /* Verified credentials */
       const credRows = await db
-        .select({
-          status: candidateCredentials.status,
-        })
+        .select({ status: candidateCredentials.status })
         .from(candidateCredentials)
         .where(eq(candidateCredentials.candidateId, candidateRow.id))
 
@@ -66,20 +72,14 @@ export default async function DashboardPage() {
 
       /* Skill‑quiz scores (last 10) */
       const attempts = await db
-        .select({
-          score: quizAttempts.score,
-          createdAt: quizAttempts.createdAt,
-        })
+        .select({ score: quizAttempts.score, createdAt: quizAttempts.createdAt })
         .from(quizAttempts)
         .where(eq(quizAttempts.candidateId, candidateRow.id))
         .orderBy(desc(quizAttempts.createdAt))
         .limit(10)
 
       scoreData = attempts
-        .map((a) => ({
-          date: a.createdAt.toISOString().split('T')[0],
-          score: a.score ?? 0,
-        }))
+        .map((a) => ({ date: a.createdAt.toISOString().split('T')[0], score: a.score ?? 0 }))
         .reverse()
 
       skillPassCount = attempts.filter((a) => (a.score ?? 0) >= 70).length
@@ -101,10 +101,7 @@ export default async function DashboardPage() {
     pipelineTotal = pipelines.length
 
     const pcRows = await db
-      .select({
-        stage: pipelineCandidates.stage,
-        candidateId: pipelineCandidates.candidateId,
-      })
+      .select({ stage: pipelineCandidates.stage, candidateId: pipelineCandidates.candidateId })
       .from(pipelineCandidates)
       .leftJoin(recruiterPipelines, eq(pipelineCandidates.pipelineId, recruiterPipelines.id))
       .where(eq(recruiterPipelines.recruiterId, user.id))
@@ -120,7 +117,7 @@ export default async function DashboardPage() {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Issuer metrics                                                     */
+  /* Issuer metrics & datasets                                          */
   /* ------------------------------------------------------------------ */
   let pendingReq = 0
   let issuedCreds = 0
@@ -171,57 +168,50 @@ export default async function DashboardPage() {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Quick actions (kept same for now)                                  */
+  /* Metric definitions                                                 */
   /* ------------------------------------------------------------------ */
-  const quickActions: Record<string, QuickAction[]> = {
-    candidate: [],
+  const metrics: Record<string, { title: string; value: number; icon: React.ComponentType<any> }[]> = {
+    candidate: [
+      { title: 'Verified Credentials', value: verifiedCount, icon: BadgeCheck },
+      { title: 'AI Skill Passes', value: skillPassCount, icon: Award },
+    ],
+    recruiter: [
+      { title: 'Pipelines', value: pipelineTotal, icon: FolderKanban },
+      { title: 'Unique Candidates', value: uniqueCandidates, icon: Users },
+    ],
+    issuer: [
+      { title: 'Pending Requests', value: pendingReq, icon: Mail },
+      { title: 'Credentials Signed', value: issuedCreds, icon: CheckCircle },
+    ],
+    admin: [
+      { title: 'Total Users', value: totalUsers, icon: User2 },
+      { title: 'Total Teams', value: totalTeams, icon: Building2 },
+    ],
   }
 
   /* ------------------------------------------------------------------ */
   /* JSX                                                                */
   /* ------------------------------------------------------------------ */
   return (
-    <section className='space-y-12'>
+    <section className="space-y-12">
       {/* Greeting */}
-      <div className='space-y-1'>
-        <h1 className='text-4xl font-extrabold tracking-tight'>
-          Welcome back, <span className='break-all'>{user.name || user.email}</span>
+      <div className="space-y-3">
+        <h1 className="text-4xl font-extrabold tracking-tight leading-tight">
+          Welcome back, <span className="break-all">{user.name || user.email}</span>
         </h1>
-        <RoleBadge role={user.role} />
-        <p className='text-muted-foreground max-w-prose'>
-          Your personalised VeriTalent workspace overview.
-        </p>
+        <div className="flex items-center gap-3">
+          <RoleBadge role={user.role} />
+          <p className="text-muted-foreground text-sm">
+            Your personalised VeriTalent workspace overview.
+          </p>
+        </div>
       </div>
 
       {/* Metric cards */}
-      <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-        {user.role === 'candidate' && (
-          <>
-            <MetricCard title='Verified Credentials' value={verifiedCount} />
-            <MetricCard title='AI Skill Passes' value={skillPassCount} />
-          </>
-        )}
-
-        {user.role === 'recruiter' && (
-          <>
-            <MetricCard title='Pipelines' value={pipelineTotal} />
-            <MetricCard title='Unique Candidates' value={uniqueCandidates} />
-          </>
-        )}
-
-        {user.role === 'issuer' && (
-          <>
-            <MetricCard title='Pending Requests' value={pendingReq} />
-            <MetricCard title='Credentials Signed' value={issuedCreds} />
-          </>
-        )}
-
-        {user.role === 'admin' && (
-          <>
-            <MetricCard title='Total Users' value={totalUsers} />
-            <MetricCard title='Total Teams' value={totalTeams} />
-          </>
-        )}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {metrics[user.role]?.map((m) => (
+          <MetricCard key={m.title} title={m.title} value={m.value} Icon={m.icon} />
+        ))}
       </div>
 
       {/* Insights / charts */}
@@ -233,8 +223,9 @@ export default async function DashboardPage() {
         <RecruiterCharts stageData={stageData} uniqueCandidates={uniqueCandidates} />
       )}
 
-      {/* Quick actions */}
-      <QuickActions actions={quickActions[user.role] ?? []} />
+      {user.role === 'issuer' && (
+        <IssuerCharts pending={pendingReq} verified={issuedCreds} />
+      )}
     </section>
   )
 }
@@ -243,14 +234,23 @@ export default async function DashboardPage() {
 /*                                 HELPERS                                    */
 /* -------------------------------------------------------------------------- */
 
-function MetricCard({ title, value }: { title: string; value: number }) {
+type MetricProps = {
+  title: string
+  value: number
+  Icon: React.ComponentType<{ className?: string }>
+}
+
+function MetricCard({ title, value, Icon }: MetricProps) {
   return (
-    <Card className='shadow-sm transition-shadow hover:shadow-lg'>
+    <Card className="relative overflow-hidden shadow-sm transition-shadow hover:shadow-lg">
       <CardHeader>
-        <CardTitle className='text-lg font-medium'>{title}</CardTitle>
+        <CardTitle className="text-lg font-medium flex items-center gap-2">
+          {title}
+        </CardTitle>
+        <Icon className="absolute right-4 top-4 h-6 w-6 opacity-20" />
       </CardHeader>
       <CardContent>
-        <p className='text-4xl font-extrabold tracking-tight'>{value}</p>
+        <p className="text-4xl font-extrabold tracking-tight">{value}</p>
       </CardContent>
     </Card>
   )
