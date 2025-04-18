@@ -1,7 +1,6 @@
 'use client'
 
 import { use, useState } from 'react'
-
 import {
   LayoutDashboard,
   Users,
@@ -27,17 +26,10 @@ import { useUser } from '@/lib/auth'
 /*                               STATIC NAV ITEMS                             */
 /* -------------------------------------------------------------------------- */
 
-const DASHBOARD_NAV: SidebarNavItem = {
-  href: '/dashboard',
-  icon: LayoutDashboard,
-  label: 'Dashboard',
-}
-
-const PRICING_NAV: SidebarNavItem = {
-  href: '/pricing',
-  icon: Tag,
-  label: 'Pricing',
-}
+const MAIN_NAV: SidebarNavItem[] = [
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/pricing', icon: Tag, label: 'Pricing' },
+]
 
 const SETTINGS_NAV: SidebarNavItem[] = [
   { href: '/settings/general', icon: Cog, label: 'General' },
@@ -47,7 +39,7 @@ const SETTINGS_NAV: SidebarNavItem[] = [
 ]
 
 /* -------------------------------------------------------------------------- */
-/*                        ROLE‑SPECIFIC (INTRINSIC) PAGES                     */
+/*                          ROLE‑SPECIFIC NAV HELPERS                         */
 /* -------------------------------------------------------------------------- */
 
 function roleNav(role?: string): SidebarNavItem[] {
@@ -80,6 +72,21 @@ function roleNav(role?: string): SidebarNavItem[] {
   }
 }
 
+function roleTitle(role?: string): string {
+  switch (role) {
+    case 'candidate':
+      return 'Candidate Tools'
+    case 'recruiter':
+      return 'Recruiter Workspace'
+    case 'issuer':
+      return 'Issuer Console'
+    case 'admin':
+      return 'Admin'
+    default:
+      return ''
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /*                                  LAYOUT                                    */
 /* -------------------------------------------------------------------------- */
@@ -95,16 +102,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   function SidebarContent() {
     return (
       <>
-        {/* Fixed Dashboard and Pricing links */}
-        <SidebarNav items={[DASHBOARD_NAV, PRICING_NAV]} />
+        <SidebarNav title='Main' items={MAIN_NAV} />
 
-        {/* Role‑specific pages */}
-        <hr className='border-border my-2' />
-        {intrinsicNav.length > 0 && <SidebarNav items={intrinsicNav} />}
+        {intrinsicNav.length > 0 && (
+          <SidebarNav title={roleTitle(user?.role)} items={intrinsicNav} />
+        )}
 
-        {/* Settings */}
-        <hr className='border-border my-2' />
-        <SidebarNav items={SETTINGS_NAV} />
+        <SidebarNav title='Settings' items={SETTINGS_NAV} />
       </>
     )
   }
@@ -113,7 +117,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   return (
     <div className='mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl'>
       {/* Desktop sidebar */}
-      <aside className='border-border bg-background sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r lg:block'>
+      <aside className='border-border bg-sidebar sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r lg:block'>
         <SidebarContent />
       </aside>
 
@@ -128,7 +132,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         </div>
 
         {sidebarOpen && (
-          <aside className='border-border bg-background fixed top-16 z-40 h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r lg:hidden'>
+          <aside className='border-border bg-sidebar fixed top-16 z-40 h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r lg:hidden'>
             <SidebarContent />
           </aside>
         )}
