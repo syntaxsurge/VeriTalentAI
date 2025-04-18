@@ -38,7 +38,19 @@ interface CandidateChartsProps {
 /*                        S H A R E D   S T Y L E S                           */
 /* -------------------------------------------------------------------------- */
 
-const STATUS_COLORS = [
+/**
+ * Explicit colour mapping for each credential status.
+ * Works for both light and dark themes because colours are derived
+ * from Tailwind CSS custom properties driven by the theme.
+ */
+const STATUS_COLOR_MAP: Record<string, string> = {
+  VERIFIED: 'hsl(var(--color-success))',      // green
+  PENDING: 'hsl(var(--color-warning))',       // amber
+  UNVERIFIED: 'hsl(var(--color-destructive))',// red
+  REJECTED: 'hsl(var(--color-destructive))',  // red
+}
+
+const FALLBACK_COLORS = [
   'hsl(var(--color-chart-1))',
   'hsl(var(--color-chart-2))',
   'hsl(var(--color-chart-3))',
@@ -103,7 +115,10 @@ export default function CandidateCharts({ scoreData, statusData }: CandidateChar
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: 'hsl(var(--foreground))' }} />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                />
                 <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
                 <Pie
                   data={statusData}
@@ -114,9 +129,12 @@ export default function CandidateCharts({ scoreData, statusData }: CandidateChar
                   outerRadius={90}
                   label
                 >
-                  {statusData.map((_, idx) => (
-                    <Cell key={idx} fill={STATUS_COLORS[idx % STATUS_COLORS.length]} />
-                  ))}
+                  {statusData.map((d, idx) => {
+                    const color =
+                      STATUS_COLOR_MAP[d.name?.toUpperCase()] ??
+                      FALLBACK_COLORS[idx % FALLBACK_COLORS.length]
+                    return <Cell key={idx} fill={color} />
+                  })}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>

@@ -170,24 +170,25 @@ export default async function DashboardPage() {
   /* ------------------------------------------------------------------ */
   /* Metric definitions                                                 */
   /* ------------------------------------------------------------------ */
-  const metrics: Record<string, { title: string; value: number; icon: React.ComponentType<any> }[]> = {
-    candidate: [
-      { title: 'Verified Credentials', value: verifiedCount, icon: BadgeCheck },
-      { title: 'AI Skill Passes', value: skillPassCount, icon: Award },
-    ],
-    recruiter: [
-      { title: 'Pipelines', value: pipelineTotal, icon: FolderKanban },
-      { title: 'Unique Candidates', value: uniqueCandidates, icon: Users },
-    ],
-    issuer: [
-      { title: 'Pending Requests', value: pendingReq, icon: Mail },
-      { title: 'Credentials Signed', value: issuedCreds, icon: CheckCircle },
-    ],
-    admin: [
-      { title: 'Total Users', value: totalUsers, icon: User2 },
-      { title: 'Total Teams', value: totalTeams, icon: Building2 },
-    ],
-  }
+  const metrics: Record<string, { title: string; value: number; icon: React.ComponentType<any> }[]> =
+    {
+      candidate: [
+        { title: 'Verified Credentials', value: verifiedCount, icon: BadgeCheck },
+        { title: 'AI Skill Passes', value: skillPassCount, icon: Award },
+      ],
+      recruiter: [
+        { title: 'Pipelines', value: pipelineTotal, icon: FolderKanban },
+        { title: 'Unique Candidates', value: uniqueCandidates, icon: Users },
+      ],
+      issuer: [
+        { title: 'Pending Requests', value: pendingReq, icon: Mail },
+        { title: 'Credentials Signed', value: issuedCreds, icon: CheckCircle },
+      ],
+      admin: [
+        { title: 'Total Users', value: totalUsers, icon: User2 },
+        { title: 'Total Teams', value: totalTeams, icon: Building2 },
+      ],
+    }
 
   /* ------------------------------------------------------------------ */
   /* JSX                                                                */
@@ -223,9 +224,7 @@ export default async function DashboardPage() {
         <RecruiterCharts stageData={stageData} uniqueCandidates={uniqueCandidates} />
       )}
 
-      {user.role === 'issuer' && (
-        <IssuerCharts pending={pendingReq} verified={issuedCreds} />
-      )}
+      {user.role === 'issuer' && <IssuerCharts pending={pendingReq} verified={issuedCreds} />}
     </section>
   )
 }
@@ -247,7 +246,8 @@ function MetricCard({ title, value, Icon }: MetricProps) {
         <CardTitle className="text-lg font-medium flex items-center gap-2">
           {title}
         </CardTitle>
-        <Icon className="absolute right-4 top-4 h-6 w-6 opacity-20" />
+        {/* Brighter icon for better visibility */}
+        <Icon className="absolute right-4 top-4 h-6 w-6 text-gray-400 dark:text-gray-300" />
       </CardHeader>
       <CardContent>
         <p className="text-4xl font-extrabold tracking-tight">{value}</p>
