@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1726443359662,
+      "tag": "0000_soft_the_anarchist",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1744816244416,
+      "tag": "0001_parched_rumiko_fujikawa",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1744816728489,
+      "tag": "0002_silly_dexter_bennett",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1744871747248,
+      "tag": "0003_concerned_hemingway",
+      "breakpoints": true
+    }
+  ]
+}
