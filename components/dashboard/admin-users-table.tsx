@@ -106,8 +106,8 @@ function EditUserDialog({
 
         <form onSubmit={handleSubmit} className='space-y-4'>
           <div>
-            <Label htmlFor='name'>Name</Label>
-            <Input id='name' name='name' defaultValue={row.name ?? ''} required />
+            <Label htmlFor='name'>Name (optional)</Label>
+            <Input id='name' name='name' defaultValue={row.name ?? ''} />
           </div>
           <div>
             <Label htmlFor='email'>Email</Label>

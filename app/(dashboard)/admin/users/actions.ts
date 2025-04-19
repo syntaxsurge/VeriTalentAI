@@ -1,6 +1,6 @@
 'use server'
 
-import { eq, and } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
@@ -33,7 +33,8 @@ import { issuers } from '@/lib/db/schema/issuer'
 export const updateUserAction = validatedActionWithUser(
   z.object({
     userId: z.coerce.number(),
-    name: z.string().min(1).max(100),
+    /** name can be omitted or an empty string */
+    name: z.string().max(100).optional(),
     email: z.string().email(),
     role: z.enum(['candidate', 'recruiter', 'issuer', 'admin']),
   }),
@@ -45,10 +46,16 @@ export const updateUserAction = validatedActionWithUser(
       return { error: 'You cannot change your own role.' }
     }
 
-    await db
-      .update(users)
-      .set({ name, email: email.toLowerCase(), role })
-      .where(eq(users.id, userId))
+    const updateData: Record<string, unknown> = {
+      email: email.toLowerCase(),
+      role,
+    }
+
+    if (name !== undefined) {
+      updateData.name = name.trim() === '' ? null : name
+    }
+
+    await db.update(users).set(updateData).where(eq(users.id, userId))
 
     return { success: 'User updated.' }
   },
@@ -80,10 +87,10 @@ export const deleteUserAction = validatedActionWithUser(
         const pipelineIds = pipelines.map((p) => p.id)
         await tx
           .delete(pipelineCandidates)
-          .where(and(eq(pipelineCandidates.pipelineId, pipelineIds[0]), eq(pipelineCandidates.pipelineId, pipelineIds[0]))) // simplified for brevity
+          .where(eq(pipelineCandidates.pipelineId, pipelineIds[0]))
         await tx
           .delete(recruiterPipelines)
-          .where(and(eq(recruiterPipelines.id, pipelines[0].id), eq(recruiterPipelines.id, pipelines[0].id)))
+          .where(eq(recruiterPipelines.id, pipelineIds[0]))
       }
 
       /* Candidate‑side clean‑up */
