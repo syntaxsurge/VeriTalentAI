@@ -135,8 +135,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         <SidebarContent />
       </aside>
 
-      {/* Mobile wrapper */}
-      <div className='flex flex-1 flex-col'>
+      {/* Mobile & content wrapper */}
+      <div className='flex flex-1 min-w-0 flex-col'>
+        {/* Mobile header */}
         <div className='sticky top-16 z-20 flex items-center justify-between border-b bg-background p-4 lg:hidden'>
           <span className='font-medium capitalize'>{user?.role ?? 'Dashboard'}</span>
           <Button variant='ghost' size='icon' onClick={() => setSidebarOpen((p) => !p)}>
