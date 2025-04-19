@@ -194,7 +194,9 @@ export default async function DashboardPage() {
     pendingIssuers = issuerCounter[IssuerStatus.PENDING] ?? 0
 
     /* Credentials */
-    const credRows = await db.select({ status: candidateCredentials.status }).from(candidateCredentials)
+    const credRows = await db
+      .select({ status: candidateCredentials.status })
+      .from(candidateCredentials)
     totalCredentials = credRows.length
     const credCounter: Record<string, number> = {}
     credRows.forEach((r) => {
@@ -206,27 +208,29 @@ export default async function DashboardPage() {
   /* ------------------------------------------------------------------ */
   /* Metric definitions                                                 */
   /* ------------------------------------------------------------------ */
-  const metrics: Record<string, { title: string; value: number; icon: React.ComponentType<any> }[]> =
-    {
-      candidate: [
-        { title: 'Verified Credentials', value: verifiedCount, icon: BadgeCheck },
-        { title: 'AI Skill Passes', value: skillPassCount, icon: Award },
-      ],
-      recruiter: [
-        { title: 'Pipelines', value: pipelineTotal, icon: FolderKanban },
-        { title: 'Unique Candidates', value: uniqueCandidates, icon: Users },
-      ],
-      issuer: [
-        { title: 'Pending Requests', value: pendingReq, icon: Mail },
-        { title: 'Credentials Signed', value: issuedCreds, icon: CheckCircle },
-      ],
-      admin: [
-        { title: 'Total Users', value: totalUsers, icon: User2 },
-        { title: 'Total Teams', value: totalTeams, icon: Building2 },
-        { title: 'Pending Issuers', value: pendingIssuers, icon: ShieldCheck },
-        { title: 'Total Credentials', value: totalCredentials, icon: Award },
-      ],
-    }
+  const metrics: Record<
+    string,
+    { title: string; value: number; icon: React.ComponentType<any> }[]
+  > = {
+    candidate: [
+      { title: 'Verified Credentials', value: verifiedCount, icon: BadgeCheck },
+      { title: 'AI Skill Passes', value: skillPassCount, icon: Award },
+    ],
+    recruiter: [
+      { title: 'Pipelines', value: pipelineTotal, icon: FolderKanban },
+      { title: 'Unique Candidates', value: uniqueCandidates, icon: Users },
+    ],
+    issuer: [
+      { title: 'Pending Requests', value: pendingReq, icon: Mail },
+      { title: 'Credentials Signed', value: issuedCreds, icon: CheckCircle },
+    ],
+    admin: [
+      { title: 'Total Users', value: totalUsers, icon: User2 },
+      { title: 'Total Teams', value: totalTeams, icon: Building2 },
+      { title: 'Pending Issuers', value: pendingIssuers, icon: ShieldCheck },
+      { title: 'Total Credentials', value: totalCredentials, icon: Award },
+    ],
+  }
 
   /* ------------------------------------------------------------------ */
   /* JSX                                                                */
@@ -252,7 +256,7 @@ export default async function DashboardPage() {
       </Card>
 
       {/* Metric cards */}
-      <div className='grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'>
+      <div className='grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:[grid-template-columns:repeat(auto-fit,_minmax(220px,_1fr))]'>
         {metrics[user.role]?.map((m) => (
           <MetricCard key={m.title} title={m.title} value={m.value} Icon={m.icon} />
         ))}
@@ -294,11 +298,15 @@ function MetricCard({ title, value, Icon }: MetricProps) {
   return (
     <Card className='relative overflow-hidden shadow-sm transition-shadow hover:shadow-lg'>
       {/* Decorative background icon */}
-      <Icon className='pointer-events-none absolute bottom-2 right-2 h-20 w-20 text-primary/10' aria-hidden='true' />
+      <Icon
+        className='pointer-events-none absolute bottom-2 right-2 h-20 w-20 text-primary/10'
+        aria-hidden='true'
+      />
 
       <CardContent className='relative z-10 p-4'>
         <p className='text-muted-foreground text-sm font-medium'>{title}</p>
         <p className='text-4xl font-extrabold tracking-tight'>{value}</p>
       </CardContent>
     </Card>
-  )}
+  )
+}

@@ -29,7 +29,7 @@ export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
 
   return (
     <section className='flex-1 p-4 lg:p-8'>
-      <h1 className='mb-6 text-lg font-medium lg:text-2xl'>Team Settings</h1>
+      <h1 className='mb-6 text-lg font-medium lg:text-2xl'>Settings</h1>
 
       {/* Subscription */}
       <Card className='mb-8'>
