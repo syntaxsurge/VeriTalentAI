@@ -8,17 +8,36 @@ import { db } from '@/lib/db/drizzle'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 
 /* -------------------------------------------------------------------------- */
-/*                             C R E A T E   I S S U E R                       */
+/*                               S C H E M A S                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * DID schema:
+ *   • Trim surrounding whitespace.
+ *   • Convert blank strings to <undefined> so that an empty field bypasses validation.
+ *   • If a value remains, enforce a minimum length of 10 characters.
+ */
+const didSchema = z
+  .string()
+  .trim()
+  .transform((val) => (val === '' ? undefined : val))
+  .refine((val) => val === undefined || val.length >= 10, {
+    message: 'Invalid DID',
+  })
+  .optional()
+
+/* -------------------------------------------------------------------------- */
+/*                         C R E A T E   I S S U E R                          */
 /* -------------------------------------------------------------------------- */
 export const createIssuerAction = validatedActionWithUser(
   z.object({
     name: z.string().min(2).max(200),
     domain: z.string().min(3).max(255),
     logoUrl: z.string().url('Invalid URL').optional(),
-    did: z.string().min(10).optional(),
+    did: didSchema,
   }),
   async (data, _, user) => {
-    // ensure user doesn't already own an issuer
+    /* Prevent multiple issuers per user */
     const existing = await db
       .select()
       .from(issuers)
@@ -34,7 +53,7 @@ export const createIssuerAction = validatedActionWithUser(
       name: data.name,
       domain: data.domain.toLowerCase(),
       logoUrl: data.logoUrl,
-      did: data.did,
+      did: data.did ?? undefined, // never persist an empty string
       status: IssuerStatus.PENDING,
     })
 
@@ -43,7 +62,7 @@ export const createIssuerAction = validatedActionWithUser(
 )
 
 /* -------------------------------------------------------------------------- */
-/*                         U P D A T E   I S S U E R   D I D                   */
+/*                         U P D A T E   I S S U E R   D I D                  */
 /* -------------------------------------------------------------------------- */
 export const updateIssuerDidAction = validatedActionWithUser(
   z.object({
