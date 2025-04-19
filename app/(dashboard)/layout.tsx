@@ -108,7 +108,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           <SidebarNav title={roleTitle(user?.role)} items={intrinsicNav} />
         )}
 
-        <SidebarNav title='Settings' items={SETTINGS_NAV} />
+        {/* Show settings only when authenticated */}
+        {user && <SidebarNav title='Settings' items={SETTINGS_NAV} />}
       </>
     )
   }
