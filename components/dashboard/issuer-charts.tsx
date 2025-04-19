@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { PieChartWithLegend } from '@/components/ui/pie-chart-with-legend'
+import { PieChart } from '@/components/ui/charts/pie-chart'
 import { type ChartConfig } from '@/components/ui/chart'
 
 interface IssuerChartsProps {
@@ -30,7 +30,7 @@ export default function IssuerCharts({ pending, verified }: IssuerChartsProps) {
         {pending + verified === 0 ? (
           <p className='text-muted-foreground text-sm'>No requests yet.</p>
         ) : (
-          <PieChartWithLegend data={data} dataKey='count' nameKey='status' config={chartConfig} />
+          <PieChart data={data} dataKey='count' nameKey='status' config={chartConfig} />
         )}
       </CardContent>
     </Card>

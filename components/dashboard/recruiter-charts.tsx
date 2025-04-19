@@ -1,8 +1,8 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { PieChartWithLegend } from '@/components/ui/pie-chart-with-legend'
-import { BarChartWithBars } from '@/components/ui/bar-chart-with-bars'
+import { PieChart } from '@/components/ui/charts/pie-chart'
+import { BarChart } from '@/components/ui/charts/bar-chart'
 import { type ChartConfig } from '@/components/ui/chart'
 
 interface StageDatum {
@@ -46,16 +46,9 @@ export default function RecruiterCharts({
         </CardHeader>
         <CardContent className='h-72'>
           {stageData.length === 0 ? (
-            <p className='text-muted-foreground text-sm'>
-              No candidates in pipelines yet.
-            </p>
+            <p className='text-muted-foreground text-sm'>No candidates in pipelines yet.</p>
           ) : (
-            <BarChartWithBars
-              data={stageData}
-              xKey='stage'
-              yKey='count'
-              config={barConfig}
-            />
+            <BarChart data={stageData} xKey='stage' yKey='count' config={barConfig} />
           )}
         </CardContent>
       </Card>
@@ -69,12 +62,7 @@ export default function RecruiterCharts({
           {uniqueCandidates === 0 ? (
             <p className='text-muted-foreground text-sm'>No data to display.</p>
           ) : (
-            <PieChartWithLegend
-              data={pieData}
-              dataKey='value'
-              nameKey='category'
-              config={pieConfig}
-            />
+            <PieChart data={pieData} dataKey='value' nameKey='category' config={pieConfig} />
           )}
         </CardContent>
       </Card>

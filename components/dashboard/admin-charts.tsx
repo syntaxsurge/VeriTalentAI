@@ -1,12 +1,8 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { PieChartWithLegend } from '@/components/ui/pie-chart-with-legend'
+import { PieChart } from '@/components/ui/charts/pie-chart'
 import { type ChartConfig } from '@/components/ui/chart'
-
-/* -------------------------------------------------------------------------- */
-/*                                   T Y P E S                                */
-/* -------------------------------------------------------------------------- */
 
 export interface Datum {
   name: string
@@ -18,10 +14,6 @@ interface AdminChartsProps {
   issuerData: Datum[]
   credentialData: Datum[]
 }
-
-/* -------------------------------------------------------------------------- */
-/*                        U T I L – dynamic colour map                         */
-/* -------------------------------------------------------------------------- */
 
 function buildConfig(title: string, data: Datum[]): ChartConfig {
   const palette = [
@@ -37,10 +29,6 @@ function buildConfig(title: string, data: Datum[]): ChartConfig {
   })
   return cfg as ChartConfig
 }
-
-/* -------------------------------------------------------------------------- */
-/*                                   V I E W                                  */
-/* -------------------------------------------------------------------------- */
 
 export default function AdminCharts({
   usersData,
@@ -70,12 +58,7 @@ export default function AdminCharts({
               {pieData.length === 0 ? (
                 <p className='text-muted-foreground text-sm'>No data.</p>
               ) : (
-                <PieChartWithLegend
-                  data={pieData}
-                  dataKey='value'
-                  nameKey='category'
-                  config={config}
-                />
+                <PieChart data={pieData} dataKey='value' nameKey='category' config={config} />
               )}
             </CardContent>
           </Card>

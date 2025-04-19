@@ -1,13 +1,9 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { PieChartWithLegend } from '@/components/ui/pie-chart-with-legend'
-import { LineChartWithDots } from '@/components/ui/line-chart-with-dots'
+import { PieChart } from '@/components/ui/charts/pie-chart'
+import { LineChart } from '@/components/ui/charts/line-chart'
 import { type ChartConfig } from '@/components/ui/chart'
-
-/* -------------------------------------------------------------------------- */
-/*                                   T Y P E S                                */
-/* -------------------------------------------------------------------------- */
 
 export interface ScoreDatum {
   date: string
@@ -23,10 +19,6 @@ interface CandidateChartsProps {
   scoreData: ScoreDatum[]
   statusData: StatusDatum[]
 }
-
-/* -------------------------------------------------------------------------- */
-/*                                   V I E W                                  */
-/* -------------------------------------------------------------------------- */
 
 export default function CandidateCharts({ scoreData, statusData }: CandidateChartsProps) {
   /* Pie‑chart prep */
@@ -59,13 +51,13 @@ export default function CandidateCharts({ scoreData, statusData }: CandidateChar
           {scoreData.length === 0 ? (
             <p className='text-muted-foreground text-sm'>No quiz attempts yet.</p>
           ) : (
-            <LineChartWithDots
+            <LineChart
               data={scoreData}
               xKey='date'
               yKey='score'
               yDomain={[0, 100]}
               config={lineConfig}
-              xTickFormatter={(v) => String(v).slice(5)} /* show MM‑DD */
+              xTickFormatter={(v) => String(v).slice(5)}
             />
           )}
         </CardContent>
@@ -80,12 +72,7 @@ export default function CandidateCharts({ scoreData, statusData }: CandidateChar
           {pieData.length === 0 ? (
             <p className='text-muted-foreground text-sm'>No credentials added yet.</p>
           ) : (
-            <PieChartWithLegend
-              data={pieData}
-              dataKey='count'
-              nameKey='status'
-              config={pieConfig}
-            />
+            <PieChart data={pieData} dataKey='count' nameKey='status' config={pieConfig} />
           )}
         </CardContent>
       </Card>
