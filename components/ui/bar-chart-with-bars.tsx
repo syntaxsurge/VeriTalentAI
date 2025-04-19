@@ -1,13 +1,7 @@
 'use client'
 
 import React from 'react'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 
 import {
   ChartContainer,
@@ -25,7 +19,7 @@ interface BarChartWithBarsProps<D extends Record<string, any> = any> {
   yKey: keyof D
   /** Colour / label mapping, same contract as other shadcn helpers */
   config: ChartConfig
-  /** Optional formatter for X ticks */
+  /** Optional formatter for X ticks (default: full label) */
   xTickFormatter?: (value: any) => string
 }
 
@@ -37,17 +31,14 @@ export function BarChartWithBars<D extends Record<string, any> = any>({
   xKey,
   yKey,
   config,
-  xTickFormatter = (v) => String(v).slice(0, 3),
+  xTickFormatter = (v) => String(v),
 }: BarChartWithBarsProps<D>) {
   /* Derive bar colour from the config entry matching `yKey` */
   const colourVar = `var(--color-${String(yKey)})`
 
   return (
     <ChartContainer config={config}>
-      <BarChart
-        data={data}
-        margin={{ top: 8, left: 12, right: 12 }}
-      >
+      <BarChart data={data} margin={{ top: 8, left: 12, right: 12 }}>
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey={xKey as string}
@@ -62,14 +53,8 @@ export function BarChartWithBars<D extends Record<string, any> = any>({
           axisLine={false}
           tickMargin={8}
         />
-        <ChartTooltip
-          content={<ChartTooltipContent />}
-        />
-        <Bar
-          dataKey={yKey as string}
-          fill={colourVar}
-          radius={[4, 4, 0, 0]}
-        />
+        <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+        <Bar dataKey={yKey as string} fill={colourVar} radius={[4, 4, 0, 0]} />
       </BarChart>
     </ChartContainer>
   )
