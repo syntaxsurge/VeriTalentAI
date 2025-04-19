@@ -228,12 +228,6 @@ function RowActions({ row }: { row: RowType }) {
 
 const columns: Column<RowType>[] = [
   {
-    key: 'name',
-    header: 'Name',
-    sortable: true,
-    render: (v, r) => <>{v || r.email}</>,
-  },
-  {
     key: 'email',
     header: 'Email',
     sortable: true,
