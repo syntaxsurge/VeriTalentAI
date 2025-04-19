@@ -65,6 +65,7 @@ function roleNav(role?: string): SidebarNavItem[] {
       return [
         { href: '/admin/users', icon: Users, label: 'Users' },
         { href: '/admin/credentials', icon: Award, label: 'Credentials' },
+        { href: '/admin/issuers', icon: ShieldCheck, label: 'Issuers' },
       ]
     default:
       return []
