@@ -1,15 +1,19 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
+import {
+  candidateCredentials,
+  CredentialStatus,
+} from '@/lib/db/schema/veritalent'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 
 /* -------------------------------------------------------------------------- */
-/*                               V A L I D A T I O N                          */
+/*                               U P D A T E                                  */
 /* -------------------------------------------------------------------------- */
 
 const updateIssuerStatusSchema = z
@@ -26,16 +30,11 @@ const updateIssuerStatusSchema = z
     if (val.status === IssuerStatus.REJECTED && !val.rejectionReason) {
       ctx.addIssue({
         code: 'custom',
-        message:
-          'Rejection reason is required when rejecting an issuer.',
+        message: 'Rejection reason is required when rejecting an issuer.',
         path: ['rejectionReason'],
       })
     }
   })
-
-/* -------------------------------------------------------------------------- */
-/*                         I N N E R   A C T I O N                            */
-/* -------------------------------------------------------------------------- */
 
 const _updateIssuerStatus = validatedActionWithUser(
   updateIssuerStatusSchema,
@@ -56,17 +55,51 @@ const _updateIssuerStatus = validatedActionWithUser(
   },
 )
 
-/* -------------------------------------------------------------------------- */
-/*                     E X P O R T E D   S E R V E R   A C T I O N            */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Next.js requires exported server actions to be async functions declared
- * at the module level; we wrap the validated action to fulfil that contract.
- */
 export const updateIssuerStatusAction = async (
   ...args: Parameters<typeof _updateIssuerStatus>
 ) => {
   'use server'
   return _updateIssuerStatus(...args)
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               D E L E T E                                  */
+/* -------------------------------------------------------------------------- */
+
+const deleteIssuerSchema = z.object({
+  issuerId: z.coerce.number(),
+})
+
+const _deleteIssuer = validatedActionWithUser(
+  deleteIssuerSchema,
+  async ({ issuerId }, _formData, user) => {
+    if (user.role !== 'admin') return { error: 'Unauthorized.' }
+
+    await db.transaction(async (tx) => {
+      /* Unlink any credentials that referenced this issuer */
+      await tx
+        .update(candidateCredentials)
+        .set({
+          issuerId: null,
+          status: CredentialStatus.UNVERIFIED,
+          verified: false,
+          verifiedAt: null,
+          vcIssuedId: null,
+        })
+        .where(eq(candidateCredentials.issuerId, issuerId))
+
+      /* Finally remove the issuer row */
+      await tx.delete(issuers).where(eq(issuers.id, issuerId))
+    })
+
+    revalidatePath('/admin/issuers')
+    return { success: 'Issuer deleted.' }
+  },
+)
+
+export const deleteIssuerAction = async (
+  ...args: Parameters<typeof _deleteIssuer>
+) => {
+  'use server'
+  return _deleteIssuer(...args)
 }

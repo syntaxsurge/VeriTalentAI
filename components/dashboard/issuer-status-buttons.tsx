@@ -7,7 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
-import { updateIssuerStatusAction } from '@/app/(dashboard)/admin/issuers/actions'
+import {
+  updateIssuerStatusAction,
+  deleteIssuerAction,
+} from '@/app/(dashboard)/admin/issuers/actions'
 
 interface Props {
   issuerId: number
@@ -20,12 +23,16 @@ export default function IssuerStatusButtons({ issuerId, status }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  /* -------- Reject popup state -------- */
+  /* Reject state */
   const [showReject, setShowReject] = useState(false)
   const [preset, setPreset] = useState<(typeof PRESETS)[number]>('Spam / fraudulent')
   const [custom, setCustom] = useState('')
 
-  function mutate(nextStatus: keyof typeof IssuerStatus, reason?: string) {
+  /* Delete confirm */
+  const [showDelete, setShowDelete] = useState(false)
+
+  /* ------------------------- helpers ------------------------- */
+  function mutateStatus(nextStatus: keyof typeof IssuerStatus, reason?: string) {
     startTransition(async () => {
       const fd = new FormData()
       fd.append('issuerId', issuerId.toString())
@@ -37,14 +44,23 @@ export default function IssuerStatusButtons({ issuerId, status }: Props) {
     })
   }
 
-  /* ----------------------------- Render ----------------------------- */
+  function deleteIssuer() {
+    startTransition(async () => {
+      const fd = new FormData()
+      fd.append('issuerId', issuerId.toString())
+      await deleteIssuerAction({}, fd)
+      router.refresh()
+    })
+  }
+
+  /* ------------------------- UI blocks ----------------------- */
   if (showReject) {
     return (
       <form
         onSubmit={(e) => {
           e.preventDefault()
           const reason = preset === 'Other' ? custom : preset
-          mutate(IssuerStatus.REJECTED, reason)
+          mutateStatus(IssuerStatus.REJECTED, reason)
         }}
         className='flex flex-col gap-2'
       >
@@ -94,14 +110,37 @@ export default function IssuerStatusButtons({ issuerId, status }: Props) {
     )
   }
 
+  if (showDelete) {
+    return (
+      <div className='flex flex-col gap-2'>
+        <p className='text-xs'>Delete this issuer permanently?</p>
+        <div className='flex gap-2'>
+          <Button
+            size='sm'
+            variant='outline'
+            disabled={isPending}
+            onClick={() => setShowDelete(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            size='sm'
+            variant='destructive'
+            disabled={isPending}
+            onClick={deleteIssuer}
+          >
+            Delete
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  /* Default buttons */
   return (
-    <div className='flex gap-2 whitespace-nowrap'>
+    <div className='flex flex-wrap items-center gap-2 whitespace-nowrap'>
       {status !== IssuerStatus.ACTIVE && (
-        <Button
-          size='sm'
-          disabled={isPending}
-          onClick={() => mutate(IssuerStatus.ACTIVE)}
-        >
+        <Button size='sm' disabled={isPending} onClick={() => mutateStatus(IssuerStatus.ACTIVE)}>
           Verify
         </Button>
       )}
@@ -111,7 +150,7 @@ export default function IssuerStatusButtons({ issuerId, status }: Props) {
           size='sm'
           variant='outline'
           disabled={isPending}
-          onClick={() => mutate(IssuerStatus.PENDING)}
+          onClick={() => mutateStatus(IssuerStatus.PENDING)}
         >
           Unverify
         </Button>
@@ -127,6 +166,15 @@ export default function IssuerStatusButtons({ issuerId, status }: Props) {
           Reject
         </Button>
       )}
+
+      <Button
+        size='sm'
+        variant='destructive'
+        disabled={isPending}
+        onClick={() => setShowDelete(true)}
+      >
+        Delete
+      </Button>
     </div>
   )
 }
