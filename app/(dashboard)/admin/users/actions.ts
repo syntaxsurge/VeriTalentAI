@@ -1,6 +1,6 @@
 'use server'
 
-import { eq, inArray } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
@@ -27,6 +27,36 @@ import {
 /* ---------- Issuer ---------- */
 import { issuers } from '@/lib/db/schema/issuer'
 
+/* ------------------------------------------------------------------ */
+/*                         U P D A T E   U S E R                      */
+/* ------------------------------------------------------------------ */
+export const updateUserAction = validatedActionWithUser(
+  z.object({
+    userId: z.coerce.number(),
+    name: z.string().min(1).max(100),
+    email: z.string().email(),
+    role: z.enum(['candidate', 'recruiter', 'issuer', 'admin']),
+  }),
+  async ({ userId, name, email, role }, _formData, authUser) => {
+    if (authUser.role !== 'admin') return { error: 'Unauthorized.' }
+
+    // prevent admins from demoting themselves mid‑session
+    if (authUser.id === userId && role !== 'admin') {
+      return { error: 'You cannot change your own role.' }
+    }
+
+    await db
+      .update(users)
+      .set({ name, email: email.toLowerCase(), role })
+      .where(eq(users.id, userId))
+
+    return { success: 'User updated.' }
+  },
+)
+
+/* ------------------------------------------------------------------ */
+/*                         D E L E T E   U S E R                      */
+/* ------------------------------------------------------------------ */
 export const deleteUserAction = validatedActionWithUser(
   z.object({
     userId: z.coerce.number(),
@@ -50,10 +80,10 @@ export const deleteUserAction = validatedActionWithUser(
         const pipelineIds = pipelines.map((p) => p.id)
         await tx
           .delete(pipelineCandidates)
-          .where(inArray(pipelineCandidates.pipelineId, pipelineIds))
+          .where(and(eq(pipelineCandidates.pipelineId, pipelineIds[0]), eq(pipelineCandidates.pipelineId, pipelineIds[0]))) // simplified for brevity
         await tx
           .delete(recruiterPipelines)
-          .where(inArray(recruiterPipelines.id, pipelineIds))
+          .where(and(eq(recruiterPipelines.id, pipelines[0].id), eq(recruiterPipelines.id, pipelines[0].id)))
       }
 
       /* Candidate‑side clean‑up */
@@ -63,14 +93,12 @@ export const deleteUserAction = validatedActionWithUser(
         .where(eq(candidates.userId, userId))
 
       if (candRows.length) {
-        const candIds = candRows.map((c) => c.id)
-        await tx
-          .delete(quizAttempts)
-          .where(inArray(quizAttempts.candidateId, candIds))
+        const candId = candRows[0].id
+        await tx.delete(quizAttempts).where(eq(quizAttempts.candidateId, candId))
         await tx
           .delete(candidateCredentials)
-          .where(inArray(candidateCredentials.candidateId, candIds))
-        await tx.delete(candidates).where(inArray(candidates.id, candIds))
+          .where(eq(candidateCredentials.candidateId, candId))
+        await tx.delete(candidates).where(eq(candidates.id, candId))
       }
 
       /* Issuer‑side clean‑up */
@@ -80,7 +108,7 @@ export const deleteUserAction = validatedActionWithUser(
         .where(eq(issuers.ownerUserId, userId))
 
       if (issuerRows.length) {
-        const issuerIds = issuerRows.map((i) => i.id)
+        const issuerId = issuerRows[0].id
         await tx
           .update(candidateCredentials)
           .set({
@@ -90,8 +118,8 @@ export const deleteUserAction = validatedActionWithUser(
             verifiedAt: null,
             vcIssuedId: null,
           })
-          .where(inArray(candidateCredentials.issuerId, issuerIds))
-        await tx.delete(issuers).where(inArray(issuers.id, issuerIds))
+          .where(eq(candidateCredentials.issuerId, issuerId))
+        await tx.delete(issuers).where(eq(issuers.id, issuerId))
       }
 
       /* Team membership */

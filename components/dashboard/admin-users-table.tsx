@@ -1,11 +1,12 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useTransition, useState, useActionState, startTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   MoreHorizontal,
   Trash2,
   Loader2,
+  Pencil,
 } from 'lucide-react'
 
 import {
@@ -14,13 +15,20 @@ import {
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/data-table'
-import { deleteUserAction } from '@/app/(dashboard)/admin/users/actions'
+import { deleteUserAction, updateUserAction } from '@/app/(dashboard)/admin/users/actions'
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { FormStatus } from '@/components/ui/form-status'
+import React from 'react'
 
 export interface RowType {
   id: number
+  name: string | null
   email: string
   role: string
   createdAt: Date
@@ -41,18 +49,114 @@ function formatDateTime(d: Date) {
   })
 }
 
+const ROLES = ['candidate', 'recruiter', 'issuer', 'admin'] as const
+
 /* -------------------------------------------------------------------------- */
 /*                             Row‑level actions                              */
 /* -------------------------------------------------------------------------- */
 
-function RowActions({ id }: { id: number }) {
+function EditDialog({ row }: { row: RowType }) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+
+  type ActionState = { error?: string; success?: string }
+  const [state, action, pending] = useActionState<ActionState, FormData>(updateUserAction, {
+    error: '',
+    success: '',
+  })
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    fd.append('userId', row.id.toString())
+    startTransition(() => action(fd))
+  }
+
+  // close & refresh after successful update
+  React.useEffect(() => {
+    if (state.success) {
+      setOpen(false)
+      router.refresh()
+    }
+  }, [state.success, router])
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <DropdownMenuItem>
+          <Pencil className="mr-2 h-4 w-4" />
+          Edit
+        </DropdownMenuItem>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit User</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              name="name"
+              required
+              defaultValue={row.name ?? ''}
+              placeholder="Full name"
+            />
+          </div>
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              defaultValue={row.email}
+              placeholder="user@example.com"
+            />
+          </div>
+          <div>
+            <Label htmlFor="role">Role</Label>
+            <select
+              id="role"
+              name="role"
+              defaultValue={row.role}
+              className="h-10 w-full rounded-md border px-2 capitalize"
+            >
+              {ROLES.map((r) => (
+                <option key={r} value={r} className="capitalize">
+                  {r}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <FormStatus state={state} />
+
+          <Button type="submit" className="w-full" disabled={pending}>
+            {pending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function RowActions({ row }: { row: RowType }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   function destroy() {
     startTransition(async () => {
       const fd = new FormData()
-      fd.append('userId', id.toString())
+      fd.append('userId', row.id.toString())
       await deleteUserAction({}, fd)
       router.refresh()
     })
@@ -61,26 +165,28 @@ function RowActions({ id }: { id: number }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
+        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
           {isPending ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <MoreHorizontal className='h-4 w-4' />
+            <MoreHorizontal className="h-4 w-4" />
           )}
-          <span className='sr-only'>Open menu</span>
+          <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
+      <DropdownMenuContent align="end" className="rounded-md p-1 shadow-lg">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-        {/* Future‑proof: add more row‑level actions here, e.g. “Edit User” */}
+        <EditDialog row={row} />
+
+        <DropdownMenuSeparator />
 
         <DropdownMenuItem
           onClick={destroy}
           disabled={isPending}
-          className='text-rose-600 dark:text-rose-400 font-semibold hover:bg-rose-500/10 focus:bg-rose-500/10'
+          className="text-rose-600 dark:text-rose-400 font-semibold hover:bg-rose-500/10 focus:bg-rose-500/10"
         >
-          <Trash2 className='mr-2 h-4 w-4' />
+          <Trash2 className="mr-2 h-4 w-4" />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -93,6 +199,12 @@ function RowActions({ id }: { id: number }) {
 /* -------------------------------------------------------------------------- */
 
 const columns: Column<RowType>[] = [
+  {
+    key: 'name',
+    header: 'Name',
+    sortable: true,
+    render: (v, r) => v || r.email,
+  },
   {
     key: 'email',
     header: 'Email',
@@ -117,7 +229,7 @@ const columns: Column<RowType>[] = [
     header: '',
     enableHiding: false,
     sortable: false,
-    render: (_v, row) => <RowActions id={row.id} />,
+    render: (_v, row) => <RowActions row={row} />,
   },
 ]
 
@@ -160,7 +272,7 @@ export default function AdminUsersTable({ rows }: { rows: RowType[] }) {
     <DataTable
       columns={columns}
       rows={rows}
-      filterKey='email'
+      filterKey="email"
       bulkActions={bulkActions}
     />
   )

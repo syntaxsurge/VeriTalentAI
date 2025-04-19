@@ -17,6 +17,7 @@ export default async function AdminUsersPage() {
   const rows = await db
     .select({
       id: usersTable.id,
+      name: usersTable.name,
       email: usersTable.email,
       role: usersTable.role,
       createdAt: usersTable.createdAt,
@@ -25,6 +26,7 @@ export default async function AdminUsersPage() {
 
   const tableRows: RowType[] = rows.map((u) => ({
     id: u.id,
+    name: u.name,
     email: u.email,
     role: u.role,
     createdAt: u.createdAt,
