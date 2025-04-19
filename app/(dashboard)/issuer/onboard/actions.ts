@@ -5,33 +5,24 @@ import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
-import {
-  issuers,
-  IssuerStatus,
-  IssuerCategory,
-  IssuerIndustry,
-} from '@/lib/db/schema/issuer'
+import { issuers, IssuerStatus, IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
 import { db } from '@/lib/db/drizzle'
 
-/* -------------------- Shared helpers -------------------- */
+/* -------------------------------------------------------------------------- */
+/*                              H E L P E R S                                 */
+/* -------------------------------------------------------------------------- */
+
 function refresh() {
   revalidatePath('/issuer/onboard')
 }
 
-/* -------------------- Schemas --------------------------- */
-const didSchema = z
-  .string()
-  .trim()
-  .transform((val) => (val === '' ? undefined : val))
-  .refine((val) => val === undefined || val.length >= 10, {
-    message: 'Invalid DID',
-  })
-  .optional()
-
 const categoryEnum = z.enum([...Object.values(IssuerCategory)] as [string, ...string[]])
 const industryEnum = z.enum([...Object.values(IssuerIndustry)] as [string, ...string[]])
 
-/* -------------------- Create issuer --------------------- */
+/* -------------------------------------------------------------------------- */
+/*                          C R E A T E   I S S U E R                         */
+/* -------------------------------------------------------------------------- */
+
 export const createIssuerAction = validatedActionWithUser(
   z.object({
     name: z.string().min(2).max(200),
@@ -41,12 +32,11 @@ export const createIssuerAction = validatedActionWithUser(
       .url('Invalid URL')
       .regex(/^https:\/\//, 'Logo URL must start with https://')
       .optional(),
-    did: didSchema,
     category: categoryEnum.default(IssuerCategory.OTHER),
     industry: industryEnum.default(IssuerIndustry.OTHER),
   }),
   async (data, _, user) => {
-    /* Reject duplicates */
+    /* Prevent duplicate issuer per user */
     const existing = await db
       .select()
       .from(issuers)
@@ -57,13 +47,11 @@ export const createIssuerAction = validatedActionWithUser(
       return { error: 'You already have an issuer organisation.' }
     }
 
-    /* Narrow the literal types to satisfy drizzle insert typings */
     const newIssuer: typeof issuers.$inferInsert = {
       ownerUserId: user.id,
       name: data.name,
       domain: data.domain.toLowerCase(),
       logoUrl: data.logoUrl ?? null,
-      did: data.did ?? null,
       status: IssuerStatus.PENDING,
       category: data.category as (typeof IssuerCategory)[keyof typeof IssuerCategory],
       industry: data.industry as (typeof IssuerIndustry)[keyof typeof IssuerIndustry],
@@ -76,7 +64,10 @@ export const createIssuerAction = validatedActionWithUser(
   },
 )
 
-/* --------------------- Link DID ------------------------- */
+/* -------------------------------------------------------------------------- */
+/*                     L I N K   D I D   (optional post‑verify)               */
+/* -------------------------------------------------------------------------- */
+
 export const updateIssuerDidAction = validatedActionWithUser(
   z.object({ did: z.string().min(10, 'Invalid DID') }),
   async ({ did }, _, user) => {
@@ -100,7 +91,10 @@ export const updateIssuerDidAction = validatedActionWithUser(
   },
 )
 
-/* -------------- Update + resubmit rejected issuer -------------- */
+/* -------------------------------------------------------------------------- */
+/*               U P D A T E   A N D   R E S U B M I T   I S S U E R          */
+/* -------------------------------------------------------------------------- */
+
 export const updateIssuerDetailsAction = validatedActionWithUser(
   z.object({
     name: z.string().min(2).max(200),
