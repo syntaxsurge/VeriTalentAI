@@ -241,7 +241,7 @@ export function DataTable<T extends Record<string, any>>({
                     className={cn(
                       "cursor-pointer",
                       a.variant === "destructive" &&
-                        "text-destructive text-rose-600 dark:text-rose-400 font-medium",
+                        "text-rose-600 dark:text-rose-400 font-medium",
                       selectedCount === 0 && "opacity-50 cursor-not-allowed",
                     )}
                   >
