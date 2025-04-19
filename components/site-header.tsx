@@ -188,11 +188,10 @@ export default function SiteHeader() {
                   </Link>
                 </DropdownMenuItem>
 
-                {/* Team settings */}
                 <DropdownMenuItem asChild>
                   <Link href='/settings/team'>
                     <Settings className='mr-2 h-4 w-4' />
-                    Team Settings
+                    Settings
                   </Link>
                 </DropdownMenuItem>
 
