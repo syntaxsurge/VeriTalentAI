@@ -13,7 +13,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { RoleBadge } from '@/components/dashboard/role-badge'
 import CandidateCharts from '@/components/dashboard/candidate-charts'
 import RecruiterCharts from '@/components/dashboard/recruiter-charts'
@@ -252,7 +252,7 @@ export default async function DashboardPage() {
       </Card>
 
       {/* Metric cards */}
-      <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+      <div className='grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'>
         {metrics[user.role]?.map((m) => (
           <MetricCard key={m.title} title={m.title} value={m.value} Icon={m.icon} />
         ))}
@@ -292,18 +292,13 @@ type MetricProps = {
 
 function MetricCard({ title, value, Icon }: MetricProps) {
   return (
-    <Card className='group overflow-hidden shadow-sm transition-shadow hover:shadow-lg'>
-      <CardHeader className='pb-2'>
-        <div className='flex items-start justify-between'>
-          <CardTitle className='text-sm font-medium truncate'>{title}</CardTitle>
-          <span className='bg-muted text-primary rounded-md p-2 shadow-sm'>
-            <Icon className='h-5 w-5' />
-          </span>
-        </div>
-      </CardHeader>
-      <CardContent className='pt-0'>
+    <Card className='relative overflow-hidden shadow-sm transition-shadow hover:shadow-lg'>
+      {/* Decorative background icon */}
+      <Icon className='pointer-events-none absolute bottom-2 right-2 h-20 w-20 text-primary/10' aria-hidden='true' />
+
+      <CardContent className='relative z-10 p-4'>
+        <p className='text-muted-foreground text-sm font-medium'>{title}</p>
         <p className='text-4xl font-extrabold tracking-tight'>{value}</p>
       </CardContent>
     </Card>
-  )
-}
+  )}
