@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -12,7 +13,12 @@ import {
 } from '@/lib/db/schema/issuer'
 import { db } from '@/lib/db/drizzle'
 
-/* -------------------------------- Schemas -------------------------------- */
+/* -------------------- Shared helpers -------------------- */
+function refresh() {
+  revalidatePath('/issuer/onboard')
+}
+
+/* -------------------- Schemas --------------------------- */
 const didSchema = z
   .string()
   .trim()
@@ -22,14 +28,10 @@ const didSchema = z
   })
   .optional()
 
-const categoryEnum = z.enum([
-  ...Object.values(IssuerCategory),
-] as [string, ...string[]])
-const industryEnum = z.enum([
-  ...Object.values(IssuerIndustry),
-] as [string, ...string[]])
+const categoryEnum = z.enum([...Object.values(IssuerCategory)] as [string, ...string[]])
+const industryEnum = z.enum([...Object.values(IssuerIndustry)] as [string, ...string[]])
 
-/* ---------------------------- Create new issuer --------------------------- */
+/* -------------------- Create issuer --------------------- */
 export const createIssuerAction = validatedActionWithUser(
   z.object({
     name: z.string().min(2).max(200),
@@ -59,11 +61,12 @@ export const createIssuerAction = validatedActionWithUser(
       industry: data.industry,
     })
 
+    refresh()
     return { success: 'Issuer created and pending review.' }
   },
 )
 
-/* ----------------------------- Link DID action ---------------------------- */
+/* --------------------- Link DID ------------------------- */
 export const updateIssuerDidAction = validatedActionWithUser(
   z.object({ did: z.string().min(10, 'Invalid DID') }),
   async ({ did }, _, user) => {
@@ -80,6 +83,7 @@ export const updateIssuerDidAction = validatedActionWithUser(
       .set({ did, status: IssuerStatus.ACTIVE })
       .where(eq(issuers.id, issuer.id))
 
+    refresh()
     return { success: 'DID linked successfully — issuer is now active.' }
   },
 )

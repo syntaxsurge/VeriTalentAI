@@ -1,17 +1,12 @@
 import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
+import IssuerStatusButtons from '@/components/dashboard/issuer-status-buttons'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { users as usersTable } from '@/lib/db/schema/core'
-import {
-  issuers as issuersTable,
-  IssuerStatus,
-} from '@/lib/db/schema/issuer'
-
-import { updateIssuerStatusAction } from './actions'
+import { issuers as issuersTable, IssuerStatus } from '@/lib/db/schema/issuer'
 
 export const revalidate = 0
 
@@ -20,9 +15,6 @@ export default async function AdminIssuersPage() {
   if (!currentUser) redirect('/sign-in')
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
-  /* ------------------------------------------------------------ */
-  /* Load issuer rows + owner user                                */
-  /* ------------------------------------------------------------ */
   const rows = await db
     .select({
       issuer: issuersTable,
@@ -30,12 +22,6 @@ export default async function AdminIssuersPage() {
     })
     .from(issuersTable)
     .leftJoin(usersTable, eq(issuersTable.ownerUserId, usersTable.id))
-
-  /* Wrapper because updateIssuerStatusAction expects single FormData */
-  const updateStatus = async (fd: FormData): Promise<void> => {
-    'use server'
-    await updateIssuerStatusAction({}, fd)
-  }
 
   return (
     <section className='space-y-6'>
@@ -71,13 +57,11 @@ export default async function AdminIssuersPage() {
                     {owner?.name || owner?.email || '—'}
                     <div className='text-muted-foreground text-xs'>{owner?.email}</div>
                   </td>
-                  <td className='break-all py-2 pr-4 max-w-[12rem]'>{issuer.did || '—'}</td>
+                  <td className='break-all max-w-[12rem] py-2 pr-4'>{issuer.did || '—'}</td>
                   <td className='capitalize py-2 pr-4'>
                     {issuer.category.replaceAll('_', ' ').toLowerCase()}
                   </td>
-                  <td className='capitalize py-2 pr-4'>
-                    {issuer.industry.toLowerCase()}
-                  </td>
+                  <td className='capitalize py-2 pr-4'>{issuer.industry.toLowerCase()}</td>
                   <td
                     className={`capitalize py-2 ${
                       issuer.status === IssuerStatus.ACTIVE
@@ -89,37 +73,8 @@ export default async function AdminIssuersPage() {
                   >
                     {issuer.status}
                   </td>
-                  <td className='py-2 space-x-2 whitespace-nowrap'>
-                    {/* Verify button */}
-                    {issuer.status !== IssuerStatus.ACTIVE && (
-                      <form action={updateStatus} className='inline'>
-                        <input type='hidden' name='issuerId' value={issuer.id} />
-                        <input type='hidden' name='status' value={IssuerStatus.ACTIVE} />
-                        <Button size='sm' variant='default'>
-                          Verify
-                        </Button>
-                      </form>
-                    )}
-                    {/* Unverify button (reset to pending) */}
-                    {issuer.status === IssuerStatus.ACTIVE && (
-                      <form action={updateStatus} className='inline'>
-                        <input type='hidden' name='issuerId' value={issuer.id} />
-                        <input type='hidden' name='status' value={IssuerStatus.PENDING} />
-                        <Button size='sm' variant='outline'>
-                          Unverify
-                        </Button>
-                      </form>
-                    )}
-                    {/* Reject button */}
-                    {issuer.status !== IssuerStatus.REJECTED && (
-                      <form action={updateStatus} className='inline'>
-                        <input type='hidden' name='issuerId' value={issuer.id} />
-                        <input type='hidden' name='status' value={IssuerStatus.REJECTED} />
-                        <Button size='sm' variant='destructive'>
-                          Reject
-                        </Button>
-                      </form>
-                    )}
+                  <td className='py-2 pr-4'>
+                    <IssuerStatusButtons issuerId={issuer.id} status={issuer.status} />
                   </td>
                 </tr>
               ))}

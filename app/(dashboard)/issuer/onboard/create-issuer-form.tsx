@@ -1,7 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { useActionState, startTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { useActionState, startTransition, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 
 import { createIssuerAction } from './actions'
@@ -9,10 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { FormStatus } from '@/components/ui/form-status'
-import {
-  IssuerCategory,
-  IssuerIndustry,
-} from '@/lib/db/schema/issuer'
+import { IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
 
 type ActionState = { error?: string; success?: string }
 
@@ -20,15 +18,21 @@ const CATEGORIES = Object.values(IssuerCategory)
 const INDUSTRIES = Object.values(IssuerIndustry)
 
 export function CreateIssuerForm() {
-  const [state, formAction, pending] = useActionState<ActionState, FormData>(createIssuerAction, {
-    error: '',
-    success: '',
-  })
+  const router = useRouter()
+  const [state, formAction, pending] = useActionState<ActionState, FormData>(
+    createIssuerAction,
+    { error: '', success: '' },
+  )
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     startTransition(() => formAction(new FormData(e.currentTarget)))
   }
+
+  /* Automatically refresh to show the newly created issuer record */
+  useEffect(() => {
+    if (state.success) router.refresh()
+  }, [state.success, router])
 
   return (
     <form onSubmit={handleSubmit} className='space-y-5'>

@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -9,7 +10,6 @@ import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 
 /**
  * Admin‑only action: update the lifecycle status of an issuer.
- * `status` must be one of the IssuerStatus enum values.
  */
 export const updateIssuerStatusAction = validatedActionWithUser(
   z.object({
@@ -20,6 +20,10 @@ export const updateIssuerStatusAction = validatedActionWithUser(
     if (user.role !== 'admin') return { error: 'Unauthorized.' }
 
     await db.update(issuers).set({ status }).where(eq(issuers.id, issuerId))
+
+    // Ensure the UI re‑fetches fresh data immediately
+    revalidatePath('/admin/issuers')
+
     return { success: `Issuer status updated to ${status}.` }
   },
 )
