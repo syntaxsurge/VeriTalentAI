@@ -1,31 +1,47 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import {
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+  type LucideIcon,
+} from 'lucide-react'
+
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
 
 export interface Column<T extends Record<string, any>> {
   key: keyof T
   header: string
-  /** enable sortable header */
+  /** Enable sortable header */
   sortable?: boolean
-  /** optional class overrides for this column */
+  /** Optional class overrides for this column */
   className?: string
-  /** custom cell renderer */
+  /** Custom cell renderer */
   render?: (value: T[keyof T], row: T) => React.ReactNode
 }
 
 interface DataTableProps<T extends Record<string, any>> {
   columns: Column<T>[]
   rows: T[]
-  /** current sort key */
+  /** Current sort key */
   sort?: string
   /** asc | desc */
   dir?: 'asc' | 'desc'
-  /** util to build href preserving existing params */
+  /** Util to build href preserving existing params */
   buildLink?: (params: Record<string, any>) => string
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                COMPONENT                                   */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Generic, server‑friendly table component that handles header links for sorting and
- * flexible cell rendering while keeping markup accessible for large datasets.
+ * Generic, server‑friendly table component.
+ * Adds modern chevron indicators to sortable headers:
+ *   • Double‑chevron (⇅) for unsorted sortable columns
+ *   • Up or down chevron for active sort direction.
  */
 export function DataTable<T extends Record<string, any>>({
   columns,
@@ -39,31 +55,68 @@ export function DataTable<T extends Record<string, any>>({
       <thead className='[&_th]:text-muted-foreground border-b'>
         <tr>
           {columns.map((col) => {
-            const sortable = col.sortable && buildLink
-            const active = sortable && sort === col.key
+            const isSortable = col.sortable && buildLink
+            const isActive = isSortable && sort === col.key
             const nextDir = dir === 'asc' ? 'desc' : 'asc'
-            const indicator = active ? (dir === 'asc' ? '▲' : '▼') : ''
+
+            /* Choose icon: ⇅ default, ↑ asc, ↓ desc */
+            let IconComponent: LucideIcon = ChevronsUpDown
+            if (isActive) {
+              IconComponent = dir === 'asc' ? ChevronUp : ChevronDown
+            }
+
+            const headerContent = (
+              <span className='flex items-center gap-1'>
+                {col.header}
+                {isSortable && (
+                  <IconComponent
+                    className={cn(
+                      'h-3 w-3 flex-shrink-0 transition-colors',
+                      isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground',
+                    )}
+                    aria-hidden='true'
+                  />
+                )}
+              </span>
+            )
+
             return (
-              <th key={String(col.key)} className={cn('py-2 text-left', col.className)}>
-                {sortable ? (
+              <th
+                key={String(col.key)}
+                className={cn(
+                  'py-2 pr-4 text-left font-semibold',
+                  isSortable && 'group cursor-pointer select-none',
+                  col.className,
+                )}
+                /* Accessibility: indicate current sort */
+                aria-sort={
+                  isSortable
+                    ? isActive
+                      ? (dir === 'asc' ? 'ascending' : 'descending')
+                      : 'none'
+                    : undefined
+                }
+              >
+                {isSortable ? (
                   <Link
                     href={buildLink!({
                       sort: col.key,
-                      dir: active ? nextDir : 'asc',
+                      dir: isActive ? nextDir : 'asc',
                       page: 1,
                     })}
-                    className='flex items-center gap-1'
+                    className='inline-flex items-center gap-1 hover:underline'
                   >
-                    {col.header} {indicator}
+                    {headerContent}
                   </Link>
                 ) : (
-                  col.header
+                  headerContent
                 )}
               </th>
             )
           })}
         </tr>
       </thead>
+
       <tbody className='divide-y'>
         {rows.map((row, idx) => (
           <tr key={idx} className='hover:bg-muted/30'>
