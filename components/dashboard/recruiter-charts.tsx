@@ -1,17 +1,8 @@
 'use client'
 
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-} from 'recharts'
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PieChartWithLegend } from '@/components/ui/pie-chart-with-legend'
+import { BarChartWithBars } from '@/components/ui/bar-chart-with-bars'
 import { type ChartConfig } from '@/components/ui/chart'
 
 interface StageDatum {
@@ -24,25 +15,28 @@ interface RecruiterChartsProps {
   uniqueCandidates: number
 }
 
-const tooltipStyle = {
-  backgroundColor: 'hsl(var(--popover))',
-  border: '1px solid hsl(var(--border))',
-  color: 'hsl(var(--foreground))',
-  borderRadius: 6,
-} as const
+export default function RecruiterCharts({
+  stageData,
+  uniqueCandidates,
+}: RecruiterChartsProps) {
+  /* --------------------- bar‑chart config --------------------- */
+  const barConfig = {
+    count: { label: 'Candidates', color: 'var(--color-primary)' },
+  } satisfies ChartConfig
 
-export default function RecruiterCharts({ stageData, uniqueCandidates }: RecruiterChartsProps) {
+  /* --------------------- pie‑chart prep ----------------------- */
   const pieData = [
     { category: 'unique', value: uniqueCandidates },
-    { category: 'total', value: stageData.reduce((acc, d) => acc + d.count, 0) },
+    { category: 'total', value: stageData.reduce((sum, d) => sum + d.count, 0) },
   ]
 
-  const chartConfig = {
+  const pieConfig = {
     value: { label: 'Entries' },
     unique: { label: 'Unique Candidates', color: 'var(--color-chart-1)' },
     total: { label: 'Total Entries', color: 'var(--color-chart-2)' },
   } satisfies ChartConfig
 
+  /* --------------------------- view --------------------------- */
   return (
     <div className='grid gap-6 md:grid-cols-2'>
       {/* Bar chart – stage distribution */}
@@ -52,21 +46,16 @@ export default function RecruiterCharts({ stageData, uniqueCandidates }: Recruit
         </CardHeader>
         <CardContent className='h-72'>
           {stageData.length === 0 ? (
-            <p className='text-muted-foreground text-sm'>No candidates in pipelines yet.</p>
+            <p className='text-muted-foreground text-sm'>
+              No candidates in pipelines yet.
+            </p>
           ) : (
-            <ResponsiveContainer width='100%' height='100%'>
-              <BarChart data={stageData}>
-                <XAxis dataKey='stage' tick={{ fontSize: 12 }} />
-                <YAxis allowDecimals={false} />
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  itemStyle={{ color: 'hsl(var(--foreground))' }}
-                  labelStyle={{ color: 'hsl(var(--foreground))' }}
-                />
-                <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
-                <Bar dataKey='count' fill='hsl(var(--color-primary))' radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <BarChartWithBars
+              data={stageData}
+              xKey='stage'
+              yKey='count'
+              config={barConfig}
+            />
           )}
         </CardContent>
       </Card>
@@ -80,7 +69,12 @@ export default function RecruiterCharts({ stageData, uniqueCandidates }: Recruit
           {uniqueCandidates === 0 ? (
             <p className='text-muted-foreground text-sm'>No data to display.</p>
           ) : (
-            <PieChartWithLegend data={pieData} dataKey='value' nameKey='category' config={chartConfig} />
+            <PieChartWithLegend
+              data={pieData}
+              dataKey='value'
+              nameKey='category'
+              config={pieConfig}
+            />
           )}
         </CardContent>
       </Card>
