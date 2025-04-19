@@ -1,69 +1,36 @@
 'use client'
 
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-} from 'recharts'
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PieChartWithLegend } from '@/components/ui/pie-chart-with-legend'
+import { type ChartConfig } from '@/components/ui/chart'
 
 interface IssuerChartsProps {
   pending: number
   verified: number
 }
 
-const STATUS_COLORS = [
-  'hsl(var(--color-warning))', // pending – amber
-  'hsl(var(--color-success))', // verified – green
-]
-
 export default function IssuerCharts({ pending, verified }: IssuerChartsProps) {
   const data = [
-    { name: 'Pending', value: pending },
-    { name: 'Verified', value: verified },
+    { status: 'pending', count: pending },
+    { status: 'verified', count: verified },
   ]
 
-  const tooltipStyle = {
-    backgroundColor: 'hsl(var(--popover))',
-    border: '1px solid hsl(var(--border))',
-    color: 'hsl(var(--foreground))',
-    borderRadius: 6,
-  } as const
+  const chartConfig = {
+    count: { label: 'Requests' },
+    pending: { label: 'Pending', color: 'var(--warning)' },
+    verified: { label: 'Verified', color: 'var(--success)' },
+  } satisfies ChartConfig
 
   return (
-    <Card className="md:col-span-2">
+    <Card className='md:col-span-2'>
       <CardHeader>
-        <CardTitle className="text-lg font-medium">
-          Request Status Overview
-        </CardTitle>
+        <CardTitle className='text-lg font-medium'>Request Status Overview</CardTitle>
       </CardHeader>
-      <CardContent className="h-72">
+      <CardContent className='h-72'>
         {pending + verified === 0 ? (
-          <p className="text-muted-foreground text-sm">No requests yet.</p>
+          <p className='text-muted-foreground text-sm'>No requests yet.</p>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: 'hsl(var(--foreground))' }} />
-              <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
-              <Pie
-                data={data}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={90}
-                label
-              >
-                {data.map((_, idx) => (
-                  <Cell key={idx} fill={STATUS_COLORS[idx]} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
+          <PieChartWithLegend data={data} dataKey='count' nameKey='status' config={chartConfig} />
         )}
       </CardContent>
     </Card>

@@ -7,13 +7,12 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  PieChart,
-  Pie,
-  Cell,
   Legend,
 } from 'recharts'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PieChartWithLegend } from '@/components/ui/pie-chart-with-legend'
+import { type ChartConfig } from '@/components/ui/chart'
 
 /* -------------------------------------------------------------------------- */
 /*                                 T Y P E S                                  */
@@ -35,27 +34,8 @@ interface CandidateChartsProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                        S H A R E D   S T Y L E S                           */
+/*                              S H A R E D S T Y L E S                        */
 /* -------------------------------------------------------------------------- */
-
-/**
- * Explicit colour mapping for each credential status.
- * Works for both light and dark themes because colours are derived
- * from Tailwind CSS custom properties driven by the theme.
- */
-const STATUS_COLOR_MAP: Record<string, string> = {
-  VERIFIED: 'hsl(var(--color-success))',      // green
-  PENDING: 'hsl(var(--color-warning))',       // amber
-  UNVERIFIED: 'hsl(var(--color-destructive))',// red
-  REJECTED: 'hsl(var(--color-destructive))',  // red
-}
-
-const FALLBACK_COLORS = [
-  'hsl(var(--color-chart-1))',
-  'hsl(var(--color-chart-2))',
-  'hsl(var(--color-chart-3))',
-  'hsl(var(--color-chart-4))',
-]
 
 const tooltipStyle = {
   backgroundColor: 'hsl(var(--popover))',
@@ -69,20 +49,34 @@ const tooltipStyle = {
 /* -------------------------------------------------------------------------- */
 
 export default function CandidateCharts({ scoreData, statusData }: CandidateChartsProps) {
+  /* Transform for pie‑chart */
+  const pieData = statusData.map((d) => ({
+    status: d.name.toLowerCase(),
+    count: d.value,
+  }))
+
+  const chartConfig = {
+    count: { label: 'Credentials' },
+    verified: { label: 'Verified', color: 'var(--success)' },
+    pending: { label: 'Pending', color: 'var(--warning)' },
+    unverified: { label: 'Unverified', color: 'var(--color-muted-foreground)' },
+    rejected: { label: 'Rejected', color: 'var(--color-destructive)' },
+  } satisfies ChartConfig
+
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className='grid gap-6 md:grid-cols-2'>
       {/* Line chart – quiz scores */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium">Quiz Scores (last 10)</CardTitle>
+          <CardTitle className='text-lg font-medium'>Quiz Scores (last 10)</CardTitle>
         </CardHeader>
-        <CardContent className="h-72">
+        <CardContent className='h-72'>
           {scoreData.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No quiz attempts yet.</p>
+            <p className='text-muted-foreground text-sm'>No quiz attempts yet.</p>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width='100%' height='100%'>
               <LineChart data={scoreData}>
-                <XAxis dataKey="date" />
+                <XAxis dataKey='date' />
                 <YAxis domain={[0, 100]} allowDecimals={false} />
                 <Tooltip
                   contentStyle={tooltipStyle}
@@ -91,9 +85,9 @@ export default function CandidateCharts({ scoreData, statusData }: CandidateChar
                 />
                 <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
                 <Line
-                  type="monotone"
-                  dataKey="score"
-                  stroke="hsl(var(--color-primary))"
+                  type='monotone'
+                  dataKey='score'
+                  stroke='hsl(var(--color-primary))'
                   strokeWidth={3}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}
@@ -107,37 +101,18 @@ export default function CandidateCharts({ scoreData, statusData }: CandidateChar
       {/* Pie chart – credential status */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium">Credential Status Mix</CardTitle>
+          <CardTitle className='text-lg font-medium'>Credential Status Mix</CardTitle>
         </CardHeader>
-        <CardContent className="h-72">
-          {statusData.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No credentials added yet.</p>
+        <CardContent className='h-72'>
+          {pieData.length === 0 ? (
+            <p className='text-muted-foreground text-sm'>No credentials added yet.</p>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  itemStyle={{ color: 'hsl(var(--foreground))' }}
-                />
-                <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
-                <Pie
-                  data={statusData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={90}
-                  label
-                >
-                  {statusData.map((d, idx) => {
-                    const color =
-                      STATUS_COLOR_MAP[d.name?.toUpperCase()] ??
-                      FALLBACK_COLORS[idx % FALLBACK_COLORS.length]
-                    return <Cell key={idx} fill={color} />
-                  })}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
+            <PieChartWithLegend
+              data={pieData}
+              dataKey='count'
+              nameKey='status'
+              config={chartConfig}
+            />
           )}
         </CardContent>
       </Card>

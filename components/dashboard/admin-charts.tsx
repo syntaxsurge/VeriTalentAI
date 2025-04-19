@@ -1,19 +1,13 @@
 'use client'
 
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-} from 'recharts'
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PieChartWithLegend } from '@/components/ui/pie-chart-with-legend'
+import { type ChartConfig } from '@/components/ui/chart'
 
 /* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
+/*                                   T Y P E S                                */
 /* -------------------------------------------------------------------------- */
+
 export interface Datum {
   name: string
   value: number
@@ -25,24 +19,29 @@ interface AdminChartsProps {
   credentialData: Datum[]
 }
 
-/* Shared colours (fallback) */
-const COLORS = [
-  'hsl(var(--color-chart-1))',
-  'hsl(var(--color-chart-2))',
-  'hsl(var(--color-chart-3))',
-  'hsl(var(--color-chart-4))',
-]
+/* -------------------------------------------------------------------------- */
+/*                        U T I L – dynamic colour map                         */
+/* -------------------------------------------------------------------------- */
 
-const tooltipStyle = {
-  backgroundColor: 'hsl(var(--popover))',
-  border: '1px solid hsl(var(--border))',
-  color: 'hsl(var(--foreground))',
-  borderRadius: 6,
-} as const
+function buildConfig(title: string, data: Datum[]): ChartConfig {
+  const palette = [
+    'var(--color-chart-1)',
+    'var(--color-chart-2)',
+    'var(--color-chart-3)',
+    'var(--color-chart-4)',
+    'var(--color-chart-5)',
+  ]
+  const cfg: any = { value: { label: title } }
+  data.forEach((d, i) => {
+    cfg[d.name.toLowerCase()] = { label: d.name, color: palette[i % palette.length] }
+  })
+  return cfg as ChartConfig
+}
 
 /* -------------------------------------------------------------------------- */
-/*                                   VIEW                                     */
+/*                                   V I E W                                  */
 /* -------------------------------------------------------------------------- */
+
 export default function AdminCharts({
   usersData,
   issuerData,
@@ -56,41 +55,32 @@ export default function AdminCharts({
 
   return (
     <div className='grid gap-6 lg:grid-cols-3 md:grid-cols-2'>
-      {charts.map(({ title, data }) => (
-        <Card key={title}>
-          <CardHeader>
-            <CardTitle className='text-lg font-medium'>{title}</CardTitle>
-          </CardHeader>
-          <CardContent className='h-72'>
-            {data.length === 0 ? (
-              <p className='text-muted-foreground text-sm'>No data.</p>
-            ) : (
-              <ResponsiveContainer width='100%' height='100%'>
-                <PieChart>
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    itemStyle={{ color: 'hsl(var(--foreground))' }}
-                  />
-                  <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
-                  <Pie
-                    data={data}
-                    dataKey='value'
-                    nameKey='name'
-                    cx='50%'
-                    cy='50%'
-                    outerRadius={90}
-                    label
-                  >
-                    {data.map((_, idx) => (
-                      <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+      {charts.map(({ title, data }) => {
+        const pieData = data.map((d) => ({
+          category: d.name.toLowerCase(),
+          value: d.value,
+        }))
+        const config = buildConfig(title, data)
+        return (
+          <Card key={title}>
+            <CardHeader>
+              <CardTitle className='text-lg font-medium'>{title}</CardTitle>
+            </CardHeader>
+            <CardContent className='h-72'>
+              {pieData.length === 0 ? (
+                <p className='text-muted-foreground text-sm'>No data.</p>
+              ) : (
+                <PieChartWithLegend
+                  data={pieData}
+                  dataKey='value'
+                  nameKey='category'
+                  config={config}
+                />
+              )}
+            </CardContent>
+          </Card>
+        )
+      })}
     </div>
   )
 }
