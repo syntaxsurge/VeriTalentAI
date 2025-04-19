@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/table"
 
 /* -------------------------------------------------------------------------- */
-/*                                 P U B L I C T Y P E S                      */
+/*                              P U B L I C  T Y P E S                        */
 /* -------------------------------------------------------------------------- */
 
 export interface Column<T extends Record<string, any>> {
@@ -72,7 +72,7 @@ interface DataTableProps<T extends Record<string, any>> {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               H E L P E R S                                */
+/*                               H E L P E R S                                */
 /* -------------------------------------------------------------------------- */
 
 function SortableHeader({
@@ -114,8 +114,9 @@ function buildColumnDefs<T extends Record<string, any>>(
             <SortableHeader column={column} title={col.header} />
           )
         : col.header,
+      // non‑null assertion prevents TS 2722 when render is present
       cell: col.render
-        ? ({ row }) => col.render(row.original[col.key], row.original)
+        ? ({ row }) => col.render!(row.original[col.key], row.original)
         : undefined,
       enableSorting: !!col.sortable,
       enableHiding: col.enableHiding !== false,
@@ -134,7 +135,7 @@ export function DataTable<T extends Record<string, any>>({
   filterKey,
   bulkActions = [],
 }: DataTableProps<T>) {
-  /* -------------------- table state -------------------- */
+  /* -------------------- state -------------------- */
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] =
@@ -142,8 +143,8 @@ export function DataTable<T extends Record<string, any>>({
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
 
+  /* -------------------- columns ------------------ */
   const columnDefs = React.useMemo<ColumnDef<T>[]>(() => {
-    /* selection checkbox column */
     const selectCol: ColumnDef<T> = {
       id: "select",
       header: ({ table }) => (
@@ -171,6 +172,7 @@ export function DataTable<T extends Record<string, any>>({
     return [selectCol, ...buildColumnDefs(columns)]
   }, [columns])
 
+  /* -------------------- table instance ----------- */
   const table = useReactTable({
     data: rows,
     columns: columnDefs,
@@ -195,7 +197,7 @@ export function DataTable<T extends Record<string, any>>({
 
   /* ------------------------- render ------------------------- */
   return (
-    <div className="w-full">
+    <div className="w-full overflow-x-auto">
       {/* toolbar */}
       {(filterKey ||
         table.getAllColumns().some((c) => c.getCanHide()) ||
@@ -285,15 +287,15 @@ export function DataTable<T extends Record<string, any>>({
       )}
 
       {/* table */}
-      <div className="rounded-md border overflow-x-auto">
-        <Table className="min-w-full">
+      <div className="rounded-md border">
+        <Table className="w-full table-auto">
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((header) => {
                   const cls = (header.column.columnDef.meta as any)?.className
                   return (
-                    <TableHead key={header.id} className={cn(cls)}>
+                    <TableHead key={header.id} className={cn(cls, "break-words")}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -314,7 +316,10 @@ export function DataTable<T extends Record<string, any>>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className="break-words align-top"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
@@ -335,10 +340,10 @@ export function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* footer */}
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
+      <div className="flex flex-col items-center justify-between gap-2 py-4 sm:flex-row">
+        <span className="text-sm text-muted-foreground">
           {selectedCount} of {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
+        </span>
         <div className="space-x-2">
           <Button
             variant="outline"
