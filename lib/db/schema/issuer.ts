@@ -12,7 +12,6 @@ import {
 /*                                E N U M S                                   */
 /* -------------------------------------------------------------------------- */
 
-/** Lifecycle status controlled by the admin panel. */
 export const issuerStatusEnum = pgEnum('issuer_status', ['PENDING', 'ACTIVE', 'REJECTED'])
 export const IssuerStatus = {
   PENDING: 'PENDING',
@@ -20,7 +19,6 @@ export const IssuerStatus = {
   REJECTED: 'REJECTED',
 } as const
 
-/** Broad organisation category. */
 export const issuerCategoryEnum = pgEnum('issuer_category', [
   'UNIVERSITY',
   'EMPLOYER',
@@ -36,7 +34,6 @@ export const IssuerCategory = {
   OTHER: 'OTHER',
 } as const
 
-/** Optional industry tag to improve search and filtering. */
 export const issuerIndustryEnum = pgEnum('issuer_industry', [
   'TECH',
   'FINANCE',
@@ -78,5 +75,7 @@ export const issuers = pgTable('issuers', {
   status: issuerStatusEnum('status').notNull().default('PENDING'),
   category: issuerCategoryEnum('category').notNull().default('OTHER'),
   industry: issuerIndustryEnum('industry').notNull().default('OTHER'),
+  /** Optional free‑text reason when an admin rejects the application */
+  rejectionReason: text('rejection_reason'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })

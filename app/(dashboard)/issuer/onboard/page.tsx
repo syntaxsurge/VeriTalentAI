@@ -28,9 +28,13 @@ export default async function IssuerOnboardPage() {
       {issuer && issuer.status === IssuerStatus.REJECTED && (
         <>
           <p className='text-destructive-foreground text-sm'>
-            Your previous submission was rejected. Please correct any mistakes and resubmit for
-            admin review.
+            Your previous submission was rejected.
           </p>
+          {issuer.rejectionReason && (
+            <p className='text-muted-foreground whitespace-pre-wrap rounded-md bg-muted p-3 text-xs'>
+              <span className='font-medium'>Reason:</span> {issuer.rejectionReason}
+            </p>
+          )}
           <EditIssuerForm issuer={issuer} />
         </>
       )}
@@ -48,7 +52,6 @@ export default async function IssuerOnboardPage() {
             )}
           </div>
 
-          {/* Link DID if still missing and issuer is approved */}
           {!issuer.did && issuer.status === IssuerStatus.ACTIVE && <LinkDidForm />}
 
           {issuer.status === IssuerStatus.PENDING && (

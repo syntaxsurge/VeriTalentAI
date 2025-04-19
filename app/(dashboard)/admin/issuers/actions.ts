@@ -8,22 +8,34 @@ import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 
-/**
- * Admin‑only action: update the lifecycle status of an issuer.
- */
 export const updateIssuerStatusAction = validatedActionWithUser(
-  z.object({
-    issuerId: z.coerce.number(),
-    status: z.enum([IssuerStatus.PENDING, IssuerStatus.ACTIVE, IssuerStatus.REJECTED]),
-  }),
-  async ({ issuerId, status }, _, user) => {
+  z
+    .object({
+      issuerId: z.coerce.number(),
+      status: z.enum([IssuerStatus.PENDING, IssuerStatus.ACTIVE, IssuerStatus.REJECTED]),
+      rejectionReason: z.string().max(2000).optional(),
+    })
+    .superRefine((val, ctx) => {
+      if (val.status === IssuerStatus.REJECTED && !val.rejectionReason) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Rejection reason is required when rejecting an issuer.',
+          path: ['rejectionReason'],
+        })
+      }
+    }),
+  async ({ issuerId, status, rejectionReason }, _, user) => {
     if (user.role !== 'admin') return { error: 'Unauthorized.' }
 
-    await db.update(issuers).set({ status }).where(eq(issuers.id, issuerId))
+    await db
+      .update(issuers)
+      .set({
+        status,
+        rejectionReason: status === IssuerStatus.REJECTED ? rejectionReason ?? null : null,
+      })
+      .where(eq(issuers.id, issuerId))
 
-    // Ensure the UI re‑fetches fresh data immediately
     revalidatePath('/admin/issuers')
-
     return { success: `Issuer status updated to ${status}.` }
   },
 )

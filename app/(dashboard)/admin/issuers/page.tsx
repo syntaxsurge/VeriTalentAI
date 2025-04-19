@@ -42,6 +42,7 @@ export default async function AdminIssuersPage() {
                 <th className='py-2 text-left'>Category</th>
                 <th className='py-2 text-left'>Industry</th>
                 <th className='py-2 text-left'>Status</th>
+                <th className='py-2 text-left'>Reason</th>
                 <th className='py-2 text-left'></th>
               </tr>
             </thead>
@@ -72,6 +73,9 @@ export default async function AdminIssuersPage() {
                     }`}
                   >
                     {issuer.status}
+                  </td>
+                  <td className='py-2 pr-4 max-w-[14rem] break-words'>
+                    {issuer.rejectionReason || (issuer.status === IssuerStatus.REJECTED ? '—' : '')}
                   </td>
                   <td className='py-2 pr-4'>
                     <IssuerStatusButtons issuerId={issuer.id} status={issuer.status} />
