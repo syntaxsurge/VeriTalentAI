@@ -72,7 +72,14 @@ export function CreateIssuerForm() {
 
       <div>
         <Label htmlFor='logoUrl'>Logo URL</Label>
-        <Input id='logoUrl' name='logoUrl' type='url' placeholder='https://…' />
+        <Input
+          id='logoUrl'
+          name='logoUrl'
+          type='url'
+          placeholder='https://…'
+          pattern='https://.*'
+          title='Please provide a URL that starts with https://'
+        />
       </div>
 
       <div>

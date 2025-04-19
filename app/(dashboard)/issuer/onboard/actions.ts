@@ -36,7 +36,13 @@ export const createIssuerAction = validatedActionWithUser(
   z.object({
     name: z.string().min(2).max(200),
     domain: z.string().min(3).max(255),
-    logoUrl: z.string().url('Invalid URL').optional(),
+    logoUrl: z
+      .string()
+      .url('Invalid URL')
+      .refine((val) => val.startsWith('https://'), {
+        message: 'Logo URL must start with https://',
+      })
+      .optional(),
     did: didSchema,
     category: categoryEnum.default(IssuerCategory.OTHER),
     industry: industryEnum.default(IssuerIndustry.OTHER),
@@ -48,7 +54,9 @@ export const createIssuerAction = validatedActionWithUser(
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
 
-    if (existing.length) return { error: 'You already have an issuer organisation.' }
+    if (existing.length) {
+      return { error: 'You already have an issuer organisation.' }
+    }
 
     await db.insert(issuers).values({
       ownerUserId: user.id,
@@ -76,7 +84,9 @@ export const updateIssuerDidAction = validatedActionWithUser(
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
 
-    if (!issuer) return { error: 'Issuer not found.' }
+    if (!issuer) {
+      return { error: 'Issuer not found.' }
+    }
 
     await db
       .update(issuers)

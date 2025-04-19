@@ -1,19 +1,17 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
   images: {
-    /**
-     * Allow remote logos from any HTTPS domain without having to enumerate
-     * every possible hostname — ideal for user‑supplied issuer assets.
-     * Adjust pathname/port if you need stricter control.
-     */
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '**',
-        pathname: '**',
       },
     ],
   },
+  experimental: {
+    ppr: true,
+  },
 }
 
-module.exports = nextConfig
+export default nextConfig
