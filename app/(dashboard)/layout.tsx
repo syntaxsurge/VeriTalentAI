@@ -62,7 +62,6 @@ function roleNav(role?: string): SidebarNavItem[] {
         { href: '/issuer/onboard', icon: ShieldCheck, label: 'Organisation' },
       ]
     case 'admin':
-      /* Removed duplicate dashboard link */
       return [
         { href: '/admin/users', icon: Users, label: 'Users' },
         { href: '/admin/credentials', icon: Award, label: 'Credentials' },
@@ -108,7 +107,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           <SidebarNav title={roleTitle(user?.role)} items={intrinsicNav} />
         )}
 
-        {/* Show settings only when authenticated */}
         {user && <SidebarNav title='Settings' items={SETTINGS_NAV} />}
       </>
     )
@@ -118,13 +116,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   return (
     <div className='mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl'>
       {/* Desktop sidebar */}
-      <aside className='border-border bg-sidebar sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r lg:block'>
+      <aside className='sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-sm ring-1 ring-border/30 lg:block'>
         <SidebarContent />
       </aside>
 
       {/* Mobile wrapper */}
       <div className='flex flex-1 flex-col'>
-        <div className='border-border bg-background sticky top-16 z-20 flex items-center justify-between border-b p-4 lg:hidden'>
+        <div className='sticky top-16 z-20 flex items-center justify-between border-b bg-background p-4 lg:hidden'>
           <span className='font-medium capitalize'>{user?.role ?? 'Dashboard'}</span>
           <Button variant='ghost' size='icon' onClick={() => setSidebarOpen((p) => !p)}>
             <Menu className='h-6 w-6' />
@@ -133,7 +131,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         </div>
 
         {sidebarOpen && (
-          <aside className='border-border bg-sidebar fixed top-16 z-40 h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r lg:hidden'>
+          <aside className='fixed top-16 z-40 h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-md ring-1 ring-border/30 lg:hidden'>
             <SidebarContent />
           </aside>
         )}

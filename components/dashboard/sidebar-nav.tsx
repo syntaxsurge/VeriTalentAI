@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
@@ -30,41 +29,44 @@ interface SidebarNavProps {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Renders a vertical list of navigation buttons, optionally prefixed by
- * a group heading (e.g. “Main”, “Candidate Tools”, “Settings”).
- *
- * Active state is determined by prefix‑matching the current pathname.
+ * Vertical navigation list designed for the dashboard sidebar.
+ * Active items receive a primary‑colour left border and background tint.
  */
 export function SidebarNav({ title, items, className }: SidebarNavProps) {
   const pathname = usePathname()
 
-  if (!items.length) return null
+  if (items.length === 0) return null
 
   return (
-    <nav className={cn('mb-3', className)}>
+    <nav className={cn('mb-4', className)}>
       {title && (
-        <p className='text-sidebar-foreground/70 mb-1 ml-3 mt-4 select-none text-xs font-semibold uppercase tracking-wider'>
+        <p className='text-muted-foreground/70 ml-3 mt-6 select-none text-xs font-semibold uppercase tracking-wider'>
           {title}
         </p>
       )}
 
-      {items.map(({ href, icon: Icon, label }) => {
-        const active = pathname === href || pathname.startsWith(`${href}/`)
-        return (
-          <Link key={href} href={href}>
-            <Button
-              variant={active ? 'secondary' : 'ghost'}
-              className={cn(
-                'my-0.5 w-full justify-start shadow-none',
-                active && 'bg-secondary text-secondary-foreground',
-              )}
-            >
-              <Icon className='mr-2 h-4 w-4' />
-              {label}
-            </Button>
-          </Link>
-        )
-      })}
+      <ul className='mt-2 space-y-1'>
+        {items.map(({ href, icon: Icon, label }) => {
+          const active = pathname === href || pathname.startsWith(`${href}/`)
+          return (
+            <li key={href}>
+              <Link
+                href={href}
+                className={cn(
+                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  'hover:bg-muted hover:text-foreground',
+                  active
+                    ? 'border-l-4 border-primary bg-muted/50 text-foreground'
+                    : 'border-l-4 border-transparent text-muted-foreground',
+                )}
+              >
+                <Icon className='h-4 w-4 flex-shrink-0' />
+                <span className='truncate'>{label}</span>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
     </nav>
   )
 }
