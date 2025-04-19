@@ -82,7 +82,7 @@ export default async function DashboardPage() {
 
       scoreData = attempts
         .map((a) => ({ date: a.createdAt.toISOString().split('T')[0], score: a.score ?? 0 }))
-      .reverse()
+        .reverse()
 
       skillPassCount = attempts.filter((a) => (a.score ?? 0) >= 70).length
     }
@@ -234,17 +234,22 @@ export default async function DashboardPage() {
   return (
     <section className='space-y-12'>
       {/* Greeting */}
-      <div className='space-y-3'>
-        <h1 className='text-4xl font-extrabold leading-tight tracking-tight'>
-          Welcome back, <span className='break-all'>{user.name || user.email}</span>
-        </h1>
-        <div className='flex items-center gap-3'>
-          <RoleBadge role={user.role} />
-          <p className='text-muted-foreground text-sm'>
-            Your personalised VeriTalent workspace overview.
-          </p>
-        </div>
-      </div>
+      <Card className='overflow-hidden'>
+        <CardContent className='p-6'>
+          <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='space-y-1'>
+              <h1 className='text-3xl font-extrabold leading-tight tracking-tight'>
+                Welcome back, <span className='break-all'>{user.name || user.email}</span>
+              </h1>
+              <p className='text-muted-foreground text-sm'>
+                Your personalised VeriTalent workspace overview.
+              </p>
+            </div>
+
+            <RoleBadge role={user.role} />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Metric cards */}
       <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
@@ -287,12 +292,16 @@ type MetricProps = {
 
 function MetricCard({ title, value, Icon }: MetricProps) {
   return (
-    <Card className='relative overflow-hidden shadow-sm transition-shadow hover:shadow-lg'>
-      <CardHeader>
-        <CardTitle className='flex items-center gap-2 text-lg font-medium'>{title}</CardTitle>
-        <Icon className='absolute right-4 top-4 h-6 w-6 text-gray-400 dark:text-gray-300' />
+    <Card className='group overflow-hidden shadow-sm transition-shadow hover:shadow-lg'>
+      <CardHeader className='pb-2'>
+        <div className='flex items-start justify-between'>
+          <CardTitle className='text-sm font-medium truncate'>{title}</CardTitle>
+          <span className='bg-muted text-primary rounded-md p-2 shadow-sm'>
+            <Icon className='h-5 w-5' />
+          </span>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className='pt-0'>
         <p className='text-4xl font-extrabold tracking-tight'>{value}</p>
       </CardContent>
     </Card>

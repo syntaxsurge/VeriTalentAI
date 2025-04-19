@@ -5,7 +5,13 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { ChevronDown, LayoutDashboard, LogOut, Settings, UserCircle2 } from 'lucide-react'
+import {
+  ChevronDown,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  UserCircle2,
+} from 'lucide-react'
 
 import { signOut } from '@/app/(auth)/actions'
 import { ModeToggle } from '@/components/theme-toggle'
@@ -44,7 +50,7 @@ export default function SiteHeader() {
 
   const [user, setUser] = useState<Awaited<typeof userPromise> | null>(null)
 
-  /* Resolve user from the async promise (because hooks can’t await) */
+  /* Resolve user from the async promise */
   useEffect(() => {
     let active = true
     const value: unknown = userPromise
@@ -77,11 +83,11 @@ export default function SiteHeader() {
     <header className='border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b shadow-sm backdrop-blur'>
       <div className='mx-auto grid h-16 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-6 px-4 md:px-6'>
         {/* ------------------------------------------------------------------ */}
-        {/* Brand (left) with logo                                             */}
+        {/* Brand (left)                                                      */}
         {/* ------------------------------------------------------------------ */}
         <Link
           href='/'
-          className='text-primary flex items-center gap-2 text-lg font-extrabold tracking-tight whitespace-nowrap'
+          className='text-primary flex items-center gap-2 whitespace-nowrap text-lg font-extrabold tracking-tight'
         >
           <Image
             src='/images/veritalent-logo.png'
@@ -91,14 +97,13 @@ export default function SiteHeader() {
             priority
             className='h-6 w-auto'
           />
-          VeriTalent AI
+          VeriTalent AI
         </Link>
 
         {/* ------------------------------------------------------------------ */}
-        {/* Desktop navigation – centred by grid, hidden on mobile             */}
+        {/* Desktop nav (centre)                                              */}
         {/* ------------------------------------------------------------------ */}
         <nav className='hidden justify-center gap-8 md:flex'>
-          {/* Home + dropdown */}
           <HoverCard openDelay={100} closeDelay={100}>
             <HoverCardTrigger asChild>
               <Link
@@ -143,21 +148,18 @@ export default function SiteHeader() {
         </nav>
 
         {/* ------------------------------------------------------------------ */}
-        {/* Right‑hand controls                                                */}
+        {/* Right‑hand controls                                              */}
         {/* ------------------------------------------------------------------ */}
         <div className='flex items-center justify-end gap-3'>
-          {/* Dark / light */}
+          {/* Theme toggle */}
           <ModeToggle />
 
-          {/* Authenticated user menu */}
+          {/* User dropdown */}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className='cursor-pointer'>
-                  <AvatarImage
-                    src='/placeholder.svg?text=👤'
-                    alt={user.name || user.email || 'user'}
-                  />
+                  <AvatarImage src='/placeholder.svg?text=👤' alt={user.name || user.email || 'user'} />
                   <AvatarFallback>
                     {(user.name || user.email || 'U')
                       .split(' ')
@@ -168,10 +170,13 @@ export default function SiteHeader() {
                 </Avatar>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent align='end' className='w-48'>
-                <DropdownMenuItem disabled className='opacity-70 select-none'>
-                  <UserCircle2 className='mr-2 h-4 w-4' />
-                  {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
+              <DropdownMenuContent align='end' className='w-60 rounded-lg p-1 shadow-lg'>
+                {/* Clickable user card */}
+                <DropdownMenuItem asChild className='rounded-md p-3 hover:bg-muted'>
+                  <Link href='/settings/general' className='flex w-full flex-col items-start'>
+                    <span className='font-medium leading-none'>{user.name || user.email}</span>
+                    <span className='text-xs text-muted-foreground capitalize'>{user.role}</span>
+                  </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
@@ -183,10 +188,11 @@ export default function SiteHeader() {
                   </Link>
                 </DropdownMenuItem>
 
+                {/* Team settings */}
                 <DropdownMenuItem asChild>
-                  <Link href='/settings/general'>
+                  <Link href='/settings/team'>
                     <Settings className='mr-2 h-4 w-4' />
-                    Settings
+                    Team Settings
                   </Link>
                 </DropdownMenuItem>
 
