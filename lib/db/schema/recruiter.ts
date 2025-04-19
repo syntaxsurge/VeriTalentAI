@@ -5,7 +5,7 @@ import { users } from './core'
 import { candidates } from './veritalent'
 
 /**
- * Recruiter‑controlled pipelines (e.g. “Backend Engineer May 2025”).
+ * Recruiter‑controlled pipelines (e.g. “Backend Engineer May 2025”).
  */
 export const recruiterPipelines = pgTable('recruiter_pipelines', {
   id: serial('id').primaryKey(),
@@ -18,7 +18,7 @@ export const recruiterPipelines = pgTable('recruiter_pipelines', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
-/** Candidate membership in a pipeline with a lightweight stage label */
+/** Candidate membership in a pipeline with a lightweight stage label */
 export const pipelineCandidates = pgTable('pipeline_candidates', {
   id: serial('id').primaryKey(),
   pipelineId: integer('pipeline_id')
@@ -27,7 +27,7 @@ export const pipelineCandidates = pgTable('pipeline_candidates', {
   candidateId: integer('candidate_id')
     .notNull()
     .references(() => candidates.id),
-  /** e.g. sourced → screening → interview 1 → offer */
+  /** e.g. sourced → screening → interview 1 → offer */
   stage: varchar('stage', { length: 50 }).notNull().default('sourced'),
   notes: text('notes'),
   addedAt: timestamp('added_at').notNull().defaultNow(),

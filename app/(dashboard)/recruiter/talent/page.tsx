@@ -102,7 +102,7 @@ export default async function TalentSearchPage({
 
         <div>
           <label htmlFor='skillMin' className='mb-1 block text-sm font-medium'>
-            Min Skill Score
+            Min Skill Score
           </label>
           <Input
             id='skillMin'

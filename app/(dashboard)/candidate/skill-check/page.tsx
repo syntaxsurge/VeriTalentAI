@@ -16,7 +16,7 @@ export default async function SkillCheckPage() {
     <section className='space-y-4'>
       <h2 className='text-xl font-semibold'>AI Skill Check</h2>
       <p className='text-muted-foreground text-sm'>
-        Pass a quiz and automatically receive a verifiable “Skill Pass”.
+        Pass a quiz and automatically receive a verifiable “Skill Pass”.
       </p>
 
       {quizzes.length === 0 ? (

@@ -74,7 +74,7 @@ export default function CandidateCharts({ scoreData, statusData }: CandidateChar
       {/* Line chart – quiz scores */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium">Quiz Scores (last 10)</CardTitle>
+          <CardTitle className="text-lg font-medium">Quiz Scores (last 10)</CardTitle>
         </CardHeader>
         <CardContent className="h-72">
           {scoreData.length === 0 ? (

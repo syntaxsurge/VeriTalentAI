@@ -41,8 +41,8 @@ const tooltipStyle = {
 
 export default function RecruiterCharts({ stageData, uniqueCandidates }: RecruiterChartsProps) {
   const pieData = [
-    { name: 'Unique Candidates', value: uniqueCandidates },
-    { name: 'Total Entries', value: stageData.reduce((acc, d) => acc + d.count, 0) },
+    { name: 'Unique Candidates', value: uniqueCandidates },
+    { name: 'Total Entries', value: stageData.reduce((acc, d) => acc + d.count, 0) },
   ]
 
   return (
@@ -76,7 +76,7 @@ export default function RecruiterCharts({ stageData, uniqueCandidates }: Recruit
       {/* Pie chart – unique vs total */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium">Unique vs Total Entries</CardTitle>
+          <CardTitle className="text-lg font-medium">Unique vs Total Entries</CardTitle>
         </CardHeader>
         <CardContent className="h-72">
           {uniqueCandidates === 0 ? (

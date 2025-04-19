@@ -7,22 +7,22 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 const items = [
   {
     icon: Database,
-    title: 'Trusted Credentials',
+    title: 'Trusted Credentials',
     text: 'Issue and verify credentials on‑chain with cheqd integration.',
   },
   {
     icon: Award,
-    title: 'AI Skill Checks',
+    title: 'AI Skill Checks',
     text: 'Objective quizzes graded by OpenAI for real skill validation.',
   },
   {
     icon: Code2,
-    title: 'Developer Friendly',
+    title: 'Developer Friendly',
     text: 'Built with Next.js, TypeScript and Tailwind.',
   },
   {
     icon: CreditCard,
-    title: 'Flexible Billing',
+    title: 'Flexible Billing',
     text: 'Stripe subscriptions and pay‑per‑verification options.',
   },
 ]
@@ -33,7 +33,7 @@ export default function OverviewSection() {
       <div className='mx-auto max-w-6xl px-4'>
         <header className='mb-14 text-center'>
           <h2 className='text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl'>
-            Why VeriTalent AI?
+            Why VeriTalent AI?
           </h2>
           <p className='text-muted-foreground mx-auto mt-4 max-w-2xl'>
             Eliminate tedious background checks with blockchain‑backed credentials and AI

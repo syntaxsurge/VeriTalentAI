@@ -44,7 +44,7 @@ export const candidatesRelations = relations(candidates, ({ one, many }) => ({
 /*                       C A N D I D A T E   C R E D E N T I A L S             */
 /* -------------------------------------------------------------------------- */
 
-/** Credential verification status */
+/** Credential verification status */
 export enum CredentialStatus {
   UNVERIFIED = 'unverified',
   PENDING = 'pending',
@@ -57,10 +57,10 @@ export const candidateCredentials = pgTable('candidate_credentials', {
   candidateId: integer('candidate_id')
     .notNull()
     .references(() => candidates.id),
-  /** FK → issuers.id (university, past employer, etc.)  */
+  /** FK → issuers.id (university, past employer, etc.)  */
   issuerId: integer('issuer_id').references(() => issuers.id),
   title: varchar('title', { length: 200 }).notNull(),
-  /** e.g. diploma, cert, job_ref */
+  /** e.g. diploma, cert, job_ref */
   type: varchar('type', { length: 50 }).notNull(),
   fileUrl: text('file_url'),
   status: varchar('status', { length: 20 }).notNull().default(CredentialStatus.UNVERIFIED),

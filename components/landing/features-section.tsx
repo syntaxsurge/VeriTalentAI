@@ -15,7 +15,7 @@ const features = [
   },
   {
     icon: Lock,
-    title: 'Secure & Private',
+    title: 'Secure & Private',
     description: 'All data & credentials are encrypted and under your control.',
   },
   {
@@ -30,7 +30,7 @@ export default function FeaturesSection() {
     <section id='features' className='bg-muted/50 py-20'>
       <div className='mx-auto max-w-6xl px-4 text-center'>
         <h2 className='text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl'>
-          Core Features
+          Core Features
         </h2>
 
         <div className='mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4'>

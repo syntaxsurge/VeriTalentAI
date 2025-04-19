@@ -1,22 +1,41 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
-import { candidateCredentials, candidates, CredentialStatus } from '@/lib/db/schema/veritalent'
+import {
+  candidateCredentials,
+  candidates,
+  CredentialStatus,
+} from '@/lib/db/schema/veritalent'
+import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 
 export const addCredential = validatedActionWithUser(
   z.object({
     title: z.string().min(2).max(200),
     type: z.string().min(1).max(50),
     fileUrl: z.string().url('Invalid URL'),
+    issuerId: z.coerce.number().optional(),
   }),
-  async (data, _, user) => {
-    const { title, type, fileUrl } = data
+  async ({ title, type, fileUrl, issuerId }, _, user) => {
+    // If issuerId provided ensure it exists & active
+    let linkedIssuerId: number | undefined
+    let status: CredentialStatus = CredentialStatus.UNVERIFIED
+
+    if (issuerId) {
+      const [issuer] = await db
+        .select()
+        .from(issuers)
+        .where(and(eq(issuers.id, issuerId), eq(issuers.status, IssuerStatus.ACTIVE)))
+        .limit(1)
+      if (issuer) {
+        linkedIssuerId = issuer.id
+        status = CredentialStatus.PENDING
+      }
+    }
 
     // ensure candidate exists
     let [candidate] = await db
@@ -35,7 +54,8 @@ export const addCredential = validatedActionWithUser(
       title,
       type,
       fileUrl,
-      status: CredentialStatus.UNVERIFIED,
+      issuerId: linkedIssuerId,
+      status,
     })
 
     redirect('/candidate/credentials')

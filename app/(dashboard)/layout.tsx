@@ -47,9 +47,9 @@ function roleNav(role?: string): SidebarNavItem[] {
     case 'candidate':
       return [
         { href: '/candidate/credentials', icon: BookOpen, label: 'Credentials' },
-        { href: '/candidate/skill-check', icon: Award, label: 'Skill Quiz' },
-        { href: '/candidate/verify', icon: ShieldCheck, label: 'Verify Credential' },
-        { href: '/candidate/create-did', icon: Key, label: 'Create DID' },
+        { href: '/candidate/skill-check', icon: Award, label: 'Skill Quiz' },
+        { href: '/candidate/verify', icon: ShieldCheck, label: 'Verify Credential' },
+        { href: '/candidate/create-did', icon: Key, label: 'Create DID' },
       ]
     case 'recruiter':
       return [

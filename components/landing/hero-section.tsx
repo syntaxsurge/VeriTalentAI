@@ -31,7 +31,7 @@ export default function HeroSection() {
         </p>
 
         <p className='text-muted-foreground mx-auto mt-6 max-w-3xl text-lg/relaxed sm:text-xl'>
-          The trust layer for modern hiring — merge verifiable credentials with AI‑graded skill
+          The trust layer for modern hiring — merge verifiable credentials with AI‑graded skill
           passes and get hired faster.
         </p>
 

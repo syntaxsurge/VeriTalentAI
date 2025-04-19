@@ -18,9 +18,9 @@ export default async function IssuerOnboardPage() {
 
   return (
     <section className='max-w-xl space-y-8'>
-      <h2 className='text-xl font-semibold'>Issuer Onboarding</h2>
+      <h2 className='text-xl font-semibold'>Issuer Onboarding</h2>
 
-      {/* ------------------------------- First time ------------------------------- */}
+      {/* ------------------------------- First time ------------------------------- */}
       {!issuer && <CreateIssuerForm />}
 
       {/* ----------------------------- Existing issuer ----------------------------- */}

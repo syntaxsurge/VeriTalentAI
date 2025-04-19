@@ -89,13 +89,13 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 243.4 75.4% 58.6%; /* Indigo 600 */
+    --primary: 243.4 75.4% 58.6%; /* Indigo 600 */
     --primary-foreground: 210 40% 98%;
-    --secondary: 271.5 81.3% 55.9%; /* Purple 600 */
+    --secondary: 271.5 81.3% 55.9%; /* Purple 600 */
     --secondary-foreground: 210 40% 98%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 293.4 69.5% 48.8%; /* Fuchsia 500 */
+    --accent: 293.4 69.5% 48.8%; /* Fuchsia 500 */
     --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -174,19 +174,19 @@
   --card-foreground: hsl(240 10% 3.9%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(240 10% 3.9%);
-  --primary: hsl(243.4 75.4% 58.6%); /* Indigo 600 */
+  --primary: hsl(243.4 75.4% 58.6%); /* Indigo 600 */
   --primary-foreground: hsl(0 0% 98%);
-  --secondary: hsl(271.5 81.3% 55.9%); /* Purple 600 */
+  --secondary: hsl(271.5 81.3% 55.9%); /* Purple 600 */
   --secondary-foreground: hsl(0 0% 98%);
   --muted: hsl(240 4.8% 95.9%);
   --muted-foreground: hsl(240 3.8% 46.1%);
-  --accent: hsl(293.4 69.5% 48.8%); /* Fuchsia 500 */
+  --accent: hsl(293.4 69.5% 48.8%); /* Fuchsia 500 */
   --accent-foreground: hsl(0 0% 98%);
-  --success: hsl(158 64% 44%); /* Emerald 500 */
+  --success: hsl(158 64% 44%); /* Emerald 500 */
   --success-foreground: hsl(0 0% 98%);
-  --warning: hsl(45 95% 50%); /* Amber 500 */
+  --warning: hsl(45 95% 50%); /* Amber 500 */
   --warning-foreground: hsl(0 0% 10%);
-  --destructive: hsl(0 84.2% 60.2%); /* Rose 500 */
+  --destructive: hsl(0 84.2% 60.2%); /* Rose 500 */
   --destructive-foreground: hsl(0 0% 98%);
   --border: hsl(240 5.9% 90%);
   --input: hsl(240 5.9% 90%);

@@ -44,7 +44,7 @@ export default async function PipelinesPage() {
               if (el) el.scrollIntoView({ behavior: 'smooth' })
             }}
           >
-            + New Pipeline
+            + New Pipeline
           </Button>
         )}
       </div>
@@ -69,7 +69,7 @@ export default async function PipelinesPage() {
                   {p.description || 'No description provided.'}
                 </p>
                 <Link href={`/recruiter/pipelines/${p.id}`} className='text-primary underline'>
-                  Open Board
+                  Open Board
                 </Link>
               </CardContent>
             </Card>
@@ -79,7 +79,7 @@ export default async function PipelinesPage() {
 
       <Card id='create-pipeline-form' className='max-w-xl'>
         <CardHeader>
-          <CardTitle>Create New Pipeline</CardTitle>
+          <CardTitle>Create New Pipeline</CardTitle>
         </CardHeader>
 
         <CardContent>
@@ -88,7 +88,7 @@ export default async function PipelinesPage() {
               <label htmlFor='name' className='mb-1 block text-sm font-medium'>
                 Name
               </label>
-              <Input id='name' name='name' required placeholder='e.g. Backend Engineer May 2025' />
+              <Input id='name' name='name' required placeholder='e.g. Backend Engineer May 2025' />
             </div>
 
             <div>
@@ -104,7 +104,7 @@ export default async function PipelinesPage() {
               />
             </div>
 
-            <Button type='submit'>Create Pipeline</Button>
+            <Button type='submit'>Create Pipeline</Button>
           </form>
         </CardContent>
       </Card>

@@ -49,7 +49,7 @@ export default async function PipelineBoard({ params }: { params: { id: string }
     .where(eq(pipelineCandidates.pipelineId, pipelineId))
 
   /* ---------------------------------------------------------- */
-  /* Helper maps – fully typed to avoid TS7053                  */
+  /* Helper maps – fully typed to avoid TS7053                  */
   /* ---------------------------------------------------------- */
   const grouped: Record<Stage, typeof rows> = STAGES.reduce(
     (acc, stage) => {
@@ -79,7 +79,7 @@ export default async function PipelineBoard({ params }: { params: { id: string }
       <div className='flex items-center justify-between'>
         <h2 className='text-2xl font-semibold'>{pipeline.name}</h2>
         <Link href='/recruiter/pipelines' className='text-sm underline'>
-          ← Back
+          ← Back
         </Link>
       </div>
 

@@ -9,7 +9,7 @@ const ROLES = [
   {
     icon: BadgeCheck,
     title: 'Candidates',
-    punch: 'Own your narrative — verified.',
+    punch: 'Own your narrative — verified.',
     bullets: [
       'Single profile with signed proofs',
       'AI‑graded SkillPass credentials',

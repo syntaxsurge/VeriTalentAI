@@ -91,8 +91,8 @@ export function Login({ mode = 'signin', fixedRole }: LoginProps) {
                   className='border-border focus-visible:ring-primary mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2'
                 >
                   <option value='candidate'>Candidate</option>
-                  <option value='recruiter'>Recruiter / Employer</option>
-                  <option value='issuer'>Issuer (University / Employer)</option>
+                  <option value='recruiter'>Recruiter / Employer</option>
+                  <option value='issuer'>Issuer (University / Employer)</option>
                 </select>
               </div>
             )}

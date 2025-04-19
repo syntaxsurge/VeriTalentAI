@@ -85,7 +85,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
 
           <div className='flex flex-1 flex-col'>
             <label htmlFor='pipelineId' className='mb-1 text-sm font-medium'>
-              Add to Pipeline
+              Add to Pipeline
             </label>
             <select
               id='pipelineId'
@@ -108,7 +108,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
       {/* Verified credentials */}
       <Card>
         <CardHeader>
-          <CardTitle>Verified Credentials</CardTitle>
+          <CardTitle>Verified Credentials</CardTitle>
         </CardHeader>
         <CardContent className='space-y-2 text-sm'>
           {creds.length === 0 ? (
@@ -136,7 +136,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
       {/* Skill passes */}
       <Card>
         <CardHeader>
-          <CardTitle>Skill Passes</CardTitle>
+          <CardTitle>Skill Passes</CardTitle>
         </CardHeader>
         <CardContent className='space-y-2 text-sm'>
           {passes.length === 0 ? (
@@ -144,7 +144,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
           ) : (
             passes.map((p) => (
               <p key={p.id}>
-                Quiz #{p.quizId} — Score {p.score}
+                Quiz #{p.quizId} — Score {p.score}
               </p>
             ))
           )}
@@ -152,7 +152,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
       </Card>
 
       <Link href='/recruiter/talent' className='text-sm underline'>
-        ← Back to search
+        ← Back to search
       </Link>
     </section>
   )

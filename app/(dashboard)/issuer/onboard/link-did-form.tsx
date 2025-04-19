@@ -34,7 +34,7 @@ export function LinkDidForm() {
   return (
     <form onSubmit={handleSubmit} className='space-y-5'>
       <div>
-        <Label htmlFor='did'>Link a cheqd DID</Label>
+        <Label htmlFor='did'>Link a cheqd DID</Label>
         <Input id='did' name='did' required placeholder='did:cheqd:testnet:xyz…' />
       </div>
 
@@ -47,7 +47,7 @@ export function LinkDidForm() {
             Saving…
           </>
         ) : (
-          'Save DID'
+          'Save DID'
         )}
       </Button>
     </form>
