@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useActionState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { removeTeamMember } from '@/app/(auth)/actions'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -16,16 +16,39 @@ type ActionState = { error?: string; success?: string }
 
 export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
   const { userPromise } = useUser()
-  const user = use(userPromise)
+  const [user, setUser] = useState<User | null | undefined>(undefined)
 
-  const isOwner = !!teamData.teamMembers.find((m) => m.role === 'owner' && m.user.id === user?.id)
+  useEffect(() => {
+    let mounted = true
+    userPromise.then((u) => mounted && setUser(u as User | null))
+    return () => {
+      mounted = false
+    }
+  }, [userPromise])
 
-  const [removeState, removeAction, removing] = useActionState<ActionState, FormData>(
-    removeTeamMember,
-    { error: '', success: '' },
+  const isOwner = !!teamData.teamMembers.find(
+    (m) => m.role === 'owner' && m.user.id === user?.id,
   )
 
+  const [removeState, removeAction, removing] = useState<ActionState>({
+    error: '',
+    success: '',
+  })
+
+  // Wrap action handler so we can keep local state for status messages
+  async function handleRemove(fd: FormData) {
+    const res = await removeTeamMember({}, fd as any)
+    setRemoveState(res as ActionState)
+  }
+
+  const [removeStateInternal, setRemoveState] = useState<ActionState>({
+    error: '',
+    success: '',
+  })
+
   const displayName = (u: Pick<User, 'name' | 'email'>) => u.name || u.email || 'Unknown'
+
+  if (user === undefined) return null
 
   return (
     <section className='flex-1 p-4 lg:p-8'>
@@ -101,7 +124,7 @@ export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
                   </div>
                 </div>
                 {i > 1 && isOwner && (
-                  <form action={removeAction}>
+                  <form action={handleRemove}>
                     <input type='hidden' name='memberId' value={m.id} />
                     <Button type='submit' size='sm' variant='outline' disabled={removing}>
                       {removing ? 'Removing…' : 'Remove'}
@@ -111,8 +134,8 @@ export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
               </li>
             ))}
           </ul>
-          {removeState.error && (
-            <p className='text-destructive-foreground mt-4'>{removeState.error}</p>
+          {removeStateInternal.error && (
+            <p className='text-destructive-foreground mt-4'>{removeStateInternal.error}</p>
           )}
         </CardContent>
       </Card>

@@ -1,7 +1,12 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { startTransition, use, useActionState, useEffect } from 'react'
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useState,
+} from 'react'
 
 import { Loader2 } from 'lucide-react'
 
@@ -17,24 +22,39 @@ type ActionState = { error?: string; success?: string }
 
 export default function GeneralPage() {
   const { userPromise } = useUser()
-  const user = use(userPromise)
+  const [user, setUser] = useState<any | null | undefined>(undefined)
+
+  // Resolve promise client‑side
+  useEffect(() => {
+    let mounted = true
+    userPromise.then((u) => mounted && setUser(u))
+    return () => {
+      mounted = false
+    }
+  }, [userPromise])
 
   const router = useRouter()
   useEffect(() => {
+    if (user === undefined) return // still loading
     if (!user) {
       router.replace('/sign-in')
     }
   }, [user, router])
 
-  const [state, formAction, isPending] = useActionState<ActionState, FormData>(updateAccount, {
-    error: '',
-    success: '',
-  })
+  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
+    updateAccount,
+    {
+      error: '',
+      success: '',
+    },
+  )
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     startTransition(() => formAction(new FormData(event.currentTarget)))
   }
+
+  if (user === undefined) return null // skeleton could be added here
 
   return (
     <section className='flex-1 p-4 lg:p-8'>

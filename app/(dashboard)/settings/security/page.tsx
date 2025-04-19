@@ -1,7 +1,12 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { startTransition, useActionState, use, useEffect } from 'react'
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useState,
+} from 'react'
 
 import { Lock, Trash2, Loader2 } from 'lucide-react'
 
@@ -20,30 +25,39 @@ type ActionState = {
 
 export default function SecurityPage() {
   const { userPromise } = useUser()
-  const user = use(userPromise)
+  const [user, setUser] = useState<any | null | undefined>(undefined)
+
+  useEffect(() => {
+    let mounted = true
+    userPromise.then((u) => mounted && setUser(u))
+    return () => {
+      mounted = false
+    }
+  }, [userPromise])
 
   const router = useRouter()
   useEffect(() => {
+    if (user === undefined) return
     if (!user) {
       router.replace('/sign-in')
     }
   }, [user, router])
 
-  const [passwordState, passwordAction, isPasswordPending] = useActionState<ActionState, FormData>(
-    updatePassword,
-    {
-      error: '',
-      success: '',
-    },
-  )
+  const [passwordState, passwordAction, isPasswordPending] = useActionState<
+    ActionState,
+    FormData
+  >(updatePassword, {
+    error: '',
+    success: '',
+  })
 
-  const [deleteState, deleteAction, isDeletePending] = useActionState<ActionState, FormData>(
-    deleteAccount,
-    {
-      error: '',
-      success: '',
-    },
-  )
+  const [deleteState, deleteAction, isDeletePending] = useActionState<
+    ActionState,
+    FormData
+  >(deleteAccount, {
+    error: '',
+    success: '',
+  })
 
   const handlePasswordSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -54,6 +68,8 @@ export default function SecurityPage() {
     event.preventDefault()
     startTransition(() => deleteAction(new FormData(event.currentTarget)))
   }
+
+  if (user === undefined) return null
 
   return (
     <section className='flex-1 p-4 lg:p-8'>

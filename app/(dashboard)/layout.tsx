@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
   Users,
@@ -92,10 +92,22 @@ function roleTitle(role?: string): string {
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const { userPromise } = useUser()
-  const user = use(userPromise)
 
+  const [user, setUser] = useState<any | null | undefined>(undefined)
+
+  // Resolve the promise client‑side to avoid mismatched HTML on hydration
+  useEffect(() => {
+    let mounted = true
+    userPromise.then((u) => {
+      if (mounted) setUser(u)
+    })
+    return () => {
+      mounted = false
+    }
+  }, [userPromise])
+
+  // Until the promise resolves, fall back to no intrinsic nav (keeps markup identical)
   const intrinsicNav = roleNav(user?.role)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   /* ----------------------------- Sidebar markup ---------------------------- */
   function SidebarContent() {
@@ -113,6 +125,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   }
 
   /* ------------------------------- Template ------------------------------- */
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
     <div className='mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl'>
       {/* Desktop sidebar */}
