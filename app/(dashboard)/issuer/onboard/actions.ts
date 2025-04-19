@@ -99,3 +99,48 @@ export const updateIssuerDidAction = validatedActionWithUser(
     return { success: 'DID linked successfully — issuer is now active.' }
   },
 )
+
+/* -------------- Update + resubmit rejected issuer -------------- */
+export const updateIssuerDetailsAction = validatedActionWithUser(
+  z.object({
+    name: z.string().min(2).max(200),
+    domain: z.string().min(3).max(255),
+    logoUrl: z
+      .string()
+      .url('Invalid URL')
+      .regex(/^https:\/\//, 'Logo URL must start with https://')
+      .optional(),
+    category: categoryEnum.default(IssuerCategory.OTHER),
+    industry: industryEnum.default(IssuerIndustry.OTHER),
+  }),
+  async (data, _, user) => {
+    const [issuer] = await db
+      .select()
+      .from(issuers)
+      .where(eq(issuers.ownerUserId, user.id))
+      .limit(1)
+
+    if (!issuer) {
+      return { error: 'Issuer not found.' }
+    }
+
+    if (issuer.status !== IssuerStatus.REJECTED) {
+      return { error: 'Only rejected issuers can be updated.' }
+    }
+
+    await db
+      .update(issuers)
+      .set({
+        name: data.name,
+        domain: data.domain.toLowerCase(),
+        logoUrl: data.logoUrl ?? null,
+        category: data.category as (typeof IssuerCategory)[keyof typeof IssuerCategory],
+        industry: data.industry as (typeof IssuerIndustry)[keyof typeof IssuerIndustry],
+        status: IssuerStatus.PENDING,
+      })
+      .where(eq(issuers.id, issuer.id))
+
+    refresh()
+    return { success: 'Details updated – issuer resubmitted for review.' }
+  },
+)

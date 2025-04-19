@@ -7,6 +7,7 @@ import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 
 import { CreateIssuerForm } from './create-issuer-form'
 import { LinkDidForm } from './link-did-form'
+import { EditIssuerForm } from './edit-issuer-form'
 
 export const revalidate = 0
 
@@ -23,8 +24,19 @@ export default async function IssuerOnboardPage() {
       {/* ------------------------------- First time ------------------------------- */}
       {!issuer && <CreateIssuerForm />}
 
-      {/* ----------------------------- Existing issuer ----------------------------- */}
-      {issuer && (
+      {/* --------------------------- Rejected → Edit form -------------------------- */}
+      {issuer && issuer.status === IssuerStatus.REJECTED && (
+        <>
+          <p className='text-destructive-foreground text-sm'>
+            Your previous submission was rejected. Please correct any mistakes and resubmit for
+            admin review.
+          </p>
+          <EditIssuerForm issuer={issuer} />
+        </>
+      )}
+
+      {/* ------------------------- Pending / Active state ------------------------- */}
+      {issuer && issuer.status !== IssuerStatus.REJECTED && (
         <>
           <div className='space-y-1.5'>
             <p className='font-medium'>Name: {issuer.name}</p>
@@ -36,8 +48,8 @@ export default async function IssuerOnboardPage() {
             )}
           </div>
 
-          {/* Link DID if still missing */}
-          {!issuer.did && <LinkDidForm />}
+          {/* Link DID if still missing and issuer is approved */}
+          {!issuer.did && issuer.status === IssuerStatus.ACTIVE && <LinkDidForm />}
 
           {issuer.status === IssuerStatus.PENDING && (
             <p className='text-muted-foreground text-sm'>
