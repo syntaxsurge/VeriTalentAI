@@ -11,6 +11,7 @@ import {
   CredentialStatus,
 } from '@/lib/db/schema/veritalent'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
+import { createCheqdDID } from '@/lib/cheqd'
 
 /* -------------------------------------------------------------------------- */
 /*                               U P D A T E                                  */
@@ -41,17 +42,46 @@ const _updateIssuerStatus = validatedActionWithUser(
   async ({ issuerId, status, rejectionReason }, _formData, user) => {
     if (user.role !== 'admin') return { error: 'Unauthorized.' }
 
+    /* ------------------------------------------------------------------ */
+    /* Fetch current issuer record                                        */
+    /* ------------------------------------------------------------------ */
+    const [issuer] = await db.select().from(issuers).where(eq(issuers.id, issuerId)).limit(1)
+    if (!issuer) return { error: 'Issuer not found.' }
+
+    let didToPersist: string | undefined
+
+    /* ------------------------------------------------------------------ */
+    /* If verifying and issuer lacks DID → create one                     */
+    /* ------------------------------------------------------------------ */
+    if (status === IssuerStatus.ACTIVE && !issuer.did) {
+      try {
+        const { did } = await createCheqdDID()
+        didToPersist = did
+      } catch (err) {
+        console.error('Failed to create cheqd DID for issuer', issuerId, err)
+        return { error: 'Could not generate DID while verifying issuer.' }
+      }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Persist changes                                                    */
+    /* ------------------------------------------------------------------ */
     await db
       .update(issuers)
       .set({
         status,
         rejectionReason:
           status === IssuerStatus.REJECTED ? rejectionReason ?? null : null,
+        ...(didToPersist ? { did: didToPersist } : {}),
       })
       .where(eq(issuers.id, issuerId))
 
     revalidatePath('/admin/issuers')
-    return { success: `Issuer status updated to ${status}.` }
+    return {
+      success: `Issuer status updated to ${status}${
+        didToPersist ? ' and DID generated.' : '.'
+      }`,
+    }
   },
 )
 
