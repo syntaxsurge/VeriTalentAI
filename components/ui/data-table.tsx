@@ -1,133 +1,369 @@
-import Link from 'next/link'
-import { cn } from '@/lib/utils'
+"use client"
+
+import * as React from "react"
 import {
-  ChevronUp,
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+  VisibilityState,
+  ColumnFiltersState,
+  RowSelectionState,
+  SortingState,
+} from "@tanstack/react-table"
+import {
+  ArrowUpDown,
   ChevronDown,
-  ChevronsUpDown,
   type LucideIcon,
-} from 'lucide-react'
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 /* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
+/*                                 P U B L I C T Y P E S                      */
 /* -------------------------------------------------------------------------- */
 
 export interface Column<T extends Record<string, any>> {
   key: keyof T
-  header: string
-  /** Enable sortable header */
-  sortable?: boolean
-  /** Optional class overrides for this column */
-  className?: string
-  /** Custom cell renderer */
+  header: string | React.ReactNode
   render?: (value: T[keyof T], row: T) => React.ReactNode
+  enableHiding?: boolean
+  sortable?: boolean
+  className?: string
+}
+
+export interface BulkAction<T extends Record<string, any>> {
+  label: string
+  icon: LucideIcon
+  onClick: (selectedRows: T[]) => void | Promise<void>
+  /** optional colour accent */
+  variant?: "default" | "destructive" | "outline"
 }
 
 interface DataTableProps<T extends Record<string, any>> {
   columns: Column<T>[]
   rows: T[]
-  /** Current sort key */
-  sort?: string
-  /** asc | desc */
-  dir?: 'asc' | 'desc'
-  /** Util to build href preserving existing params */
-  buildLink?: (params: Record<string, any>) => string
+  filterKey?: keyof T
+  /** optional bulk actions shown when rows are selected */
+  bulkActions?: BulkAction<T>[]
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                COMPONENT                                   */
+/*                               H E L P E R S                                */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Generic, server‑friendly table component.
- * Adds modern chevron indicators to sortable headers:
- *   • Double‑chevron (⇅) for unsorted sortable columns
- *   • Up or down chevron for active sort direction.
- */
+function SortableHeader({
+  column,
+  title,
+}: {
+  column: any
+  title: React.ReactNode
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="-ml-3 h-8 data-[state=open]:bg-accent"
+      onClick={() =>
+        column.toggleSorting(column.getIsSorted() === "asc", false)
+      }
+    >
+      <span>{title}</span>
+      <ArrowUpDown className="ml-1 h-4 w-4" />
+    </Button>
+  )
+}
+
+const checkboxOutline =
+  "border-foreground/50 data-[state=unchecked]:bg-background data-[state=unchecked]:border-foreground/50"
+
+function buildColumnDefs<T extends Record<string, any>>(
+  cols: Column<T>[],
+): ColumnDef<T>[] {
+  return cols.map((col) => {
+    const headerLabel =
+      typeof col.header === "string" ? col.header : String(col.key)
+
+    return {
+      accessorKey: col.key as string,
+      header: col.sortable
+        ? ({ column }) => (
+            <SortableHeader column={column} title={col.header} />
+          )
+        : col.header,
+      cell: col.render
+        ? ({ row }) => col.render(row.original[col.key], row.original)
+        : undefined,
+      enableSorting: !!col.sortable,
+      enableHiding: col.enableHiding !== false,
+      meta: { className: col.className, label: headerLabel },
+    } as ColumnDef<T>
+  })
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   T A B L E                                */
+/* -------------------------------------------------------------------------- */
+
 export function DataTable<T extends Record<string, any>>({
   columns,
   rows,
-  sort,
-  dir = 'desc',
-  buildLink,
+  filterKey,
+  bulkActions = [],
 }: DataTableProps<T>) {
+  /* -------------------- table state -------------------- */
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] =
+    React.useState<ColumnFiltersState>([])
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
+  const [sorting, setSorting] = React.useState<SortingState>([])
+
+  const columnDefs = React.useMemo<ColumnDef<T>[]>(() => {
+    /* selection checkbox column */
+    const selectCol: ColumnDef<T> = {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          className={checkboxOutline}
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
+          aria-label="Select all rows"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          className={checkboxOutline}
+          checked={row.getIsSelected()}
+          onCheckedChange={(v) => row.toggleSelected(!!v)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    }
+    return [selectCol, ...buildColumnDefs(columns)]
+  }, [columns])
+
+  const table = useReactTable({
+    data: rows,
+    columns: columnDefs,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onColumnFiltersChange: setColumnFilters,
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    state: { columnVisibility, columnFilters, rowSelection, sorting },
+  })
+
+  const selectedRows = table.getFilteredSelectedRowModel().rows
+  const selectedCount = selectedRows.length
+
+  /* ------------------------- render ------------------------- */
   return (
-    <table className='w-full caption-bottom text-sm'>
-      <thead className='[&_th]:text-muted-foreground border-b'>
-        <tr>
-          {columns.map((col) => {
-            const isSortable = col.sortable && buildLink
-            const isActive = isSortable && sort === col.key
-            const nextDir = dir === 'asc' ? 'desc' : 'asc'
+    <div className="w-full">
+      {/* toolbar */}
+      {(filterKey ||
+        table.getAllColumns().some((c) => c.getCanHide()) ||
+        bulkActions.length > 0) && (
+        <div className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center">
+          {/* filter input */}
+          {filterKey && (
+            <Input
+              placeholder={`Filter ${String(filterKey)}…`}
+              value={
+                (table.getColumn(filterKey as string)?.getFilterValue() as
+                  | string
+                  | undefined) ?? ""
+              }
+              onChange={(e) =>
+                table
+                  .getColumn(filterKey as string)
+                  ?.setFilterValue(e.target.value)
+              }
+              className="max-w-sm sm:mr-auto"
+            />
+          )}
 
-            /* Choose icon: ⇅ default, ↑ asc, ↓ desc */
-            let IconComponent: LucideIcon = ChevronsUpDown
-            if (isActive) {
-              IconComponent = dir === 'asc' ? ChevronUp : ChevronDown
-            }
+          {/* bulk actions – always visible */}
+          {bulkActions.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="sm:ml-2">
+                  Bulk&nbsp;Selection{" "}
+                  {selectedCount > 0 && `(${selectedCount})`}{" "}
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {selectedCount === 0 && (
+                  <DropdownMenuLabel className="text-muted-foreground">
+                    No rows selected
+                  </DropdownMenuLabel>
+                )}
 
-            const headerContent = (
-              <span className='flex items-center gap-1'>
-                {col.header}
-                {isSortable && (
-                  <IconComponent
+                {selectedCount === 0 && <DropdownMenuSeparator />}
+
+                {bulkActions.map((a) => (
+                  <DropdownMenuItem
+                    key={a.label}
+                    onClick={() =>
+                      a.onClick(selectedRows.map((r) => r.original))
+                    }
+                    disabled={selectedCount === 0}
                     className={cn(
-                      'h-3 w-3 flex-shrink-0 transition-colors',
-                      isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground',
+                      "cursor-pointer",
+                      a.variant === "destructive" &&
+                        "text-destructive text-rose-600 dark:text-rose-400 font-medium",
+                      selectedCount === 0 && "opacity-50 cursor-not-allowed",
                     )}
-                    aria-hidden='true'
-                  />
-                )}
-              </span>
-            )
-
-            return (
-              <th
-                key={String(col.key)}
-                className={cn(
-                  'py-2 pr-4 text-left font-semibold',
-                  isSortable && 'group cursor-pointer select-none',
-                  col.className,
-                )}
-                /* Accessibility: indicate current sort */
-                aria-sort={
-                  isSortable
-                    ? isActive
-                      ? (dir === 'asc' ? 'ascending' : 'descending')
-                      : 'none'
-                    : undefined
-                }
-              >
-                {isSortable ? (
-                  <Link
-                    href={buildLink!({
-                      sort: col.key,
-                      dir: isActive ? nextDir : 'asc',
-                      page: 1,
-                    })}
-                    className='inline-flex items-center gap-1 hover:underline'
                   >
-                    {headerContent}
-                  </Link>
-                ) : (
-                  headerContent
-                )}
-              </th>
-            )
-          })}
-        </tr>
-      </thead>
+                    <a.icon className="mr-2 h-4 w-4" />
+                    {a.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
-      <tbody className='divide-y'>
-        {rows.map((row, idx) => (
-          <tr key={idx} className='hover:bg-muted/30'>
-            {columns.map((col) => (
-              <td key={String(col.key)} className={cn('py-2 pr-4', col.className)}>
-                {col.render ? col.render(row[col.key], row) : (row[col.key] as any)}
-              </td>
+          {/* column toggle */}
+          {table.getAllColumns().some((c) => c.getCanHide()) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="sm:ml-2">
+                  Columns <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {table
+                  .getAllColumns()
+                  .filter((c) => c.getCanHide())
+                  .map((c) => {
+                    const label =
+                      (c.columnDef.meta as any)?.label ?? c.id
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={c.id}
+                        className="capitalize"
+                        checked={c.getIsVisible()}
+                        onCheckedChange={(v) => c.toggleVisibility(!!v)}
+                      >
+                        {label}
+                      </DropdownMenuCheckboxItem>
+                    )
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      )}
+
+      {/* table */}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id}>
+                {hg.headers.map((header) => {
+                  const cls = header.column.columnDef.meta?.className
+                  return (
+                    <TableHead key={header.id} className={cn(cls)}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
+                  )
+                })}
+              </TableRow>
             ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columnDefs.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* footer */}
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex-1 text-sm text-muted-foreground">
+          {selectedCount} of {table.getFilteredRowModel().rows.length} row(s) selected.
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }
