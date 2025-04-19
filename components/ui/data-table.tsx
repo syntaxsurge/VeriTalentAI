@@ -285,8 +285,8 @@ export function DataTable<T extends Record<string, any>>({
       )}
 
       {/* table */}
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
