@@ -119,7 +119,7 @@ function buildColumnDefs<T extends Record<string, any>>(
         : undefined,
       enableSorting: !!col.sortable,
       enableHiding: col.enableHiding !== false,
-      meta: { className: col.className, label: headerLabel },
+      meta: { className: col.className, label: headerLabel } as any,
     } as ColumnDef<T>
   })
 }
@@ -188,6 +188,11 @@ export function DataTable<T extends Record<string, any>>({
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const selectedCount = selectedRows.length
 
+  /* Pre‑compute filter column to avoid optional‑call error */
+  const filterColumn = React.useMemo(() => {
+    return filterKey ? table.getColumn(filterKey as string) : undefined
+  }, [table, filterKey])
+
   /* ------------------------- render ------------------------- */
   return (
     <div className="w-full">
@@ -200,16 +205,8 @@ export function DataTable<T extends Record<string, any>>({
           {filterKey && (
             <Input
               placeholder={`Filter ${String(filterKey)}…`}
-              value={
-                (table.getColumn(filterKey as string)?.getFilterValue() as
-                  | string
-                  | undefined) ?? ""
-              }
-              onChange={(e) =>
-                table
-                  .getColumn(filterKey as string)
-                  ?.setFilterValue(e.target.value)
-              }
+              value={(filterColumn?.getFilterValue() as string | undefined) ?? ""}
+              onChange={(e) => filterColumn?.setFilterValue(e.target.value)}
               className="max-w-sm sm:mr-auto"
             />
           )}
@@ -226,12 +223,13 @@ export function DataTable<T extends Record<string, any>>({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 {selectedCount === 0 && (
-                  <DropdownMenuLabel className="text-muted-foreground">
-                    No rows selected
-                  </DropdownMenuLabel>
+                  <>
+                    <DropdownMenuLabel className="text-muted-foreground">
+                      No rows selected
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                  </>
                 )}
-
-                {selectedCount === 0 && <DropdownMenuSeparator />}
 
                 {bulkActions.map((a) => (
                   <DropdownMenuItem
@@ -268,8 +266,7 @@ export function DataTable<T extends Record<string, any>>({
                   .getAllColumns()
                   .filter((c) => c.getCanHide())
                   .map((c) => {
-                    const label =
-                      (c.columnDef.meta as any)?.label ?? c.id
+                    const label = (c.columnDef.meta as any)?.label ?? c.id
                     return (
                       <DropdownMenuCheckboxItem
                         key={c.id}
@@ -294,7 +291,7 @@ export function DataTable<T extends Record<string, any>>({
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((header) => {
-                  const cls = header.column.columnDef.meta?.className
+                  const cls = (header.column.columnDef.meta as any)?.className
                   return (
                     <TableHead key={header.id} className={cn(cls)}>
                       {header.isPlaceholder
@@ -328,10 +325,7 @@ export function DataTable<T extends Record<string, any>>({
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columnDefs.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columnDefs.length} className="h-24 text-center">
                   No results.
                 </TableCell>
               </TableRow>

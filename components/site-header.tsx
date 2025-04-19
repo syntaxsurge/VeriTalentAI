@@ -114,7 +114,6 @@ export default function SiteHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className='cursor-pointer'>
-                  <AvatarImage src='/placeholder.svg?text=👤' alt={user.name || user.email || 'user'} />
                   <AvatarFallback>
                     {(user.name || user.email || 'U')
                       .split(' ')

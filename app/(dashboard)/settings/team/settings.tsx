@@ -98,7 +98,6 @@ export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
               <li key={m.id} className='flex items-center justify-between'>
                 <div className='flex items-center space-x-4'>
                   <Avatar>
-                    <AvatarImage src='/placeholder.svg?text=👤' alt={displayName(m.user)} />
                     <AvatarFallback>
                       {displayName(m.user)
                         .split(' ')

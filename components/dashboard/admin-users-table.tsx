@@ -1,13 +1,13 @@
 'use client'
 
-import { useTransition, useState, useActionState, startTransition } from 'react'
+import React, {
+  useTransition,
+  useState,
+  useActionState,
+  startTransition,
+} from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  MoreHorizontal,
-  Trash2,
-  Loader2,
-  Pencil,
-} from 'lucide-react'
+import { MoreHorizontal, Trash2, Loader2, Pencil } from 'lucide-react'
 
 import {
   DropdownMenu,
@@ -19,12 +19,20 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/data-table'
-import { deleteUserAction, updateUserAction } from '@/app/(dashboard)/admin/users/actions'
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  deleteUserAction,
+  updateUserAction,
+} from '@/app/(dashboard)/admin/users/actions'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { FormStatus } from '@/components/ui/form-status'
-import React from 'react'
 
 export interface RowType {
   id: number
@@ -52,12 +60,19 @@ function formatDateTime(d: Date) {
 const ROLES = ['candidate', 'recruiter', 'issuer', 'admin'] as const
 
 /* -------------------------------------------------------------------------- */
-/*                             Row‑level actions                              */
+/*                              Edit User Dialog                              */
 /* -------------------------------------------------------------------------- */
 
-function EditDialog({ row }: { row: RowType }) {
+function EditUserDialog({
+  row,
+  open,
+  onOpenChange,
+}: {
+  row: RowType
+  open: boolean
+  onOpenChange: (v: boolean) => void
+}) {
   const router = useRouter()
-  const [open, setOpen] = useState(false)
 
   type ActionState = { error?: string; success?: string }
   const [state, action, pending] = useActionState<ActionState, FormData>(updateUserAction, {
@@ -72,59 +87,48 @@ function EditDialog({ row }: { row: RowType }) {
     startTransition(() => action(fd))
   }
 
-  // close & refresh after successful update
   React.useEffect(() => {
     if (state.success) {
-      setOpen(false)
+      onOpenChange(false)
       router.refresh()
     }
-  }, [state.success, router])
+  }, [state.success, onOpenChange, router])
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <DropdownMenuItem>
-          <Pencil className="mr-2 h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
+          <DialogDescription>
+            Modify the user’s details, then save your changes.
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className='space-y-4'>
           <div>
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              name="name"
-              required
-              defaultValue={row.name ?? ''}
-              placeholder="Full name"
-            />
+            <Label htmlFor='name'>Name</Label>
+            <Input id='name' name='name' defaultValue={row.name ?? ''} required />
           </div>
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor='email'>Email</Label>
             <Input
-              id="email"
-              name="email"
-              type="email"
-              required
+              id='email'
+              name='email'
+              type='email'
               defaultValue={row.email}
-              placeholder="user@example.com"
+              required
             />
           </div>
           <div>
-            <Label htmlFor="role">Role</Label>
+            <Label htmlFor='role'>Role</Label>
             <select
-              id="role"
-              name="role"
+              id='role'
+              name='role'
               defaultValue={row.role}
-              className="h-10 w-full rounded-md border px-2 capitalize"
+              className='h-10 w-full rounded-md border px-2 capitalize'
             >
               {ROLES.map((r) => (
-                <option key={r} value={r} className="capitalize">
+                <option key={r} value={r}>
                   {r}
                 </option>
               ))}
@@ -133,10 +137,10 @@ function EditDialog({ row }: { row: RowType }) {
 
           <FormStatus state={state} />
 
-          <Button type="submit" className="w-full" disabled={pending}>
+          <Button type='submit' className='w-full' disabled={pending}>
             {pending ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 Saving…
               </>
             ) : (
@@ -149,9 +153,17 @@ function EditDialog({ row }: { row: RowType }) {
   )
 }
 
+/* -------------------------------------------------------------------------- */
+/*                             Row Actions Menu                               */
+/* -------------------------------------------------------------------------- */
+
 function RowActions({ row }: { row: RowType }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+
+  /* Control both dropdown and dialog open states */
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
 
   function destroy() {
     startTransition(async () => {
@@ -162,35 +174,51 @@ function RowActions({ row }: { row: RowType }) {
     })
   }
 
+  /* Ensure menu closes before dialog opens to avoid aria-hidden focus clash */
+  function openEditDialog() {
+    setMenuOpen(false)
+    /* wait one tick for menu to unmount */
+    setTimeout(() => setEditOpen(true), 0)
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
-          {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <MoreHorizontal className="h-4 w-4" />
-          )}
-          <span className="sr-only">Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="rounded-md p-1 shadow-lg">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+    <>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
+            {isPending ? (
+              <Loader2 className='h-4 w-4 animate-spin' />
+            ) : (
+              <MoreHorizontal className='h-4 w-4' />
+            )}
+            <span className='sr-only'>Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
 
-        <EditDialog row={row} />
+        <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-        <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={openEditDialog} className='cursor-pointer'>
+            <Pencil className='mr-2 h-4 w-4' />
+            Edit
+          </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onClick={destroy}
-          disabled={isPending}
-          className="text-rose-600 dark:text-rose-400 font-semibold hover:bg-rose-500/10 focus:bg-rose-500/10"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            onClick={destroy}
+            disabled={isPending}
+            className='text-rose-600 dark:text-rose-400 font-semibold hover:bg-rose-500/10 focus:bg-rose-500/10'
+          >
+            <Trash2 className='mr-2 h-4 w-4' />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Dialog outside the dropdown hierarchy */}
+      <EditUserDialog row={row} open={editOpen} onOpenChange={setEditOpen} />
+    </>
   )
 }
 
@@ -203,26 +231,26 @@ const columns: Column<RowType>[] = [
     key: 'name',
     header: 'Name',
     sortable: true,
-    render: (v, r) => v || r.email,
+    render: (v, r) => <>{v || r.email}</>,
   },
   {
     key: 'email',
     header: 'Email',
     sortable: true,
-    render: (v) => v as string,
+    render: (v) => <>{v as string}</>,
   },
   {
     key: 'role',
     header: 'Role',
     sortable: true,
     className: 'capitalize',
-    render: (v) => v as string,
+    render: (v) => <>{v as string}</>,
   },
   {
     key: 'createdAt',
     header: 'Joined',
     sortable: true,
-    render: (v) => formatDateTime(v as Date),
+    render: (v) => <>{formatDateTime(v as Date)}</>,
   },
   {
     key: 'id',
@@ -261,7 +289,7 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                  View                                      */
+/*                                 View                                       */
 /* -------------------------------------------------------------------------- */
 
 export default function AdminUsersTable({ rows }: { rows: RowType[] }) {
@@ -269,11 +297,6 @@ export default function AdminUsersTable({ rows }: { rows: RowType[] }) {
   const bulkActions = buildBulkActions(router)
 
   return (
-    <DataTable
-      columns={columns}
-      rows={rows}
-      filterKey="email"
-      bulkActions={bulkActions}
-    />
+    <DataTable columns={columns} rows={rows} filterKey='email' bulkActions={bulkActions} />
   )
 }
