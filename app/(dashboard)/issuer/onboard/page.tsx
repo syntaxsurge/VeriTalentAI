@@ -1,10 +1,8 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
@@ -25,26 +23,19 @@ export default async function IssuerOnboardPage() {
     .where(eq(issuers.ownerUserId, user.id))
     .limit(1)
 
-  /* ------------------------------------------------------------------ */
-  /*                    H E L P E R   F O R M A T T I N G                */
-  /* ------------------------------------------------------------------ */
+  /* --------------------------- helpers --------------------------- */
+  const prettify = (text?: string | null) =>
+    text ? text.replaceAll('_', ' ').toLowerCase() : '—'
 
-  function prettify(text: string | null): string {
-    return text ? text.replaceAll('_', ' ').toLowerCase() : '—'
-  }
-
-  /* ------------------------------------------------------------------ */
-  /*                                JSX                                 */
-  /* ------------------------------------------------------------------ */
-
+  /* ----------------------------- UI ----------------------------- */
   return (
-    <section className='mx-auto flex max-w-xl flex-col gap-8'>
+    <section className='max-w-xl space-y-8'>
       <h2 className='text-xl font-semibold'>Issuer Onboarding</h2>
 
-      {/* --------------------------- No issuer yet --------------------------- */}
+      {/* First‑time create */}
       {!issuer && <CreateIssuerForm />}
 
-      {/* --------------------------- Rejected state -------------------------- */}
+      {/* Rejected → edit */}
       {issuer && issuer.status === IssuerStatus.REJECTED && (
         <>
           <Card>
@@ -88,7 +79,7 @@ export default async function IssuerOnboardPage() {
         </>
       )}
 
-      {/* ---------------------- Pending / Active states ---------------------- */}
+      {/* Pending / active */}
       {issuer && issuer.status !== IssuerStatus.REJECTED && (
         <>
           <Card>
@@ -140,10 +131,8 @@ export default async function IssuerOnboardPage() {
             </CardContent>
           </Card>
 
-          {/* DID link form only when active but no DID */}
           {!issuer.did && issuer.status === IssuerStatus.ACTIVE && <LinkDidForm />}
 
-          {/* Pending info banner */}
           {issuer.status === IssuerStatus.PENDING && (
             <div className='rounded-md bg-muted p-4 text-sm'>
               Your issuer is awaiting admin approval. You’ll receive an email once it becomes
@@ -152,13 +141,6 @@ export default async function IssuerOnboardPage() {
           )}
         </>
       )}
-
-      {/* Quick link back to dashboard */}
-      <Link href='/dashboard' className='self-start'>
-        <Button variant='outline' size='sm'>
-          ← Back to Dashboard
-        </Button>
-      </Link>
     </section>
   )
 }
