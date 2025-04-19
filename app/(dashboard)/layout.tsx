@@ -62,8 +62,8 @@ function roleNav(role?: string): SidebarNavItem[] {
         { href: '/issuer/onboard', icon: ShieldCheck, label: 'Organisation' },
       ]
     case 'admin':
+      /* Removed duplicate dashboard link */
       return [
-        { href: '/admin', icon: Shield, label: 'Dashboard' },
         { href: '/admin/users', icon: Users, label: 'Users' },
         { href: '/admin/credentials', icon: Award, label: 'Credentials' },
       ]

@@ -10,6 +10,7 @@ import {
   CheckCircle,
   User2,
   Building2,
+  ShieldCheck,
 } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,11 +18,12 @@ import { RoleBadge } from '@/components/dashboard/role-badge'
 import CandidateCharts from '@/components/dashboard/candidate-charts'
 import RecruiterCharts from '@/components/dashboard/recruiter-charts'
 import IssuerCharts from '@/components/dashboard/issuer-charts'
+import AdminCharts from '@/components/dashboard/admin-charts'
 
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { users, teams } from '@/lib/db/schema/core'
-import { issuers } from '@/lib/db/schema/issuer'
+import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 import {
   candidates,
@@ -80,7 +82,7 @@ export default async function DashboardPage() {
 
       scoreData = attempts
         .map((a) => ({ date: a.createdAt.toISOString().split('T')[0], score: a.score ?? 0 }))
-        .reverse()
+      .reverse()
 
       skillPassCount = attempts.filter((a) => (a.score ?? 0) >= 70).length
     }
@@ -157,14 +159,48 @@ export default async function DashboardPage() {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Admin metrics                                                      */
+  /* Admin metrics & datasets                                           */
   /* ------------------------------------------------------------------ */
   let totalUsers = 0
   let totalTeams = 0
+  let pendingIssuers = 0
+  let totalCredentials = 0
+
+  /* Charts data */
+  let usersByRoleData: { name: string; value: number }[] = []
+  let issuerStatusData: { name: string; value: number }[] = []
+  let credentialStatusData: { name: string; value: number }[] = []
 
   if (user.role === 'admin') {
-    totalUsers = (await db.select().from(users)).length
+    /* Basic counts */
+    const userRows = await db.select({ role: users.role }).from(users)
+    totalUsers = userRows.length
     totalTeams = (await db.select().from(teams)).length
+
+    /* Users by role */
+    const roleCounter: Record<string, number> = {}
+    userRows.forEach((r) => {
+      roleCounter[r.role] = (roleCounter[r.role] || 0) + 1
+    })
+    usersByRoleData = Object.entries(roleCounter).map(([name, value]) => ({ name, value }))
+
+    /* Issuer statuses */
+    const issuerRows = await db.select({ status: issuers.status }).from(issuers)
+    const issuerCounter: Record<string, number> = {}
+    issuerRows.forEach((r) => {
+      issuerCounter[r.status] = (issuerCounter[r.status] || 0) + 1
+    })
+    issuerStatusData = Object.entries(issuerCounter).map(([name, value]) => ({ name, value }))
+    pendingIssuers = issuerCounter[IssuerStatus.PENDING] ?? 0
+
+    /* Credentials */
+    const credRows = await db.select({ status: candidateCredentials.status }).from(candidateCredentials)
+    totalCredentials = credRows.length
+    const credCounter: Record<string, number> = {}
+    credRows.forEach((r) => {
+      credCounter[r.status] = (credCounter[r.status] || 0) + 1
+    })
+    credentialStatusData = Object.entries(credCounter).map(([name, value]) => ({ name, value }))
   }
 
   /* ------------------------------------------------------------------ */
@@ -187,6 +223,8 @@ export default async function DashboardPage() {
       admin: [
         { title: 'Total Users', value: totalUsers, icon: User2 },
         { title: 'Total Teams', value: totalTeams, icon: Building2 },
+        { title: 'Pending Issuers', value: pendingIssuers, icon: ShieldCheck },
+        { title: 'Total Credentials', value: totalCredentials, icon: Award },
       ],
     }
 
@@ -194,22 +232,22 @@ export default async function DashboardPage() {
   /* JSX                                                                */
   /* ------------------------------------------------------------------ */
   return (
-    <section className="space-y-12">
+    <section className='space-y-12'>
       {/* Greeting */}
-      <div className="space-y-3">
-        <h1 className="text-4xl font-extrabold tracking-tight leading-tight">
-          Welcome back, <span className="break-all">{user.name || user.email}</span>
+      <div className='space-y-3'>
+        <h1 className='text-4xl font-extrabold leading-tight tracking-tight'>
+          Welcome back, <span className='break-all'>{user.name || user.email}</span>
         </h1>
-        <div className="flex items-center gap-3">
+        <div className='flex items-center gap-3'>
           <RoleBadge role={user.role} />
-          <p className="text-muted-foreground text-sm">
+          <p className='text-muted-foreground text-sm'>
             Your personalised VeriTalent workspace overview.
           </p>
         </div>
       </div>
 
       {/* Metric cards */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
         {metrics[user.role]?.map((m) => (
           <MetricCard key={m.title} title={m.title} value={m.value} Icon={m.icon} />
         ))}
@@ -225,6 +263,14 @@ export default async function DashboardPage() {
       )}
 
       {user.role === 'issuer' && <IssuerCharts pending={pendingReq} verified={issuedCreds} />}
+
+      {user.role === 'admin' && (
+        <AdminCharts
+          usersData={usersByRoleData}
+          issuerData={issuerStatusData}
+          credentialData={credentialStatusData}
+        />
+      )}
     </section>
   )
 }
@@ -241,16 +287,13 @@ type MetricProps = {
 
 function MetricCard({ title, value, Icon }: MetricProps) {
   return (
-    <Card className="relative overflow-hidden shadow-sm transition-shadow hover:shadow-lg">
+    <Card className='relative overflow-hidden shadow-sm transition-shadow hover:shadow-lg'>
       <CardHeader>
-        <CardTitle className="text-lg font-medium flex items-center gap-2">
-          {title}
-        </CardTitle>
-        {/* Brighter icon for better visibility */}
-        <Icon className="absolute right-4 top-4 h-6 w-6 text-gray-400 dark:text-gray-300" />
+        <CardTitle className='flex items-center gap-2 text-lg font-medium'>{title}</CardTitle>
+        <Icon className='absolute right-4 top-4 h-6 w-6 text-gray-400 dark:text-gray-300' />
       </CardHeader>
       <CardContent>
-        <p className="text-4xl font-extrabold tracking-tight">{value}</p>
+        <p className='text-4xl font-extrabold tracking-tight'>{value}</p>
       </CardContent>
     </Card>
   )
