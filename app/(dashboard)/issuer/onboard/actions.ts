@@ -39,15 +39,14 @@ export const createIssuerAction = validatedActionWithUser(
     logoUrl: z
       .string()
       .url('Invalid URL')
-      .refine((val) => val.startsWith('https://'), {
-        message: 'Logo URL must start with https://',
-      })
+      .regex(/^https:\/\//, 'Logo URL must start with https://')
       .optional(),
     did: didSchema,
     category: categoryEnum.default(IssuerCategory.OTHER),
     industry: industryEnum.default(IssuerIndustry.OTHER),
   }),
   async (data, _, user) => {
+    /* Reject duplicates */
     const existing = await db
       .select()
       .from(issuers)
@@ -58,16 +57,19 @@ export const createIssuerAction = validatedActionWithUser(
       return { error: 'You already have an issuer organisation.' }
     }
 
-    await db.insert(issuers).values({
+    /* Narrow the literal types to satisfy drizzle insert typings */
+    const newIssuer: typeof issuers.$inferInsert = {
       ownerUserId: user.id,
       name: data.name,
       domain: data.domain.toLowerCase(),
-      logoUrl: data.logoUrl,
-      did: data.did ?? undefined,
+      logoUrl: data.logoUrl ?? null,
+      did: data.did ?? null,
       status: IssuerStatus.PENDING,
-      category: data.category,
-      industry: data.industry,
-    })
+      category: data.category as (typeof IssuerCategory)[keyof typeof IssuerCategory],
+      industry: data.industry as (typeof IssuerIndustry)[keyof typeof IssuerIndustry],
+    }
+
+    await db.insert(issuers).values(newIssuer)
 
     refresh()
     return { success: 'Issuer created and pending review.' }
