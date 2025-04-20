@@ -56,7 +56,10 @@ function RowActions({ row }: { row: RowType }) {
   const isPendingStatus = row.status === 'pending'
 
   function runAction(
-    fn: typeof acceptInvitationAction | typeof declineInvitationAction | typeof deleteInvitationAction,
+    fn:
+      | typeof acceptInvitationAction
+      | typeof declineInvitationAction
+      | typeof deleteInvitationAction,
     successMsg: string,
   ) {
     startTransition(async () => {
@@ -137,12 +140,14 @@ const columns: Column<RowType>[] = [
     header: 'Role',
     sortable: true,
     className: 'capitalize',
+    render: (v) => (v as string) || '—',
   },
   {
     key: 'inviter',
     header: 'Invited By',
     sortable: true,
     className: 'break-all',
+    render: (v) => (v as string) || '—',
   },
   {
     key: 'status',
@@ -182,28 +187,66 @@ const columns: Column<RowType>[] = [
 function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
   const [isPending, startTransition] = useTransition()
 
+  /* helper to run server actions on many rows */
+  async function runBulk(
+    rows: RowType[],
+    fn:
+      | typeof acceptInvitationAction
+      | typeof declineInvitationAction
+      | typeof deleteInvitationAction,
+    loadingMsg: string,
+    successMsg: string,
+  ) {
+    const toastId = toast.loading(loadingMsg)
+    const results = await Promise.all(
+      rows.map(async (inv) => {
+        const fd = new FormData()
+        fd.append('invitationId', inv.id.toString())
+        return fn({}, fd)
+      }),
+    )
+    const errors = results.filter((r) => r?.error).map((r) => r!.error)
+    if (errors.length) {
+      toast.error(errors.join('\n'), { id: toastId })
+    } else {
+      toast.success(successMsg, { id: toastId })
+    }
+    router.refresh()
+  }
+
+  /* dynamic rules */
+  const canAccept = (rows: RowType[]) =>
+    rows.length > 0 &&
+    rows.every((r) => r.status === 'pending') &&
+    new Set(rows.map((r) => r.role)).size === 1
+
+  const canDecline = (rows: RowType[]) =>
+    rows.length > 0 && rows.every((r) => r.status === 'pending')
+
   return [
+    {
+      label: 'Accept',
+      icon: CheckCircle2,
+      onClick: (selected) =>
+        startTransition(() => runBulk(selected, acceptInvitationAction, 'Accepting…', 'Invitations accepted.')),
+      isAvailable: canAccept,
+      isDisabled: (rows) => !canAccept(rows) || isPending,
+    },
+    {
+      label: 'Decline',
+      icon: XCircle,
+      onClick: (selected) =>
+        startTransition(() => runBulk(selected, declineInvitationAction, 'Declining…', 'Invitations declined.')),
+      isAvailable: canDecline,
+      isDisabled: (rows) => !canDecline(rows) || isPending,
+    },
     {
       label: 'Delete',
       icon: Trash2,
       variant: 'destructive',
       onClick: (selected) =>
-        startTransition(async () => {
-          const results = await Promise.all(
-            selected.map(async (inv) => {
-              const fd = new FormData()
-              fd.append('invitationId', inv.id.toString())
-              return deleteInvitationAction({}, fd)
-            }),
-          )
-          const errors = results.filter((r) => r?.error).map((r) => r!.error)
-          if (errors.length) {
-            toast.error(errors.join('\n'))
-          } else {
-            toast.success('Selected invitations deleted.')
-          }
-          router.refresh()
-        }),
+        startTransition(() => runBulk(selected, deleteInvitationAction, 'Deleting…', 'Invitations deleted.')),
+      isDisabled: () => isPending,
     },
   ]
 }

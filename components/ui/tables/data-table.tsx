@@ -61,6 +61,10 @@ export interface BulkAction<T extends Record<string, any>> {
   onClick: (selectedRows: T[]) => void | Promise<void>
   /** optional colour accent */
   variant?: "default" | "destructive" | "outline"
+  /** Determines if the item should be shown given current selection (default → true) */
+  isAvailable?: (selectedRows: T[]) => boolean
+  /** Determines if the item is disabled (in addition to empty‑selection check) */
+  isDisabled?: (selectedRows: T[]) => boolean
 }
 
 interface DataTableProps<T extends Record<string, any>> {
@@ -189,6 +193,10 @@ export function DataTable<T extends Record<string, any>>({
 
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const selectedCount = selectedRows.length
+  const selectedOriginals = React.useMemo(
+    () => selectedRows.map((r) => r.original),
+    [selectedRows],
+  )
 
   /* Pre‑compute filter column to avoid optional‑call error */
   const filterColumn = React.useMemo(() => {
@@ -233,24 +241,34 @@ export function DataTable<T extends Record<string, any>>({
                   </>
                 )}
 
-                {bulkActions.map((a) => (
-                  <DropdownMenuItem
-                    key={a.label}
-                    onClick={() =>
-                      a.onClick(selectedRows.map((r) => r.original))
-                    }
-                    disabled={selectedCount === 0}
-                    className={cn(
-                      "cursor-pointer",
-                      a.variant === "destructive" &&
-                        "text-rose-600 dark:text-rose-400 font-medium",
-                      selectedCount === 0 && "opacity-50 cursor-not-allowed",
-                    )}
-                  >
-                    <a.icon className="mr-2 h-4 w-4" />
-                    {a.label}
-                  </DropdownMenuItem>
-                ))}
+                {bulkActions
+                  .filter(
+                    (a) =>
+                      !a.isAvailable || a.isAvailable(selectedOriginals),
+                  )
+                  .map((a) => (
+                    <DropdownMenuItem
+                      key={a.label}
+                      onClick={() => a.onClick(selectedOriginals)}
+                      disabled={
+                        selectedCount === 0 ||
+                        (a.isDisabled ? a.isDisabled(selectedOriginals) : false)
+                      }
+                      className={cn(
+                        "cursor-pointer",
+                        a.variant === "destructive" &&
+                          "text-rose-600 dark:text-rose-400 font-medium",
+                        (selectedCount === 0 ||
+                          (a.isDisabled
+                            ? a.isDisabled(selectedOriginals)
+                            : false)) &&
+                          "opacity-50 cursor-not-allowed",
+                      )}
+                    >
+                      <a.icon className="mr-2 h-4 w-4" />
+                      {a.label}
+                    </DropdownMenuItem>
+                  ))}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
