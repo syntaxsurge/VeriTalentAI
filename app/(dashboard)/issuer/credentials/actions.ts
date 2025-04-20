@@ -1,7 +1,5 @@
 'use server'
 
-import { redirect } from 'next/navigation'
-
 import { eq, and } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -10,7 +8,11 @@ import { issueCredential } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
 import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
-import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/viskify'
+import {
+  candidateCredentials,
+  CredentialStatus,
+  candidates,
+} from '@/lib/db/schema/viskify'
 
 /* ------------------------------------------------------------- */
 /*                     A P P R O V E   C R E D                   */
@@ -44,15 +46,11 @@ export const approveCredentialAction = validatedActionWithUser(
       )
       .limit(1)
 
-    if (!cred) {
-      return { error: 'Credential not found for this issuer.' }
-    }
-
-    if (cred.status !== CredentialStatus.PENDING) {
+    if (!cred) return { error: 'Credential not found for this issuer.' }
+    if (cred.status !== CredentialStatus.PENDING)
       return { error: 'Credential is not pending review.' }
-    }
 
-    // fetch candidate + user for subject DID / name
+    /* Candidate profile for subject DID / name */
     const [cand] = await db
       .select({
         cand: candidates,
@@ -63,10 +61,11 @@ export const approveCredentialAction = validatedActionWithUser(
       .where(eq(candidates.id, cred.candidateId))
       .limit(1)
 
-    // Fallback subject DID if candidate hasn't created one yet
-    const subjectDid = process.env.SUBJECT_DID || `did:cheqd:testnet:candidate-${cred.candidateId}`
+    /* Fallback subject DID if candidate hasn't created one yet */
+    const subjectDid =
+      process.env.SUBJECT_DID || `did:cheqd:testnet:candidate-${cred.candidateId}`
 
-    // Issue the VC via cheqd
+    /* Issue the VC via cheqd */
     let vcJwt: string | undefined
     try {
       const vc = await issueCredential({
@@ -80,8 +79,8 @@ export const approveCredentialAction = validatedActionWithUser(
       })
       vcJwt = vc?.proof?.jwt
     } catch (err) {
-      // If issuing fails we still mark verified but without VC
       console.error('VC issuance failed:', err)
+      /* If issuing fails we still mark verified but without VC */
     }
 
     await db
@@ -94,7 +93,7 @@ export const approveCredentialAction = validatedActionWithUser(
       })
       .where(eq(candidateCredentials.id, cred.id))
 
-    redirect('/issuer/requests')
+    return { success: 'Credential approved and signed.' }
   },
 )
 
@@ -112,9 +111,7 @@ export const rejectCredentialAction = validatedActionWithUser(
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
 
-    if (!issuer) {
-      return { error: 'Issuer not found.' }
-    }
+    if (!issuer) return { error: 'Issuer not found.' }
 
     await db
       .update(candidateCredentials)
@@ -130,6 +127,6 @@ export const rejectCredentialAction = validatedActionWithUser(
         ),
       )
 
-    redirect('/issuer/requests')
+    return { success: 'Credential rejected.' }
   },
 )
