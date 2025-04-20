@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useActionState } from 'react'
+import { useActionState, useRef } from 'react'
 import { toast } from 'sonner'
 import { Loader2, PlusCircle } from 'lucide-react'
 
@@ -21,16 +21,32 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 type ActionState = { error?: string; success?: string }
 
 export function InviteTeamMember({ isOwner }: { isOwner: boolean }) {
+  /* ------------------------------------------------------------------ */
+  /*                         S E R V E R  A C T I O N                    */
+  /* ------------------------------------------------------------------ */
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
     inviteTeamMember,
     { error: '', success: '' },
   )
 
+  /* Keep a ref to the form so we can clear it after a successful invite */
+  const formRef = useRef<HTMLFormElement>(null)
+
+  /* ------------------------------------------------------------------ */
+  /*                               T O A S T S                          */
+  /* ------------------------------------------------------------------ */
   React.useEffect(() => {
     if (state.error) toast.error(state.error)
-    if (state.success) toast.success(state.success)
-  }, [state.error, state.success])
+    if (state.success) {
+      toast.success(state.success)
+      /* Reset the form for consecutive invites */
+      formRef.current?.reset()
+    }
+  }, [state]) // depend on entire state object to fire even when message text repeats
 
+  /* ------------------------------------------------------------------ */
+  /*                                  UI                                */
+  /* ------------------------------------------------------------------ */
   return (
     <Card>
       <CardHeader>
@@ -38,7 +54,8 @@ export function InviteTeamMember({ isOwner }: { isOwner: boolean }) {
       </CardHeader>
 
       <CardContent>
-        <form action={formAction} className='space-y-5'>
+        <form ref={formRef} action={formAction} className='space-y-5'>
+          {/* Email */}
           <div className='flex flex-col space-y-1.5'>
             <Label htmlFor='email' className='text-sm font-medium'>
               Email
@@ -53,6 +70,7 @@ export function InviteTeamMember({ isOwner }: { isOwner: boolean }) {
             />
           </div>
 
+          {/* Role */}
           <div className='flex flex-col space-y-2'>
             <Label htmlFor='role' className='text-sm font-medium'>
               Role
@@ -78,6 +96,7 @@ export function InviteTeamMember({ isOwner }: { isOwner: boolean }) {
             </RadioGroup>
           </div>
 
+          {/* Submit */}
           <Button type='submit' disabled={pending || !isOwner}>
             {pending ? (
               <>
