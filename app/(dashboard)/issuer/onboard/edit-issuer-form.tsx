@@ -4,12 +4,12 @@ import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { useActionState, startTransition } from 'react'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { updateIssuerDetailsAction } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { FormStatus } from '@/components/ui/form-status'
 import { IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
 
 type ActionState = { error?: string; success?: string }
@@ -25,6 +25,11 @@ export function EditIssuerForm({ issuer }: { issuer: any }) {
     e.preventDefault()
     startTransition(() => formAction(new FormData(e.currentTarget)))
   }
+
+  React.useEffect(() => {
+    if (state.error) toast.error(state.error)
+    if (state.success) toast.success(state.success)
+  }, [state.error, state.success])
 
   React.useEffect(() => {
     if (state.success) router.refresh()
@@ -90,8 +95,6 @@ export function EditIssuerForm({ issuer }: { issuer: any }) {
           placeholder='https://…'
         />
       </div>
-
-      <FormStatus state={state} />
 
       <Button type='submit' disabled={pending} className='w-full'>
         {pending ? (

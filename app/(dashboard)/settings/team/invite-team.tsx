@@ -1,7 +1,8 @@
 'use client'
 
+import * as React from 'react'
 import { useActionState } from 'react'
-
+import { toast } from 'sonner'
 import { Loader2, PlusCircle } from 'lucide-react'
 
 import { inviteTeamMember } from '@/app/(auth)/actions'
@@ -16,7 +17,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { FormStatus } from '@/components/ui/form-status'
 
 type ActionState = { error?: string; success?: string }
 
@@ -26,6 +26,11 @@ export function InviteTeamMember({ isOwner }: { isOwner: boolean }) {
     { error: '', success: '' },
   )
 
+  React.useEffect(() => {
+    if (state.error) toast.error(state.error)
+    if (state.success) toast.success(state.success)
+  }, [state.error, state.success])
+
   return (
     <Card>
       <CardHeader>
@@ -34,7 +39,6 @@ export function InviteTeamMember({ isOwner }: { isOwner: boolean }) {
 
       <CardContent>
         <form action={formAction} className='space-y-5'>
-          {/* Email */}
           <div className='flex flex-col space-y-1.5'>
             <Label htmlFor='email' className='text-sm font-medium'>
               Email
@@ -49,7 +53,6 @@ export function InviteTeamMember({ isOwner }: { isOwner: boolean }) {
             />
           </div>
 
-          {/* Role */}
           <div className='flex flex-col space-y-2'>
             <Label htmlFor='role' className='text-sm font-medium'>
               Role
@@ -75,10 +78,6 @@ export function InviteTeamMember({ isOwner }: { isOwner: boolean }) {
             </RadioGroup>
           </div>
 
-          {/* Unified status / toast */}
-          <FormStatus state={state} />
-
-          {/* Submit */}
           <Button type='submit' disabled={pending || !isOwner}>
             {pending ? (
               <>

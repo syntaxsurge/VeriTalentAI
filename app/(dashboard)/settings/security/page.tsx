@@ -9,19 +9,16 @@ import {
 } from 'react'
 
 import { Lock, Trash2, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { updatePassword, deleteAccount } from '@/app/(auth)/actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FormStatus } from '@/components/ui/form-status'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUser } from '@/lib/auth'
 
-type ActionState = {
-  error?: string
-  success?: string
-}
+type ActionState = { error?: string; success?: string }
 
 export default function SecurityPage() {
   const { userPromise } = useUser()
@@ -46,27 +43,31 @@ export default function SecurityPage() {
   const [passwordState, passwordAction, isPasswordPending] = useActionState<
     ActionState,
     FormData
-  >(updatePassword, {
-    error: '',
-    success: '',
-  })
+  >(updatePassword, { error: '', success: '' })
 
   const [deleteState, deleteAction, isDeletePending] = useActionState<
     ActionState,
     FormData
-  >(deleteAccount, {
-    error: '',
-    success: '',
-  })
+  >(deleteAccount, { error: '', success: '' })
 
-  const handlePasswordSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    startTransition(() => passwordAction(new FormData(event.currentTarget)))
+  useEffect(() => {
+    if (passwordState.error) toast.error(passwordState.error)
+    if (passwordState.success) toast.success(passwordState.success)
+  }, [passwordState.error, passwordState.success])
+
+  useEffect(() => {
+    if (deleteState.error) toast.error(deleteState.error)
+    if (deleteState.success) toast.success(deleteState.success)
+  }, [deleteState.error, deleteState.success])
+
+  const handlePasswordSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    startTransition(() => passwordAction(new FormData(e.currentTarget)))
   }
 
-  const handleDeleteSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    startTransition(() => deleteAction(new FormData(event.currentTarget)))
+  const handleDeleteSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    startTransition(() => deleteAction(new FormData(e.currentTarget)))
   }
 
   if (user === undefined) return null
@@ -121,8 +122,6 @@ export default function SecurityPage() {
               />
             </div>
 
-            <FormStatus state={passwordState} />
-
             <Button type='submit' disabled={isPasswordPending}>
               {isPasswordPending ? (
                 <>
@@ -162,8 +161,6 @@ export default function SecurityPage() {
                 placeholder='Enter password to confirm'
               />
             </div>
-
-            <FormStatus state={deleteState} />
 
             <Button type='submit' variant='destructive' disabled={isDeletePending}>
               {isDeletePending ? (

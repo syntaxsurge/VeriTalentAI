@@ -4,12 +4,12 @@ import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { useActionState, startTransition } from 'react'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { updateIssuerDidAction } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { FormStatus } from '@/components/ui/form-status'
 
 type ActionState = { error?: string; success?: string }
 
@@ -26,7 +26,11 @@ export function LinkDidForm() {
     startTransition(() => formAction(fd))
   }
 
-  /* Refresh the page once a DID is successfully linked so the new DID shows up */
+  React.useEffect(() => {
+    if (state.error) toast.error(state.error)
+    if (state.success) toast.success(state.success)
+  }, [state.error, state.success])
+
   React.useEffect(() => {
     if (state.success) router.refresh()
   }, [state.success, router])
@@ -37,8 +41,6 @@ export function LinkDidForm() {
         <Label htmlFor='did'>Link a cheqd DID</Label>
         <Input id='did' name='did' required placeholder='did:cheqd:testnet:xyz…' />
       </div>
-
-      <FormStatus state={state} />
 
       <Button type='submit' disabled={pending}>
         {pending ? (

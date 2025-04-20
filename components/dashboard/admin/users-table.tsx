@@ -32,7 +32,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { FormStatus } from '@/components/ui/form-status'
 
 export interface RowType {
   id: number
@@ -135,7 +134,6 @@ function EditUserDialog({
             </select>
           </div>
 
-          <FormStatus state={state} />
 
           <Button type='submit' className='w-full' disabled={pending}>
             {pending ? (

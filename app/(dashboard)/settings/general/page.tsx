@@ -9,11 +9,11 @@ import {
 } from 'react'
 
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { updateAccount } from '@/app/(auth)/actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FormStatus } from '@/components/ui/form-status'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUser } from '@/lib/auth'
@@ -24,7 +24,6 @@ export default function GeneralPage() {
   const { userPromise } = useUser()
   const [user, setUser] = useState<any | null | undefined>(undefined)
 
-  // Resolve promise client‑side
   useEffect(() => {
     let mounted = true
     userPromise.then((u) => mounted && setUser(u))
@@ -35,7 +34,7 @@ export default function GeneralPage() {
 
   const router = useRouter()
   useEffect(() => {
-    if (user === undefined) return // still loading
+    if (user === undefined) return
     if (!user) {
       router.replace('/sign-in')
     }
@@ -43,18 +42,20 @@ export default function GeneralPage() {
 
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
     updateAccount,
-    {
-      error: '',
-      success: '',
-    },
+    { error: '', success: '' },
   )
+
+  useEffect(() => {
+    if (state.error) toast.error(state.error)
+    if (state.success) toast.success(state.success)
+  }, [state.error, state.success])
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     startTransition(() => formAction(new FormData(event.currentTarget)))
   }
 
-  if (user === undefined) return null // skeleton could be added here
+  if (user === undefined) return null
 
   return (
     <section className='flex-1 p-4 lg:p-8'>
@@ -87,8 +88,6 @@ export default function GeneralPage() {
                 required
               />
             </div>
-
-            <FormStatus state={state} />
 
             <Button type='submit' disabled={isPending}>
               {isPending ? (
