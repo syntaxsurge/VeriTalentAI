@@ -3,16 +3,14 @@ import { redirect } from 'next/navigation'
 
 import { eq } from 'drizzle-orm'
 
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import UpdateStageForm from '../update-stage-form'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { users } from '@/lib/db/schema/core'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 import { candidates } from '@/lib/db/schema/viskify'
-
-import { updateCandidateStageAction } from '../actions'
 
 export const revalidate = 0
 
@@ -65,14 +63,6 @@ export default async function PipelineBoard({ params }: { params: { id: string }
   })
 
   /* ------------------------------------------------------------------ */
-  /*                     Server action wrapper for form                  */
-  /* ------------------------------------------------------------------ */
-  const updateStageAction = async (formData: FormData): Promise<void> => {
-    'use server'
-    await updateCandidateStageAction({}, formData)
-  }
-
-  /* ------------------------------------------------------------------ */
   /*                                UI                                   */
   /* ------------------------------------------------------------------ */
   return (
@@ -100,23 +90,10 @@ export default async function PipelineBoard({ params }: { params: { id: string }
                     </CardTitle>
                   </CardHeader>
                   <CardContent className='space-y-2 text-sm'>
-                    <form action={updateStageAction} className='flex items-center gap-2'>
-                      <input type='hidden' name='pipelineCandidateId' value={row.pc.id} />
-                      <select
-                        name='stage'
-                        defaultValue={row.pc.stage}
-                        className='border-border h-8 rounded-md border px-2 text-xs'
-                      >
-                        {STAGES.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </select>
-                      <Button type='submit' variant='outline' size='sm'>
-                        Update
-                      </Button>
-                    </form>
+                    <UpdateStageForm
+                      pipelineCandidateId={row.pc.id}
+                      initialStage={row.pc.stage as Stage}
+                    />
                   </CardContent>
                 </Card>
               ))
