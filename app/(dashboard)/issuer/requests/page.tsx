@@ -14,6 +14,7 @@ import { issuers } from '@/lib/db/schema/issuer'
 import {
   candidateCredentials,
   candidates,
+  CredentialStatus,
 } from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
@@ -46,13 +47,23 @@ export default async function RequestsPage() {
     .leftJoin(users, eq(candidates.userId, users.id))
     .where(eq(candidateCredentials.issuerId, issuer.id))
 
+  /* --------------------- Transform & sort ---------------------- */
   const tableRows: RowType[] = requests.map((r) => ({
     id: r.credential.id,
     title: r.credential.title,
     type: r.credential.type,
     candidate: r.candidateUser?.name || r.candidateUser?.email || 'Unknown',
-    status: r.credential.status,
+    status: r.credential.status as CredentialStatus,
   }))
+
+  /* Prioritise pending status at the top */
+  const statusRank: Record<CredentialStatus, number> = {
+    [CredentialStatus.PENDING]: 0,
+    [CredentialStatus.UNVERIFIED]: 1,
+    [CredentialStatus.VERIFIED]: 2,
+    [CredentialStatus.REJECTED]: 3,
+  }
+  tableRows.sort((a, b) => statusRank[a.status] - statusRank[b.status])
 
   /* --------------------------- UI ------------------------------ */
   return (
