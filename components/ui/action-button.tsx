@@ -5,7 +5,7 @@ import { useTransition } from 'react'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { Button, type ButtonProps } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 type ActionResult =
@@ -17,11 +17,12 @@ type ActionResult =
 
 /**
  * A drop‑in replacement for &lt;Button&gt; that
- * • runs an async callback (onAction) inside a React transition<br/>
+ * • runs an async callback (<code>onAction</code>) inside a React transition<br/>
  * • shows a muted spinner while pending<br/>
  * • triggers a coloured Sonner toast for <code>success</code> / <code>error</code> responses.
  */
-export interface ActionButtonProps extends ButtonProps {
+export interface ActionButtonProps extends React.ComponentProps<typeof Button> {
+  /** Async handler to run when clicked */
   onAction: () => Promise<ActionResult>
   /** Optional label shown while pending; defaults to children. */
   pendingLabel?: React.ReactNode
