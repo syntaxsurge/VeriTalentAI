@@ -3,6 +3,7 @@ import { getUser } from '@/lib/db/queries'
 import { skillQuizzes } from '@/lib/db/schema/viskify'
 
 import StartQuizForm from './start-quiz-form'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const revalidate = 0
 
@@ -13,22 +14,35 @@ export default async function SkillCheckPage() {
   const quizzes = await db.select().from(skillQuizzes)
 
   return (
-    <section className='space-y-4'>
-      <h2 className='text-xl font-semibold'>AI Skill Check</h2>
-      <p className='text-muted-foreground text-sm'>
-        Pass a quiz and automatically receive a verifiable “Skill Pass”.
-      </p>
+    <section className='space-y-6'>
+      <header className='max-w-2xl space-y-2'>
+        <h1 className='text-3xl font-extrabold tracking-tight'>AI Skill Check</h1>
+        <p className='text-muted-foreground text-sm'>
+          Pass a quiz to instantly earn a verifiable <strong>Skill Pass</strong> credential.
+        </p>
+      </header>
 
       {quizzes.length === 0 ? (
-        <p>No quizzes found. Seed the database first.</p>
+        <p className='text-muted-foreground'>No quizzes found. Seed the database first.</p>
       ) : (
-        quizzes.map((quiz) => (
-          <div key={quiz.id} className='border-border mb-2 rounded-md border p-4'>
-            <h3 className='text-lg font-medium'>{quiz.title}</h3>
-            <p className='text-muted-foreground mb-4 text-sm'>{quiz.description}</p>
-            <StartQuizForm quiz={quiz} />
-          </div>
-        ))
+        <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+          {quizzes.map((quiz) => (
+            <Card
+              key={quiz.id}
+              className='group relative overflow-hidden transition-shadow hover:shadow-xl'
+            >
+              <CardHeader>
+                <CardTitle className='line-clamp-2 min-h-[3rem]'>{quiz.title}</CardTitle>
+              </CardHeader>
+              <CardContent className='flex flex-col gap-4'>
+                <p className='text-muted-foreground line-clamp-3 flex-1 text-sm'>
+                  {quiz.description}
+                </p>
+                <StartQuizForm quiz={quiz} />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </section>
   )
