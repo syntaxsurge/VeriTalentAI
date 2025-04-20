@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 
 import { eq, and } from 'drizzle-orm'
 
-import { Button } from '@/components/ui/button'
+import AddToPipelineForm from './add-to-pipeline-form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
@@ -15,8 +15,6 @@ import {
   CredentialStatus,
   quizAttempts,
 } from '@/lib/db/schema/viskify'
-
-import { addCandidateToPipelineAction } from '../../pipelines/actions'
 
 export const revalidate = 0
 
@@ -58,15 +56,9 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
 
   /* Recruiter pipelines for add‑to‑pipeline form */
   const pipelines = await db
-    .select()
+    .select({ id: recruiterPipelines.id, name: recruiterPipelines.name })
     .from(recruiterPipelines)
     .where(eq(recruiterPipelines.recruiterId, user.id))
-
-  /* Single‑parameter server‑action wrapper */
-  const addToPipelineAction = async (formData: FormData): Promise<void> => {
-    'use server'
-    await addCandidateToPipelineAction({}, formData)
-  }
 
   return (
     <section className='max-w-2xl space-y-6'>
@@ -80,29 +72,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
       </div>
 
       {pipelines.length > 0 && (
-        <form action={addToPipelineAction} className='flex items-end gap-3'>
-          <input type='hidden' name='candidateId' value={candidateId} />
-
-          <div className='flex flex-1 flex-col'>
-            <label htmlFor='pipelineId' className='mb-1 text-sm font-medium'>
-              Add to Pipeline
-            </label>
-            <select
-              id='pipelineId'
-              name='pipelineId'
-              required
-              className='border-border h-10 rounded-md border px-2 text-sm'
-            >
-              {pipelines.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <Button type='submit'>Add</Button>
-        </form>
+        <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />
       )}
 
       {/* Verified credentials */}

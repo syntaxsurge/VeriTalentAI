@@ -6,20 +6,24 @@ import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button, type ButtonProps } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 type ActionResult =
   | void
-  | { success?: string; error?: string }
+  | {
+      success?: string
+      error?: string
+    }
 
 /**
- * A drop‑in replacement for &lt;Button&gt; that:
- *  • runs an async callback (onAction) inside React transition
- *  • shows a spinner while pending
- *  • displays a coloured toast for { success, error } responses
+ * A drop‑in replacement for &lt;Button&gt; that
+ * • runs an async callback (onAction) inside a React transition<br/>
+ * • shows a muted spinner while pending<br/>
+ * • triggers a coloured Sonner toast for <code>success</code> / <code>error</code> responses.
  */
 export interface ActionButtonProps extends ButtonProps {
   onAction: () => Promise<ActionResult>
-  /** Shown while pending; falls back to children. */
+  /** Optional label shown while pending; defaults to children. */
   pendingLabel?: React.ReactNode
 }
 
@@ -28,6 +32,7 @@ export function ActionButton({
   pendingLabel,
   children,
   disabled,
+  className,
   ...rest
 }: ActionButtonProps) {
   const [isPending, startTransition] = useTransition()
@@ -36,9 +41,9 @@ export function ActionButton({
     startTransition(async () => {
       const result = await onAction()
       if (result && typeof result === 'object') {
-        if ('error' in result && result.error) {
+        if (result.error) {
           toast.error(result.error)
-        } else if ('success' in result && result.success) {
+        } else if (result.success) {
           toast.success(result.success)
         }
       }
@@ -48,6 +53,7 @@ export function ActionButton({
   return (
     <Button
       disabled={disabled || isPending}
+      className={cn(className, isPending && 'opacity-60')}
       onClick={handleClick}
       {...rest}
     >
