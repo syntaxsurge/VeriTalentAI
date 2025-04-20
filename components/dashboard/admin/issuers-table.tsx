@@ -9,6 +9,7 @@ import {
   ShieldX,
   XCircle,
   Trash2,
+  type LucideProps,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
+import { cn } from '@/lib/utils'
 
 export interface RowType {
   id: number
@@ -39,7 +41,32 @@ export interface RowType {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                   Utils                                    */
+/*                            C O L O R  E D   I C O N S                      */
+/* -------------------------------------------------------------------------- */
+
+const VerifyIcon = ({ className, ...props }: LucideProps) => (
+  <ShieldCheck
+    {...props}
+    className={cn('mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400', className)}
+  />
+)
+
+const UnverifyIcon = ({ className, ...props }: LucideProps) => (
+  <ShieldX
+    {...props}
+    className={cn('mr-2 h-4 w-4 text-amber-600 dark:text-amber-400', className)}
+  />
+)
+
+const RejectIcon = ({ className, ...props }: LucideProps) => (
+  <XCircle
+    {...props}
+    className={cn('mr-2 h-4 w-4 text-rose-600 dark:text-rose-400', className)}
+  />
+)
+
+/* -------------------------------------------------------------------------- */
+/*                                  Utils                                     */
 /* -------------------------------------------------------------------------- */
 
 function StatusBadge({ status }: { status: string }) {
@@ -116,7 +143,7 @@ function RowActions({ id, status }: { id: number; status: string }) {
             disabled={isPending}
             className='hover:bg-emerald-500/10 focus:bg-emerald-500/10'
           >
-            <ShieldCheck className='mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400' />
+            <VerifyIcon />
             Verify
           </DropdownMenuItem>
         )}
@@ -127,7 +154,7 @@ function RowActions({ id, status }: { id: number; status: string }) {
             disabled={isPending}
             className='hover:bg-amber-500/10 focus:bg-amber-500/10'
           >
-            <ShieldX className='mr-2 h-4 w-4 text-amber-600 dark:text-amber-400' />
+            <UnverifyIcon />
             Unverify
           </DropdownMenuItem>
         )}
@@ -138,7 +165,7 @@ function RowActions({ id, status }: { id: number; status: string }) {
             disabled={isPending}
             className='hover:bg-rose-500/10 focus:bg-rose-500/10'
           >
-            <XCircle className='mr-2 h-4 w-4 text-rose-600 dark:text-rose-400' />
+            <RejectIcon />
             Reject
           </DropdownMenuItem>
         )}
@@ -262,17 +289,17 @@ export default function AdminIssuersTable({ rows }: { rows: RowType[] }) {
   const bulkActions: BulkAction<RowType>[] = [
     {
       label: 'Verify',
-      icon: ShieldCheck,
+      icon: VerifyIcon as any,
       onClick: (sel) => bulkUpdate(sel, IssuerStatus.ACTIVE),
     },
     {
       label: 'Unverify',
-      icon: ShieldX,
+      icon: UnverifyIcon as any,
       onClick: (sel) => bulkUpdate(sel, IssuerStatus.PENDING),
     },
     {
       label: 'Reject',
-      icon: XCircle,
+      icon: RejectIcon as any,
       onClick: (sel) => bulkUpdate(sel, IssuerStatus.REJECTED, 'Bulk reject'),
     },
     {
