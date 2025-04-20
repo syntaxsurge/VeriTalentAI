@@ -41,7 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           disableTransitionOnChange
         >
           {/* Global toast provider */}
-          <Toaster richColors position='top-right' />
+          <Toaster richColors position='bottom-right' />
 
           <UserProvider userPromise={userPromise}>
             {/* Global header */}
