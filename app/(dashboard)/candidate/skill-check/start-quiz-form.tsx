@@ -2,12 +2,18 @@
 
 import * as React from 'react'
 import { useTransition } from 'react'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 
 import { startQuizAction } from './actions'
 
-export default function StartQuizForm({ quiz }: { quiz: { id: number; title: string } }) {
+export default function StartQuizForm({
+  quiz,
+}: {
+  quiz: { id: number; title: string }
+}) {
   const [isPending, startTransition] = useTransition()
   const [score, setScore] = React.useState<number | null>(null)
   const [message, setMessage] = React.useState('')
@@ -15,11 +21,26 @@ export default function StartQuizForm({ quiz }: { quiz: { id: number; title: str
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
+
+    // show progressive toast feedback
+    const toastId = toast.loading('Submitting your answer…')
+
     startTransition(async () => {
-      const res = await startQuizAction(fd)
-      if (res) {
-        setScore(res.score)
-        setMessage(res.message)
+      try {
+        const res = await startQuizAction(fd)
+        if (res) {
+          setScore(res.score)
+          setMessage(res.message)
+          if (res.score >= 70) {
+            toast.success(res.message, { id: toastId })
+          } else {
+            toast.info(res.message, { id: toastId })
+          }
+        } else {
+          toast.error('No response from server.', { id: toastId })
+        }
+      } catch (err: any) {
+        toast.error(err?.message ?? 'Something went wrong.', { id: toastId })
       }
     })
   }
@@ -39,8 +60,14 @@ export default function StartQuizForm({ quiz }: { quiz: { id: number; title: str
           required
         />
       </div>
-      <Button type='submit' disabled={isPending}>
-        {isPending ? 'Submitting…' : 'Submit'}
+      <Button type='submit' disabled={isPending} className='w-max'>
+        {isPending ? (
+          <>
+            <Loader2 className='mr-2 h-4 w-4 animate-spin' /> Submitting…
+          </>
+        ) : (
+          'Submit'
+        )}
       </Button>
       {score !== null && (
         <div className='mt-2'>
