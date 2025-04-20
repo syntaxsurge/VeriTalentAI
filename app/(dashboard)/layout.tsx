@@ -30,6 +30,7 @@ import { useUser } from '@/lib/auth'
 
 const MAIN_NAV: SidebarNavItem[] = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/invitations', icon: Mail, label: 'Invitations' },
   { href: '/pricing', icon: Tag, label: 'Pricing' },
 ]
 
