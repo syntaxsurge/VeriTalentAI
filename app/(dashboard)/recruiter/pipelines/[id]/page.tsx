@@ -23,9 +23,9 @@ export default async function PipelineBoard({ params }: { params: { id: string }
   if (!user) redirect('/sign-in')
   if (user.role !== 'recruiter') redirect('/')
 
-  /* ---------------------------------------------------------- */
-  /* Verify pipeline ownership                                  */
-  /* ---------------------------------------------------------- */
+  /* ------------------------------------------------------------------ */
+  /*                     Verify pipeline ownership                       */
+  /* ------------------------------------------------------------------ */
   const [pipeline] = await db
     .select()
     .from(recruiterPipelines)
@@ -34,9 +34,9 @@ export default async function PipelineBoard({ params }: { params: { id: string }
 
   if (!pipeline || pipeline.recruiterId !== user.id) redirect('/recruiter/pipelines')
 
-  /* ---------------------------------------------------------- */
-  /* Load members                                               */
-  /* ---------------------------------------------------------- */
+  /* ------------------------------------------------------------------ */
+  /*                           Load candidates                           */
+  /* ------------------------------------------------------------------ */
   const rows = await db
     .select({
       pc: pipelineCandidates,
@@ -48,9 +48,9 @@ export default async function PipelineBoard({ params }: { params: { id: string }
     .leftJoin(users, eq(candidates.userId, users.id))
     .where(eq(pipelineCandidates.pipelineId, pipelineId))
 
-  /* ---------------------------------------------------------- */
-  /* Helper maps – fully typed to avoid TS7053                  */
-  /* ---------------------------------------------------------- */
+  /* ------------------------------------------------------------------ */
+  /*                 Group candidates by stage for display               */
+  /* ------------------------------------------------------------------ */
   const grouped: Record<Stage, typeof rows> = STAGES.reduce(
     (acc, stage) => {
       acc[stage] = []
@@ -60,20 +60,21 @@ export default async function PipelineBoard({ params }: { params: { id: string }
   )
 
   rows.forEach((r) => {
-    const stageKey = r.pc.stage as Stage // cast narrows to valid keys
+    const stageKey = r.pc.stage as Stage
     grouped[stageKey].push(r)
   })
 
-  /* ---------------------------------------------------------- */
-  /* Single‑parameter server action wrapper                     */
-  /* ---------------------------------------------------------- */
+  /* ------------------------------------------------------------------ */
+  /*                     Server action wrapper for form                  */
+  /* ------------------------------------------------------------------ */
   const updateStageAction = async (formData: FormData): Promise<void> => {
+    'use server'
     await updateCandidateStageAction({}, formData)
   }
 
-  /* ---------------------------------------------------------- */
-  /* UI                                                         */
-  /* ---------------------------------------------------------- */
+  /* ------------------------------------------------------------------ */
+  /*                                UI                                   */
+  /* ------------------------------------------------------------------ */
   return (
     <section className='space-y-6'>
       <div className='flex items-center justify-between'>
