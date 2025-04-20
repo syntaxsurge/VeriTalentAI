@@ -38,7 +38,9 @@ function MemberRow({ member, canRemove }: MemberRowProps) {
 
   function handleRemove() {
     startTransition(async () => {
-      const res = await removeTeamMember({ memberId: member.id }, new FormData())
+      const fd = new FormData()
+      fd.append('memberId', member.id.toString())
+      const res = await removeTeamMember({}, fd)
       if (res?.error) {
         toast.error(res.error)
       } else {

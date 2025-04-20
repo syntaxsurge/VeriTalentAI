@@ -1,3 +1,4 @@
+
 'use server'
 
 import { cookies } from 'next/headers'
@@ -295,7 +296,8 @@ export const updateAccount = validatedActionWithUser(updateAccountSchema, async 
 /*                         T E A M  M A N A G E M E N T                       */
 /* -------------------------------------------------------------------------- */
 
-const removeTeamMemberSchema = z.object({ memberId: z.number() })
+// Fix: coerce string from FormData to number to prevent Zod error
+const removeTeamMemberSchema = z.object({ memberId: z.coerce.number() })
 
 export const removeTeamMember = validatedActionWithUser(
   removeTeamMemberSchema,
