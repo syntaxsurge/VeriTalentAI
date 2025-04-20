@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
@@ -28,7 +28,6 @@ function displayName(u: Pick<User, 'name' | 'email'>) {
 
 type MemberRowProps = {
   member: TeamDataWithMembers['teamMembers'][number]
-  /** whether the current viewer (team owner) can remove this member */
   canRemove: boolean
 }
 
@@ -45,8 +44,8 @@ function MemberRow({ member, canRemove }: MemberRowProps) {
         toast.error(res.error)
       } else {
         toast.success(res?.success ?? 'Member removed.')
+        router.refresh()
       }
-      router.refresh()
     })
   }
 
@@ -105,6 +104,16 @@ export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
 
   const isOwner =
     !!teamData.teamMembers.find((m) => m.role === 'owner' && m.user.id === user?.id)
+
+  /** Determine if the current viewer can remove the given member */
+  const canRemoveMember = useCallback(
+    (member: TeamDataWithMembers['teamMembers'][number]) => {
+      if (!isOwner) return false
+      /* Owners cannot remove other owners, nor themselves */
+      return member.role !== 'owner' && member.user.id !== user?.id
+    },
+    [isOwner, user],
+  )
 
   if (user === undefined) return null
 
@@ -167,13 +176,14 @@ export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
         </CardHeader>
         <CardContent>
           <ul className='space-y-4'>
-            {teamData.teamMembers.map((m, i) => (
-              <MemberRow key={m.id} member={m} canRemove={i > 1 && isOwner} />
+            {teamData.teamMembers.map((m) => (
+              <MemberRow key={m.id} member={m} canRemove={canRemoveMember(m)} />
             ))}
           </ul>
         </CardContent>
       </Card>
 
+      {/* Invite Form */}
       <InviteTeamMember isOwner={isOwner} />
     </section>
   )
