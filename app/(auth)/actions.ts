@@ -387,7 +387,7 @@ export const inviteTeamMember = validatedActionWithUser(
       .limit(1)
 
     if (existingInvitation.length > 0)
-      return { error: 'An invitation has already been sent to this email' }
+      return { error: 'An invitation has already been sent.' }
 
     await db.insert(invitations).values({
       teamId: userWithTeam.teamId,
