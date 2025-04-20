@@ -33,7 +33,7 @@ export default function OverviewSection() {
       <div className='mx-auto max-w-6xl px-4'>
         <header className='mb-14 text-center'>
           <h2 className='text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl'>
-            Why VeriTalent AI?
+            Why Viskify?
           </h2>
           <p className='text-muted-foreground mx-auto mt-4 max-w-2xl'>
             Eliminate tedious background checks with blockchain‑backed credentials and AI

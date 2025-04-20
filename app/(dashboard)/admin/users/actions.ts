@@ -22,7 +22,7 @@ import {
   candidateCredentials,
   quizAttempts,
   CredentialStatus,
-} from '@/lib/db/schema/veritalent'
+} from '@/lib/db/schema/viskify'
 
 /* ---------- Issuer ---------- */
 import { issuers } from '@/lib/db/schema/issuer'

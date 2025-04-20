@@ -81,7 +81,7 @@ export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
             </>
           ) : (
             <p className='text-muted-foreground text-sm'>
-              No DID yet. Create one in the VeriTalent AI dashboard.
+              No DID yet. Create one in the Viskify AI dashboard.
             </p>
           )}
         </CardContent>

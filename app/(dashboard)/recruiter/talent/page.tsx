@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { db } from '@/lib/db/drizzle'
 import { users } from '@/lib/db/schema/core'
-import { candidates, candidateCredentials, quizAttempts } from '@/lib/db/schema/veritalent'
+import { candidates, candidateCredentials, quizAttempts } from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
 

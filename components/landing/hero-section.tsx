@@ -21,7 +21,7 @@ export default function HeroSection() {
       <div className='relative z-10 mx-auto max-w-6xl px-4 py-32 text-center sm:py-44'>
         <h1 className='text-5xl font-extrabold tracking-tight sm:text-6xl md:text-7xl'>
           <span className='bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent'>
-            VeriTalent AI
+          Viskify
           </span>
         </h1>
 

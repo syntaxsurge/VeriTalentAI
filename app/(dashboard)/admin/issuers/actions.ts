@@ -9,7 +9,7 @@ import { db } from '@/lib/db/drizzle'
 import {
   candidateCredentials,
   CredentialStatus,
-} from '@/lib/db/schema/veritalent'
+} from '@/lib/db/schema/viskify'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import { createCheqdDID } from '@/lib/cheqd'
 

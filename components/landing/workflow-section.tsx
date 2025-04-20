@@ -28,7 +28,7 @@ export default function WorkflowSection() {
     <section id='workflow' className='bg-background py-24'>
       <div className='mx-auto max-w-6xl px-4'>
         <h2 className='text-center text-3xl font-extrabold tracking-tight sm:text-4xl'>
-          How VeriTalent Works
+          How Viskify Works
         </h2>
 
         {/* Responsive layout: stacked on mobile, horizontal on md+ */}

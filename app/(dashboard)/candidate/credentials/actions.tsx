@@ -10,7 +10,7 @@ import {
   candidateCredentials,
   candidates,
   CredentialStatus,
-} from '@/lib/db/schema/veritalent'
+} from '@/lib/db/schema/viskify'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 
 export const addCredential = validatedActionWithUser(

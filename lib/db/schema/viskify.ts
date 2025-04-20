@@ -11,7 +11,7 @@ import {
 } from 'drizzle-orm/pg-core'
 
 import { users } from './core'
-import { issuers } from './issuer' // new table
+import { issuers } from './issuer'
 
 /* -------------------------------------------------------------------------- */
 /*                              C A N D I D A T E S                            */

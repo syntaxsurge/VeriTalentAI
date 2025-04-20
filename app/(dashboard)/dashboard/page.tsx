@@ -30,7 +30,7 @@ import {
   candidateCredentials,
   CredentialStatus,
   quizAttempts,
-} from '@/lib/db/schema/veritalent'
+} from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
 
@@ -246,7 +246,7 @@ export default async function DashboardPage() {
                 Welcome back, <span className='break-all'>{user.name || user.email}</span>
               </h1>
               <p className='text-muted-foreground text-sm'>
-                Your personalised VeriTalent workspace overview.
+                Your personalised Viskify workspace overview.
               </p>
             </div>
 

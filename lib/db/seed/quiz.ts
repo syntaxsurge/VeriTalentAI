@@ -1,5 +1,5 @@
 import { db } from '../drizzle'
-import { skillQuizzes } from '../schema/veritalent'
+import { skillQuizzes } from '../schema/viskify'
 
 export async function seedQuizzes() {
   console.log('Seeding sample skill quizzes...')

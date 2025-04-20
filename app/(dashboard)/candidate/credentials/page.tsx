@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
-import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/veritalent'
+import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
 

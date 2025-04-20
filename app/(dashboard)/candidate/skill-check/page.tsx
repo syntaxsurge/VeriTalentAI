@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
-import { skillQuizzes } from '@/lib/db/schema/veritalent'
+import { skillQuizzes } from '@/lib/db/schema/viskify'
 
 import StartQuizForm from './start-quiz-form'
 

@@ -10,7 +10,7 @@ import { issueCredential } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
 import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
-import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/veritalent'
+import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/viskify'
 
 /* ------------------------------------------------------------- */
 /*                     A P P R O V E   C R E D                   */

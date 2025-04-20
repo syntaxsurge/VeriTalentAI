@@ -68,8 +68,8 @@ export default function SiteHeader() {
       <div className='mx-auto grid h-16 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-6 px-4 md:px-6'>
         {/* Brand */}
         <Link href='/' className='text-primary flex items-center gap-2 whitespace-nowrap text-lg font-extrabold tracking-tight'>
-          <Image src='/images/veritalent-logo.png' alt='VeriTalent logo' width={24} height={24} priority className='h-6 w-auto' />
-          VeriTalent AI
+          <Image src='/images/viskify-logo.png' alt='Viskify logo' width={24} height={24} priority className='h-6 w-auto' />
+          Viskify
         </Link>
 
         {/* Desktop nav */}

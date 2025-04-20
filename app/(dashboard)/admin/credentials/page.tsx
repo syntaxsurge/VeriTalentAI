@@ -13,7 +13,7 @@ import {
   candidateCredentials as credsT,
   candidates as candT,
   CredentialStatus,
-} from '@/lib/db/schema/veritalent'
+} from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
 

@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
-import { candidateCredentials } from '@/lib/db/schema/veritalent'
+import { candidateCredentials } from '@/lib/db/schema/viskify'
 
 export const deleteCredentialAction = validatedActionWithUser(
   z.object({

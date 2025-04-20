@@ -1,6 +1,6 @@
-# VeriTalent AI
+# Viskify
 
-**VeriTalent AI** is a trust‑layer for hiring that merges blockchain‑signed credentials with AI‑graded skill proofs.
+**Viskify** is a trust‑layer for hiring that merges blockchain‑signed credentials with AI‑graded skill proofs.
 Candidates create a **single verifiable profile for free**, recruiters instantly filter talent by proof instead of promises, and issuers sign credentials in minutes rather than weeks.
 
 ---
@@ -88,4 +88,4 @@ Navigate to http://localhost:3000 – sign up and explore for free.
 
 📜 License
 
-MIT © 2025 VeriTalent AI
+MIT © 2025 Viskify

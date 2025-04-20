@@ -1,4 +1,4 @@
 export * from './core'
-export * from './veritalent'
+export * from './viskify'
 export * from './issuer'
 export * from './recruiter'

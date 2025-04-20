@@ -48,7 +48,7 @@ export function Login({ mode = 'signin', fixedRole }: LoginProps) {
   }
 
   const heading =
-    mode === 'signin' ? 'Sign in to VeriTalent' : 'Create your VeriTalent account'
+    mode === 'signin' ? 'Sign in to Viskify' : 'Create your Viskify account'
 
   /* ---------------------------------------------------------------------- */
   /*                                   View                                 */
@@ -62,8 +62,8 @@ export function Login({ mode = 'signin', fixedRole }: LoginProps) {
         <CardHeader className='space-y-4 text-center'>
           <div className='flex justify-center'>
             <Image
-              src='/images/veritalent-logo.png'
-              alt='VeriTalent logo'
+              src='/images/viskify-logo.png'
+              alt='Viskify logo'
               width={48}
               height={48}
               priority
@@ -151,7 +151,7 @@ export function Login({ mode = 'signin', fixedRole }: LoginProps) {
           <div className='mt-8 text-center text-sm'>
             {mode === 'signin' ? (
               <>
-                New to VeriTalent?{' '}
+                New to Viskify?{' '}
                 <Link
                   href={buildSwapLink()}
                   className='text-primary font-medium underline-offset-4 hover:underline'

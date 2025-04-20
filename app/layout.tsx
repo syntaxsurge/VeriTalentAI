@@ -9,7 +9,7 @@ import { UserProvider } from '@/lib/auth'
 import { getUser } from '@/lib/db/queries'
 
 export const metadata: Metadata = {
-  title: 'VeriTalent AI',
+  title: 'Viskify',
   description: 'AI-Assisted, Credential-Backed Hiring.',
   icons: {
     icon: 'images/favicon.ico',

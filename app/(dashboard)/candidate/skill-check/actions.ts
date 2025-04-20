@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm'
 import { issueCredential } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
-import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/veritalent'
+import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/viskify'
 
 import { openAIAssess } from './openai'
 

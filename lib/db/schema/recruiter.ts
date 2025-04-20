@@ -2,7 +2,7 @@ import { relations } from 'drizzle-orm'
 import { pgTable, serial, varchar, integer, timestamp, text } from 'drizzle-orm/pg-core'
 
 import { users } from './core'
-import { candidates } from './veritalent'
+import { candidates } from './viskify'
 
 /**
  * Recruiter‑controlled pipelines (e.g. “Backend Engineer May 2025”).

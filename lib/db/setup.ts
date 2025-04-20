@@ -99,7 +99,7 @@ async function setupLocalPostgres() {
 services:
   postgres:
     image: postgres:16.4-alpine
-    container_name: veritalentai_postgres
+    container_name: viskifyai_postgres
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres

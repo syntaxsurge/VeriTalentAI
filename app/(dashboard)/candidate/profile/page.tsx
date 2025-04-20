@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
-import { candidates } from '@/lib/db/schema/veritalent'
+import { candidates } from '@/lib/db/schema/viskify'
 
 import ProfileForm from './profile-form'
 

@@ -10,7 +10,7 @@ import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { users } from '@/lib/db/schema/core'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
-import { candidates } from '@/lib/db/schema/veritalent'
+import { candidates } from '@/lib/db/schema/viskify'
 
 import { updateCandidateStageAction } from '../actions'
 
