@@ -296,12 +296,58 @@ export const removeTeamMember = validatedActionWithUser(
     const userWithTeam = await getUserWithTeam(user.id)
     if (!userWithTeam?.teamId) return { error: 'User is not part of a team' }
 
-    await db
-      .delete(teamMembers)
-      .where(and(eq(teamMembers.id, memberId), eq(teamMembers.teamId, userWithTeam.teamId)))
+    await db.transaction(async (tx) => {
+      /* -------------------------------------------------------------- */
+      /* Load the membership row to find the kicked user's ID           */
+      /* -------------------------------------------------------------- */
+      const [membership] = await tx
+        .select()
+        .from(teamMembers)
+        .where(and(eq(teamMembers.id, memberId), eq(teamMembers.teamId, userWithTeam.teamId)))
+        .limit(1)
+
+      if (!membership) throw new Error('Member not found or not in your team.')
+
+      const kickedUserId = membership.userId
+
+      /* -------------------------------------------------------------- */
+      /* Remove the membership from the current team                    */
+      /* -------------------------------------------------------------- */
+      await tx.delete(teamMembers).where(eq(teamMembers.id, membership.id))
+
+      /* -------------------------------------------------------------- */
+      /* Ensure fallback personal team membership                       */
+      /* -------------------------------------------------------------- */
+      const [personalTeam] = await tx
+        .select()
+        .from(teams)
+        .where(eq(teams.creatorUserId, kickedUserId))
+        .limit(1)
+
+      if (personalTeam) {
+        const existingPersonal = await tx
+          .select()
+          .from(teamMembers)
+          .where(
+            and(
+              eq(teamMembers.teamId, personalTeam.id),
+              eq(teamMembers.userId, kickedUserId),
+            ),
+          )
+          .limit(1)
+
+        if (existingPersonal.length === 0) {
+          await tx.insert(teamMembers).values({
+            userId: kickedUserId,
+            teamId: personalTeam.id,
+            role: 'owner',
+          })
+        }
+      }
+    })
 
     await logActivity(userWithTeam.teamId, user.id, ActivityType.REMOVE_TEAM_MEMBER)
-    return { success: 'Team member removed successfully' }
+    return { success: 'Team member removed successfully.' }
   },
 )
 
