@@ -15,15 +15,14 @@ import {
 import { teams } from '@/lib/db/schema/core'
 
 /* -------------------------------------------------------------------------- */
-/*                                  ACCEPT                                    */
+/*                                  A C C E P T                               */
 /* -------------------------------------------------------------------------- */
 
 const acceptSchema = z.object({ invitationId: z.coerce.number() })
 
-export const acceptInvitationAction = validatedActionWithUser(
+const _acceptInvitation = validatedActionWithUser(
   acceptSchema,
   async ({ invitationId }, _formData, user) => {
-    /* Fetch pending invitation */
     const [inv] = await db
       .select()
       .from(invitations)
@@ -38,7 +37,6 @@ export const acceptInvitationAction = validatedActionWithUser(
 
     if (!inv) return { error: 'Invitation not found or already handled.' }
 
-    /* Create membership + mark accepted */
     await db.transaction(async (tx) => {
       await tx.insert(teamMembers).values({
         userId: user.id,
@@ -62,13 +60,20 @@ export const acceptInvitationAction = validatedActionWithUser(
   },
 )
 
+export const acceptInvitationAction = async (
+  ...args: Parameters<typeof _acceptInvitation>
+) => {
+  'use server'
+  return _acceptInvitation(...args)
+}
+
 /* -------------------------------------------------------------------------- */
-/*                                  DECLINE                                   */
+/*                                 D E C L I N E                              */
 /* -------------------------------------------------------------------------- */
 
 const declineSchema = z.object({ invitationId: z.coerce.number() })
 
-export const declineInvitationAction = validatedActionWithUser(
+const _declineInvitation = validatedActionWithUser(
   declineSchema,
   async ({ invitationId }, _formData, user) => {
     const res = await db
@@ -88,3 +93,38 @@ export const declineInvitationAction = validatedActionWithUser(
     return { success: 'Invitation declined.' }
   },
 )
+
+export const declineInvitationAction = async (
+  ...args: Parameters<typeof _declineInvitation>
+) => {
+  'use server'
+  return _declineInvitation(...args)
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 D E L E T E                                */
+/* -------------------------------------------------------------------------- */
+
+const deleteSchema = z.object({ invitationId: z.coerce.number() })
+
+const _deleteInvitation = validatedActionWithUser(
+  deleteSchema,
+  async ({ invitationId }, _formData, user) => {
+    const res = await db
+      .delete(invitations)
+      .where(and(eq(invitations.id, invitationId), eq(invitations.email, user.email)))
+      .returning({ id: invitations.id })
+
+    if (res.length === 0) return { error: 'Invitation not found or unauthorized.' }
+
+    revalidatePath('/invitations')
+    return { success: 'Invitation deleted.' }
+  },
+)
+
+export const deleteInvitationAction = async (
+  ...args: Parameters<typeof _deleteInvitation>
+) => {
+  'use server'
+  return _deleteInvitation(...args)
+}
