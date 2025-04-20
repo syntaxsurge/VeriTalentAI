@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation'
 import { eq, desc } from 'drizzle-orm'
 
+import { AlertCircle } from 'lucide-react'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import InvitationsTable, {
-  RowType,
-} from '@/components/dashboard/invitations-table'
+import InvitationsTable, { RowType } from '@/components/dashboard/invitations-table'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { invitations, teams, users as usersTable } from '@/lib/db/schema'
@@ -15,6 +15,9 @@ export default async function InvitationsPage() {
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
+  /* ------------------------------------------------------------------ */
+  /* Load invitations addressed to the current user                     */
+  /* ------------------------------------------------------------------ */
   const rows = await db
     .select({
       id: invitations.id,
@@ -31,18 +34,6 @@ export default async function InvitationsPage() {
     .where(eq(invitations.email, user.email))
     .orderBy(desc(invitations.invitedAt))
 
-  if (rows.length === 0) {
-    return (
-      <section className='flex items-center justify-center py-12'>
-        <Card className='max-w-md text-center shadow-sm'>
-          <CardHeader>
-            <CardTitle>No Invitations</CardTitle>
-          </CardHeader>
-        </Card>
-      </section>
-    )
-  }
-
   const tableRows: RowType[] = rows.map((r) => ({
     id: r.id,
     team: r.teamName || 'Unnamed Team',
@@ -52,18 +43,28 @@ export default async function InvitationsPage() {
     invitedAt: r.invitedAt,
   }))
 
+  /* ------------------------------------------------------------------ */
+  /* Render                                                              */
+  /* ------------------------------------------------------------------ */
   return (
-    <section className='space-y-6'>
-      <h2 className='text-2xl font-semibold'>Team Invitations</h2>
+    <section className='flex-1'>
+      <h2 className='mb-4 text-xl font-semibold'>Team Invitations</h2>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Invitations Overview</CardTitle>
-        </CardHeader>
-        <CardContent className='overflow-x-auto'>
-          <InvitationsTable rows={tableRows} />
-        </CardContent>
-      </Card>
+      {tableRows.length === 0 ? (
+        <div className='text-muted-foreground flex flex-col items-center gap-2 text-center'>
+          <AlertCircle className='h-8 w-8' />
+          <p>No invitations.</p>
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Invitations Overview</CardTitle>
+          </CardHeader>
+          <CardContent className='overflow-x-auto'>
+            <InvitationsTable rows={tableRows} />
+          </CardContent>
+        </Card>
+      )}
     </section>
   )
 }
