@@ -13,6 +13,10 @@ import {
 } from '@/lib/db/schema/viskify'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 
+/* -------------------------------------------------------------------------- */
+/*                              A D D  C R E D                                */
+/* -------------------------------------------------------------------------- */
+
 export const addCredential = validatedActionWithUser(
   z.object({
     title: z.string().min(2).max(200),
@@ -21,7 +25,7 @@ export const addCredential = validatedActionWithUser(
     issuerId: z.coerce.number().optional(),
   }),
   async ({ title, type, fileUrl, issuerId }, _, user) => {
-    // If issuerId provided ensure it exists & active
+    // link issuer if active
     let linkedIssuerId: number | undefined
     let status: CredentialStatus = CredentialStatus.UNVERIFIED
 
@@ -59,5 +63,37 @@ export const addCredential = validatedActionWithUser(
     })
 
     redirect('/candidate/credentials')
+  },
+)
+
+/* -------------------------------------------------------------------------- */
+/*                          D E L E T E  C R E D                              */
+/* -------------------------------------------------------------------------- */
+
+export const deleteCredentialAction = validatedActionWithUser(
+  z.object({
+    credentialId: z.coerce.number(),
+  }),
+  async ({ credentialId }, _formData, user) => {
+    // verify ownership
+    const [candidate] = await db
+      .select()
+      .from(candidates)
+      .where(eq(candidates.userId, user.id))
+      .limit(1)
+
+    if (!candidate) return { error: 'Unauthorized.' }
+
+    const res = await db
+      .delete(candidateCredentials)
+      .where(
+        and(
+          eq(candidateCredentials.id, credentialId),
+          eq(candidateCredentials.candidateId, candidate.id),
+        ),
+      )
+
+    if (res.rowCount === 0) return { error: 'Credential not found.' }
+    return { success: 'Credential deleted.' }
   },
 )
