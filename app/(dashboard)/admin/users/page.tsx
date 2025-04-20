@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import AdminUsersTable, { RowType } from '@/components/dashboard/admin-users-table'
+import AdminUsersTable, { RowType } from '@/components/dashboard/admin/users-table'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { users as usersTable } from '@/lib/db/schema/core'

@@ -15,10 +15,10 @@ import {
 
 import { Card, CardContent } from '@/components/ui/card'
 import { RoleBadge } from '@/components/dashboard/role-badge'
-import CandidateCharts from '@/components/dashboard/candidate-charts'
-import RecruiterCharts from '@/components/dashboard/recruiter-charts'
-import IssuerCharts from '@/components/dashboard/issuer-charts'
-import AdminCharts from '@/components/dashboard/admin-charts'
+import CandidateCharts from '@/components/dashboard/candidate/charts'
+import RecruiterCharts from '@/components/dashboard/recruiter/charts'
+import IssuerCharts from '@/components/dashboard/issuer/charts'
+import AdminCharts from '@/components/dashboard/admin/charts'
 
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'

@@ -17,7 +17,6 @@ export default function HomePage() {
       <FeaturesSection />
       <DeepDiveSection />
       <WorkflowSection />
-      {/* Freemium & paid tiers */}
       <PricingSection />
       <CTASection />
     </>

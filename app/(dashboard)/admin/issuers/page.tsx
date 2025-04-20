@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import AdminIssuersTable, { RowType } from '@/components/dashboard/admin-issuers-table'
+import AdminIssuersTable, { RowType } from '@/components/dashboard/admin/issuers-table'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { users as usersTable } from '@/lib/db/schema/core'
