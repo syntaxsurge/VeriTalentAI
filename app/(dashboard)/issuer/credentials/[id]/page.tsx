@@ -1,7 +1,15 @@
 import { redirect } from 'next/navigation'
 import { eq, and } from 'drizzle-orm'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card'
+import { BadgeCheck, Clock, XCircle, FileText } from 'lucide-react'
+
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { users } from '@/lib/db/schema/core'
@@ -13,11 +21,43 @@ import {
 } from '@/lib/db/schema/viskify'
 
 import { CredentialActions } from '@/components/dashboard/issuer/credential-actions'
+import { cn } from '@/lib/utils'
 
 export const revalidate = 0
 
 /* -------------------------------------------------------------------------- */
-/*                                   PAGE                                     */
+/*                                   B A D G E S                              */
+/* -------------------------------------------------------------------------- */
+
+function StatusBadge({ status }: { status: CredentialStatus }) {
+  const cls =
+    'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize'
+  const map: Record<CredentialStatus, string> = {
+    [CredentialStatus.VERIFIED]:
+      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    [CredentialStatus.PENDING]:
+      'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    [CredentialStatus.REJECTED]:
+      'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+    [CredentialStatus.UNVERIFIED]: 'bg-muted text-foreground/80',
+  }
+  return <span className={cn(cls, map[status])}>{status.toLowerCase()}</span>
+}
+
+function StatusIcon({ status }: { status: CredentialStatus }) {
+  const base = 'h-12 w-12 flex-shrink-0'
+  switch (status) {
+    case CredentialStatus.VERIFIED:
+      return <BadgeCheck className={cn(base, 'text-emerald-500')} />
+    case CredentialStatus.REJECTED:
+      return <XCircle className={cn(base, 'text-rose-500')} />
+    default:
+      return <Clock className={cn(base, 'text-amber-500')} />
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   P A G E                                  */
 /* -------------------------------------------------------------------------- */
 
 export default async function CredentialDetailPage({
@@ -29,6 +69,7 @@ export default async function CredentialDetailPage({
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
+  /* Validate issuer ownership */
   const [issuer] = await db
     .select()
     .from(issuers)
@@ -36,12 +77,9 @@ export default async function CredentialDetailPage({
     .limit(1)
   if (!issuer) redirect('/issuer/onboard')
 
+  /* Load credential & candidate */
   const [data] = await db
-    .select({
-      cred: candidateCredentials,
-      cand: candidates,
-      candUser: users,
-    })
+    .select({ cred: candidateCredentials, cand: candidates, candUser: users })
     .from(candidateCredentials)
     .leftJoin(candidates, eq(candidateCredentials.candidateId, candidates.id))
     .leftJoin(users, eq(candidates.userId, users.id))
@@ -59,47 +97,72 @@ export default async function CredentialDetailPage({
 
   /* ----------------------------- UI ----------------------------- */
   return (
-    <section className='max-w-xl space-y-8'>
-      {/* Heading */}
-      <h2 className='text-2xl font-semibold'>Credential Details</h2>
+    <section className='mx-auto max-w-2xl space-y-6'>
+      {/* Hero header */}
+      <div className='flex items-center gap-4'>
+        <StatusIcon status={cred.status as CredentialStatus} />
+        <div className='flex-1'>
+          <h2 className='text-3xl font-extrabold leading-tight tracking-tight'>
+            {cred.title}
+          </h2>
+          <p className='text-muted-foreground text-sm'>
+            Submitted by{' '}
+            <span className='font-medium'>
+              {candUser?.name || candUser?.email || 'Unknown'}
+            </span>
+          </p>
+        </div>
+        <StatusBadge status={cred.status as CredentialStatus} />
+      </div>
 
       {/* Details card */}
-      <Card>
+      <Card className='shadow-sm'>
         <CardHeader>
-          <CardTitle className='text-lg font-medium'>{cred.title}</CardTitle>
+          <CardTitle className='text-lg font-semibold'>Credential Details</CardTitle>
         </CardHeader>
-        <CardContent className='space-y-2 text-sm'>
-          <p className='capitalize'>
-            <span className='font-medium'>Type:</span> {cred.type}
-          </p>
-          <p>
-            <span className='font-medium'>Candidate:</span>{' '}
-            {candUser?.name || candUser?.email || 'Unknown'}
-          </p>
+
+        <CardContent className='grid gap-4 sm:grid-cols-2 text-sm'>
+          <div>
+            <p className='mb-1 text-xs font-medium uppercase text-muted-foreground'>Type</p>
+            <p className='capitalize font-medium'>{cred.type}</p>
+          </div>
+
+          <div>
+            <p className='mb-1 text-xs font-medium uppercase text-muted-foreground'>
+              Candidate
+            </p>
+            <p className='break-all font-medium'>
+              {candUser?.name || candUser?.email || 'Unknown'}
+            </p>
+          </div>
+
           {cred.fileUrl && (
-            <p>
-              <span className='font-medium'>Attached File:</span>{' '}
+            <div className='sm:col-span-2'>
+              <p className='mb-1 text-xs font-medium uppercase text-muted-foreground'>
+                Attached File
+              </p>
               <a
                 href={cred.fileUrl}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='text-primary underline'
+                className='inline-flex items-center gap-2 font-medium text-primary underline-offset-2 hover:underline'
               >
-                View
+                <FileText className='h-4 w-4' />
+                View Document
               </a>
-            </p>
+            </div>
           )}
-          <p className='capitalize'>
-            <span className='font-medium'>Status:</span>{' '}
-            {cred.status.toLowerCase()}
-          </p>
         </CardContent>
-      </Card>
 
-      {/* Action buttons (pending only) */}
-      {cred.status === CredentialStatus.PENDING && (
-        <CredentialActions credentialId={cred.id} />
-      )}
+        {/* Action buttons for pending credentials */}
+        {cred.status === CredentialStatus.PENDING && (
+          <CardFooter className='border-t bg-muted/50 py-4'>
+            <div className='ml-auto'>
+              <CredentialActions credentialId={cred.id} />
+            </div>
+          </CardFooter>
+        )}
+      </Card>
     </section>
   )
 }
