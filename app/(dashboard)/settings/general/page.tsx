@@ -1,61 +1,15 @@
-'use client'
+import { redirect } from 'next/navigation'
 
-import { useRouter } from 'next/navigation'
-import {
-  startTransition,
-  useActionState,
-  useEffect,
-  useState,
-} from 'react'
-
-import { Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
-
-import { updateAccount } from '@/app/(auth)/actions'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useUser } from '@/lib/auth'
+import { getUser } from '@/lib/db/queries'
 
-type ActionState = { error?: string; success?: string }
+import GeneralForm from './general-form'
 
-export default function GeneralPage() {
-  const { userPromise } = useUser()
-  const [user, setUser] = useState<any | null | undefined>(undefined)
+export const revalidate = 0
 
-  useEffect(() => {
-    let mounted = true
-    userPromise.then((u) => mounted && setUser(u))
-    return () => {
-      mounted = false
-    }
-  }, [userPromise])
-
-  const router = useRouter()
-  useEffect(() => {
-    if (user === undefined) return
-    if (!user) {
-      router.replace('/sign-in')
-    }
-  }, [user, router])
-
-  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-    updateAccount,
-    { error: '', success: '' },
-  )
-
-  useEffect(() => {
-    if (state.error) toast.error(state.error)
-    if (state.success) toast.success(state.success)
-  }, [state.error, state.success])
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    startTransition(() => formAction(new FormData(event.currentTarget)))
-  }
-
-  if (user === undefined) return null
+export default async function GeneralSettingsPage() {
+  const user = await getUser()
+  if (!user) redirect('/sign-in')
 
   return (
     <section className='flex-1 p-4 lg:p-8'>
@@ -66,40 +20,7 @@ export default function GeneralPage() {
           <CardTitle>Account Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className='space-y-4' onSubmit={handleSubmit}>
-            <div>
-              <Label htmlFor='name'>Name</Label>
-              <Input
-                id='name'
-                name='name'
-                placeholder='Enter your name'
-                defaultValue={user?.name || ''}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor='email'>Email</Label>
-              <Input
-                id='email'
-                name='email'
-                type='email'
-                placeholder='Enter your email'
-                defaultValue={user?.email || ''}
-                required
-              />
-            </div>
-
-            <Button type='submit' disabled={isPending}>
-              {isPending ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Saving…
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-          </form>
+          <GeneralForm defaultName={user.name || ''} defaultEmail={user.email} />
         </CardContent>
       </Card>
     </section>
