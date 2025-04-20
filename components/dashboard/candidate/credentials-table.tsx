@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreHorizontal, Trash2, Loader2 } from 'lucide-react'
+import { MoreHorizontal, Trash2, Loader2, FileText, type LucideProps } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -25,6 +25,14 @@ export interface RowType {
   status: string
   fileUrl: string | null
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                   ICONS                                    */
+/* -------------------------------------------------------------------------- */
+
+const ViewIcon = (props: LucideProps) => (
+  <FileText {...props} className='mr-2 h-4 w-4 text-sky-600 dark:text-sky-400' />
+)
 
 /* -------------------------------------------------------------------------- */
 /*                               Row actions                                  */
@@ -52,21 +60,34 @@ function RowActions({ row }: { row: RowType }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
-          {isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : <MoreHorizontal className='h-4 w-4' />}
+          {isPending ? (
+            <Loader2 className='h-4 w-4 animate-spin' />
+          ) : (
+            <MoreHorizontal className='h-4 w-4' />
+          )}
           <span className='sr-only'>Open menu</span>
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
         {row.fileUrl && (
           <DropdownMenuItem asChild>
-            <a href={row.fileUrl} target='_blank' rel='noopener noreferrer' className='cursor-pointer'>
+            <a
+              href={row.fileUrl}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='flex cursor-pointer items-center'
+            >
+              <ViewIcon />
               View file
             </a>
           </DropdownMenuItem>
         )}
+
         <DropdownMenuSeparator />
+
         <DropdownMenuItem
           onClick={destroy}
           disabled={isPending}
@@ -145,7 +166,7 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                    View                                    */
+/*                                   View                                     */
 /* -------------------------------------------------------------------------- */
 
 export default function CandidateCredentialsTable({ rows }: { rows: RowType[] }) {
