@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   XCircle,
   Trash2,
+  type LucideProps,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
@@ -32,6 +33,23 @@ import {
   declineInvitationAction,
   deleteInvitationAction,
 } from '@/app/(dashboard)/invitations/actions'
+
+/* -------------------------------------------------------------------------- */
+/*                              C O L O U R  I C O N S                        */
+/* -------------------------------------------------------------------------- */
+
+/** Success‑green icon for “Accept” actions. */
+const AcceptIcon = (props: LucideProps) => (
+  <CheckCircle2
+    {...props}
+    className='mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400'
+  />
+)
+
+/** Warning‑amber icon for “Decline” actions. */
+const DeclineIcon = (props: LucideProps) => (
+  <XCircle {...props} className='mr-2 h-4 w-4 text-amber-600 dark:text-amber-400' />
+)
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -97,14 +115,14 @@ function RowActions({ row }: { row: RowType }) {
               onClick={() => runAction(acceptInvitationAction, 'Invitation accepted.')}
               disabled={isPending}
             >
-              <CheckCircle2 className='mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400' />
+              <AcceptIcon />
               Accept
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => runAction(declineInvitationAction, 'Invitation declined.')}
               disabled={isPending}
             >
-              <XCircle className='mr-2 h-4 w-4 text-amber-600 dark:text-amber-400' />
+              <DeclineIcon />
               Decline
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -168,8 +186,7 @@ const columns: Column<RowType>[] = [
     key: 'invitedAt',
     header: 'Invited',
     sortable: true,
-    render: (v) =>
-      formatDistanceToNow(v as Date, { addSuffix: true }),
+    render: (v) => formatDistanceToNow(v as Date, { addSuffix: true }),
   },
   {
     key: 'id',
@@ -187,7 +204,6 @@ const columns: Column<RowType>[] = [
 function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
   const [isPending, startTransition] = useTransition()
 
-  /* helper to run server actions on many rows */
   async function runBulk(
     rows: RowType[],
     fn:
@@ -214,7 +230,6 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
     router.refresh()
   }
 
-  /* dynamic rules */
   const canAccept = (rows: RowType[]) =>
     rows.length > 0 &&
     rows.every((r) => r.status === 'pending') &&
@@ -226,17 +241,21 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
   return [
     {
       label: 'Accept',
-      icon: CheckCircle2,
+      icon: AcceptIcon as any,
       onClick: (selected) =>
-        startTransition(() => runBulk(selected, acceptInvitationAction, 'Accepting…', 'Invitations accepted.')),
+        startTransition(() =>
+          runBulk(selected, acceptInvitationAction, 'Accepting…', 'Invitations accepted.'),
+        ),
       isAvailable: canAccept,
       isDisabled: (rows) => !canAccept(rows) || isPending,
     },
     {
       label: 'Decline',
-      icon: XCircle,
+      icon: DeclineIcon as any,
       onClick: (selected) =>
-        startTransition(() => runBulk(selected, declineInvitationAction, 'Declining…', 'Invitations declined.')),
+        startTransition(() =>
+          runBulk(selected, declineInvitationAction, 'Declining…', 'Invitations declined.'),
+        ),
       isAvailable: canDecline,
       isDisabled: (rows) => !canDecline(rows) || isPending,
     },
@@ -245,7 +264,9 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
       icon: Trash2,
       variant: 'destructive',
       onClick: (selected) =>
-        startTransition(() => runBulk(selected, deleteInvitationAction, 'Deleting…', 'Invitations deleted.')),
+        startTransition(() =>
+          runBulk(selected, deleteInvitationAction, 'Deleting…', 'Invitations deleted.'),
+        ),
       isDisabled: () => isPending,
     },
   ]
@@ -260,11 +281,6 @@ export default function InvitationsTable({ rows }: { rows: RowType[] }) {
   const bulkActions = buildBulkActions(router)
 
   return (
-    <DataTable
-      columns={columns}
-      rows={rows}
-      filterKey='team'
-      bulkActions={bulkActions}
-    />
+    <DataTable columns={columns} rows={rows} filterKey='team' bulkActions={bulkActions} />
   )
 }
