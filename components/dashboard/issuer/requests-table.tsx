@@ -51,14 +51,31 @@ function RowActions({ row }: { row: RowType }) {
 
 const columns: Column<RowType>[] = [
   { key: 'title', header: 'Title', sortable: true, render: (v) => v as string },
-  { key: 'type', header: 'Type', sortable: true, className: 'capitalize', render: (v) => v as string },
+  {
+    key: 'type',
+    header: 'Type',
+    sortable: true,
+    className: 'capitalize',
+    render: (v) => v as string,
+  },
   { key: 'candidate', header: 'Candidate', sortable: true, render: (v) => v as string },
   {
     key: 'status',
     header: 'Status',
     sortable: true,
     className: 'capitalize',
-    render: (v) => <span className='text-amber-600'>{(v as string).toLowerCase()}</span>,
+    render: (v) => {
+      const s = v as string
+      const cls =
+        s === 'VERIFIED'
+          ? 'text-emerald-600'
+          : s === 'PENDING'
+            ? 'text-amber-600'
+            : s === 'REJECTED'
+              ? 'text-rose-600'
+              : 'text-muted-foreground'
+      return <span className={cls}>{s.toLowerCase()}</span>
+    },
   },
   {
     key: 'id',

@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, inArray } from 'drizzle-orm'
 
 import { AlertCircle } from 'lucide-react'
 
 import IssuerRequestsTable, {
   type RowType,
 } from '@/components/dashboard/issuer/requests-table'
+import { RequestsStatusFilter } from '@/components/dashboard/issuer/requests-status-filter'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
@@ -19,7 +20,11 @@ import {
 
 export const revalidate = 0
 
-export default async function RequestsPage() {
+export default async function RequestsPage({
+  searchParams,
+}: {
+  searchParams?: { status?: string }
+}) {
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
@@ -31,6 +36,19 @@ export default async function RequestsPage() {
 
   if (!issuer) redirect('/issuer/onboard')
 
+  /* ------------------- status filter ------------------- */
+  const statusParam = searchParams?.status ?? CredentialStatus.PENDING
+  const statuses = statusParam
+    .split(',')
+    .map((s) => s.trim().toUpperCase())
+    .filter((s) => s !== '') as (keyof typeof CredentialStatus)[]
+
+  /* Ensure at least pending when invalid */
+  if (statuses.length === 0) {
+    statuses.push(CredentialStatus.PENDING)
+  }
+
+  /* ------------------- query --------------------------- */
   const requests = await db
     .select({
       credential: candidateCredentials,
@@ -43,7 +61,7 @@ export default async function RequestsPage() {
     .where(
       and(
         eq(candidateCredentials.issuerId, issuer.id),
-        eq(candidateCredentials.status, CredentialStatus.PENDING),
+        inArray(candidateCredentials.status, statuses as any),
       ),
     )
 
@@ -55,14 +73,18 @@ export default async function RequestsPage() {
     status: r.credential.status,
   }))
 
+  /* ------------------- UI ------------------------------ */
   return (
     <section className='flex-1 space-y-6'>
-      <h2 className='text-xl font-semibold'>Pending Verification Requests</h2>
+      <div className='flex flex-wrap items-center justify-between gap-4'>
+        <h2 className='text-xl font-semibold'>Verification Requests</h2>
+        <RequestsStatusFilter />
+      </div>
 
       {tableRows.length === 0 ? (
         <div className='text-muted-foreground flex flex-col items-center gap-2 text-center'>
           <AlertCircle className='h-8 w-8' />
-          <p>No pending requests.</p>
+          <p>No requests for the selected status.</p>
         </div>
       ) : (
         <Card>
