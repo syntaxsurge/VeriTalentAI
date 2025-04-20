@@ -1,4 +1,3 @@
-
 'use server'
 
 import { cookies } from 'next/headers'
@@ -37,14 +36,12 @@ async function logActivity(
   ipAddress?: string,
 ) {
   if (teamId === null || teamId === undefined) return
-
   const newActivity: NewActivityLog = {
     teamId,
     userId,
     action: type,
     ipAddress: ipAddress || '',
   }
-
   await db.insert(activityLogs).values(newActivity)
 }
 
@@ -113,10 +110,12 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   }
 
   const passwordHash = await hashPassword(password)
+  const desiredRole =
+    (data.role as 'candidate' | 'recruiter' | 'issuer' | undefined) ?? 'candidate'
 
-  // Decide initial role: recruiter / issuer from form, else fallback to 'candidate'
-  const desiredRole = (data.role as 'candidate' | 'recruiter' | 'issuer' | undefined) ?? 'candidate'
-
+  /* ------------------------------------------------------------------ */
+  /* Create user record                                                 */
+  /* ------------------------------------------------------------------ */
   const newUser: NewUser = { email, passwordHash, role: desiredRole }
   const [createdUser] = await db.insert(users).values(newUser).returning()
   if (!createdUser) {
@@ -124,14 +123,25 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Team creation / invitation                                         */
+  /* Always create a personal team                                      */
   /* ------------------------------------------------------------------ */
-  let teamId: number
-  let userRole: string = desiredRole
-  let createdTeam: typeof teams.$inferSelect | null = null
+  const personalTeamData: NewTeam = {
+    name: `${email}'s Team`,
+    creatorUserId: createdUser.id,
+  } as NewTeam
 
+  const [personalTeam] = await db.insert(teams).values(personalTeamData).returning()
+  await db.insert(teamMembers).values({
+    userId: createdUser.id,
+    teamId: personalTeam.id,
+    role: 'owner',
+  } as NewTeamMember)
+  await logActivity(personalTeam.id, createdUser.id, ActivityType.CREATE_TEAM)
+
+  /* ------------------------------------------------------------------ */
+  /* Handle invitation (optional)                                       */
+  /* ------------------------------------------------------------------ */
   if (inviteId) {
-    /* ---------------------------- Via invitation --------------------------- */
     const [invitation] = await db
       .select()
       .from(invitations)
@@ -148,50 +158,31 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
       return { error: 'Invalid or expired invitation.', email, password }
     }
 
-    teamId = invitation.teamId
-    userRole = invitation.role
+    await db.insert(teamMembers).values({
+      userId: createdUser.id,
+      teamId: invitation.teamId,
+      role: invitation.role,
+    } as NewTeamMember)
 
-    await db
-      .update(invitations)
-      .set({ status: 'accepted' })
-      .where(eq(invitations.id, invitation.id))
-    await logActivity(teamId, createdUser.id, ActivityType.ACCEPT_INVITATION)
-    ;[createdTeam] = await db.select().from(teams).where(eq(teams.id, teamId)).limit(1)
-  } else {
-    /* ---------------------------- New team path --------------------------- */
-    const [newTeam] = await db
-      .insert(teams)
-      .values({ name: `${email}'s Team` } as NewTeam)
-      .returning()
-
-    if (!newTeam) {
-      return { error: 'Failed to create team. Please try again.', email, password }
-    }
-
-    teamId = newTeam.id
-    createdTeam = newTeam
-    userRole = 'owner'
-    await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM)
+    await Promise.all([
+      db
+        .update(invitations)
+        .set({ status: 'accepted' })
+        .where(eq(invitations.id, invitation.id)),
+      logActivity(invitation.teamId, createdUser.id, ActivityType.ACCEPT_INVITATION),
+    ])
   }
 
   /* ------------------------------------------------------------------ */
-  /* Membership & session                                               */
+  /* Session + redirect                                                 */
   /* ------------------------------------------------------------------ */
-  const newTeamMember: NewTeamMember = { userId: createdUser.id, teamId, role: userRole }
+  await setSession(createdUser)
+  await logActivity(personalTeam.id, createdUser.id, ActivityType.SIGN_UP)
 
-  await Promise.all([
-    db.insert(teamMembers).values(newTeamMember),
-    logActivity(teamId, createdUser.id, ActivityType.SIGN_UP),
-    setSession(createdUser),
-  ])
-
-  /* ------------------------------------------------------------------ */
-  /* Optional Stripe checkout                                           */
-  /* ------------------------------------------------------------------ */
   const redirectTo = formData.get('redirect') as string | null
   if (redirectTo === 'checkout') {
     const priceId = formData.get('priceId') as string
-    return createCheckoutSession({ team: createdTeam, priceId })
+    return createCheckoutSession({ team: personalTeam, priceId })
   }
 
   redirect('/dashboard')
@@ -296,7 +287,6 @@ export const updateAccount = validatedActionWithUser(updateAccountSchema, async 
 /*                         T E A M  M A N A G E M E N T                       */
 /* -------------------------------------------------------------------------- */
 
-// Fix: coerce string from FormData to number to prevent Zod error
 const removeTeamMemberSchema = z.object({ memberId: z.coerce.number() })
 
 export const removeTeamMember = validatedActionWithUser(

@@ -1,14 +1,14 @@
 'use server'
 
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
 
 /* ---------- Core ---------- */
-import { users } from '@/lib/db/schema/core'
-import { activityLogs, teamMembers } from '@/lib/db/schema'
+import { users, teams, teamMembers } from '@/lib/db/schema/core'
+import { activityLogs } from '@/lib/db/schema'
 
 /* ---------- Recruiter ---------- */
 import {
@@ -129,8 +129,25 @@ export const deleteUserAction = validatedActionWithUser(
         await tx.delete(issuers).where(eq(issuers.id, issuerId))
       }
 
-      /* Team membership */
+      /* Remove all team memberships for the user */
       await tx.delete(teamMembers).where(eq(teamMembers.userId, userId))
+
+      /* Personal teams created by the user */
+      const ownedTeams = await tx
+        .select({ id: teams.id })
+        .from(teams)
+        .where(eq(teams.creatorUserId, userId))
+
+      for (const t of ownedTeams) {
+        const remainingMembers = await tx
+          .select()
+          .from(teamMembers)
+          .where(eq(teamMembers.teamId, t.id))
+
+        if (remainingMembers.length === 0) {
+          await tx.delete(teams).where(eq(teams.id, t.id))
+        }
+      }
 
       /* Finally, delete the user */
       await tx.delete(users).where(eq(users.id, userId))

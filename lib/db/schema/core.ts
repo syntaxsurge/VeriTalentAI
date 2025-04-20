@@ -1,6 +1,10 @@
 import { relations } from 'drizzle-orm'
 import { pgTable, serial, varchar, text, timestamp, integer } from 'drizzle-orm/pg-core'
 
+/* -------------------------------------------------------------------------- */
+/*                                   USERS                                    */
+/* -------------------------------------------------------------------------- */
+
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }),
@@ -13,8 +17,16 @@ export const users = pgTable('users', {
   deletedAt: timestamp('deleted_at'),
 })
 
+/* -------------------------------------------------------------------------- */
+/*                                    TEAMS                                   */
+/* -------------------------------------------------------------------------- */
+
 export const teams = pgTable('teams', {
   id: serial('id').primaryKey(),
+  /** New — permanent owner / creator of the team */
+  creatorUserId: integer('creator_user_id')
+    .notNull()
+    .references(() => users.id),
   name: varchar('name', { length: 100 }).notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -23,9 +35,13 @@ export const teams = pgTable('teams', {
   stripeProductId: text('stripe_product_id'),
   planName: varchar('plan_name', { length: 50 }),
   subscriptionStatus: varchar('subscription_status', { length: 20 }),
-  // New column for storing DID
-  did: text('did'), // optional, can be null if the team hasn't created one
+  // Optional cheqd DID for VC signing
+  did: text('did'),
 })
+
+/* -------------------------------------------------------------------------- */
+/*                              TEAM MEMBERS                                  */
+/* -------------------------------------------------------------------------- */
 
 export const teamMembers = pgTable('team_members', {
   id: serial('id').primaryKey(),
@@ -39,6 +55,10 @@ export const teamMembers = pgTable('team_members', {
   joinedAt: timestamp('joined_at').notNull().defaultNow(),
 })
 
+/* -------------------------------------------------------------------------- */
+/*                               ACTIVITY LOGS                                */
+/* -------------------------------------------------------------------------- */
+
 export const activityLogs = pgTable('activity_logs', {
   id: serial('id').primaryKey(),
   teamId: integer('team_id')
@@ -49,6 +69,10 @@ export const activityLogs = pgTable('activity_logs', {
   timestamp: timestamp('timestamp').notNull().defaultNow(),
   ipAddress: varchar('ip_address', { length: 45 }),
 })
+
+/* -------------------------------------------------------------------------- */
+/*                                 INVITATIONS                                */
+/* -------------------------------------------------------------------------- */
 
 export const invitations = pgTable('invitations', {
   id: serial('id').primaryKey(),
@@ -64,15 +88,27 @@ export const invitations = pgTable('invitations', {
   status: varchar('status', { length: 20 }).notNull().default('pending'),
 })
 
-export const teamsRelations = relations(teams, ({ many }) => ({
+/* -------------------------------------------------------------------------- */
+/*                                 RELATIONS                                  */
+/* -------------------------------------------------------------------------- */
+
+export const teamsRelations = relations(teams, ({ many, one }) => ({
   teamMembers: many(teamMembers),
   activityLogs: many(activityLogs),
   invitations: many(invitations),
+  creator: one(users, {
+    fields: [teams.creatorUserId],
+    references: [users.id],
+  }),
 }))
 
 export const usersRelations = relations(users, ({ many }) => ({
   teamMembers: many(teamMembers),
   invitationsSent: many(invitations),
+  /** reverse lookup – personal teams the user originally created */
+  createdTeams: many(teams, {
+    relationName: 'creator',
+  }),
 }))
 
 export const invitationsRelations = relations(invitations, ({ one }) => ({
@@ -108,6 +144,10 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   }),
 }))
 
+/* -------------------------------------------------------------------------- */
+/*                                T Y P E S                                   */
+/* -------------------------------------------------------------------------- */
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Team = typeof teams.$inferSelect
@@ -123,6 +163,10 @@ export type TeamDataWithMembers = Team & {
     user: Pick<User, 'id' | 'name' | 'email'>
   })[]
 }
+
+/* -------------------------------------------------------------------------- */
+/*                           A C T I V I T Y   E N U M                        */
+/* -------------------------------------------------------------------------- */
 
 export enum ActivityType {
   SIGN_UP = 'SIGN_UP',
