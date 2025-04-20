@@ -49,7 +49,10 @@ export const addCredential = validatedActionWithUser(
       .limit(1)
 
     if (!candidate) {
-      const [newCand] = await db.insert(candidates).values({ userId: user.id, bio: '' }).returning()
+      const [newCand] = await db
+        .insert(candidates)
+        .values({ userId: user.id, bio: '' })
+        .returning()
       candidate = newCand
     }
 
@@ -84,7 +87,7 @@ export const deleteCredentialAction = validatedActionWithUser(
 
     if (!candidate) return { error: 'Unauthorized.' }
 
-    const res = await db
+    const deleted = await db
       .delete(candidateCredentials)
       .where(
         and(
@@ -92,8 +95,9 @@ export const deleteCredentialAction = validatedActionWithUser(
           eq(candidateCredentials.candidateId, candidate.id),
         ),
       )
+      .returning({ id: candidateCredentials.id })
 
-    if (res.rowCount === 0) return { error: 'Credential not found.' }
+    if (deleted.length === 0) return { error: 'Credential not found.' }
     return { success: 'Credential deleted.' }
   },
 )
