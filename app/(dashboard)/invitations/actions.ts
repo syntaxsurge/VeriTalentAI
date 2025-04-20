@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
@@ -12,7 +12,6 @@ import {
   activityLogs,
   ActivityType,
 } from '@/lib/db/schema'
-import { teams } from '@/lib/db/schema/core'
 
 /* -------------------------------------------------------------------------- */
 /*                                  A C C E P T                               */
@@ -20,9 +19,14 @@ import { teams } from '@/lib/db/schema/core'
 
 const acceptSchema = z.object({ invitationId: z.coerce.number() })
 
+/**
+ * Accept an invitation, ensuring the user is associated with exactly one team.
+ * If a membership already exists it is updated (team, role, joinedAt); otherwise a new membership is created.
+ */
 const _acceptInvitation = validatedActionWithUser(
   acceptSchema,
   async ({ invitationId }, _formData, user) => {
+    /* Validate pending invitation addressed to the current user */
     const [inv] = await db
       .select()
       .from(invitations)
@@ -38,16 +42,41 @@ const _acceptInvitation = validatedActionWithUser(
     if (!inv) return { error: 'Invitation not found or already handled.' }
 
     await db.transaction(async (tx) => {
-      await tx.insert(teamMembers).values({
-        userId: user.id,
-        teamId: inv.teamId,
-        role: inv.role,
-      })
+      /* ------------------------------------------------------------------ */
+      /* Ensure single team membership                                      */
+      /* ------------------------------------------------------------------ */
+      const [existingMember] = await tx
+        .select()
+        .from(teamMembers)
+        .where(eq(teamMembers.userId, user.id))
+        .limit(1)
+
+      if (existingMember) {
+        /* Update current membership to point to the invited team */
+        await tx
+          .update(teamMembers)
+          .set({
+            teamId: inv.teamId,
+            role: inv.role,
+            joinedAt: sql`CURRENT_TIMESTAMP`,
+          })
+          .where(eq(teamMembers.id, existingMember.id))
+      } else {
+        /* Fallback: create membership if somehow none exists */
+        await tx.insert(teamMembers).values({
+          userId: user.id,
+          teamId: inv.teamId,
+          role: inv.role,
+        })
+      }
+
+      /* Mark invitation as accepted */
       await tx
         .update(invitations)
         .set({ status: 'accepted' })
         .where(eq(invitations.id, inv.id))
 
+      /* Log activity */
       await tx.insert(activityLogs).values({
         teamId: inv.teamId,
         userId: user.id,
