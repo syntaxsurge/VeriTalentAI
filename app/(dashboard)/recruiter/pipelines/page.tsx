@@ -31,44 +31,38 @@ export default async function PipelinesPage() {
   }
 
   return (
-    <section className='space-y-10'>
-      <div className='flex items-center justify-between'>
-        <h2 className='text-2xl font-semibold'>Pipelines</h2>
+    <section className="space-y-10">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold">Pipelines</h2>
 
         {pipelines.length > 0 && (
-          <Button
-            size='sm'
-            variant='outline'
-            onClick={() => {
-              const el = document.getElementById('create-pipeline-form')
-              if (el) el.scrollIntoView({ behavior: 'smooth' })
-            }}
-          >
-            + New Pipeline
+          <Button asChild size="sm" variant="outline">
+            {/* Anchor link avoids client‑side event handler in Server Component */}
+            <a href="#create-pipeline-form">+ New Pipeline</a>
           </Button>
         )}
       </div>
 
       {pipelines.length === 0 ? (
-        <p className='text-muted-foreground'>
+        <p className="text-muted-foreground">
           You don’t have any pipelines yet. Create your first one below to track candidates through
           your hiring stages.
         </p>
       ) : (
-        <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {pipelines.map((p) => (
-            <Card key={p.id} className='group transition-shadow hover:shadow-xl'>
+            <Card key={p.id} className="group transition-shadow hover:shadow-xl">
               <CardHeader>
-                <CardTitle className='truncate' title={p.name}>
+                <CardTitle className="truncate" title={p.name}>
                   {p.name}
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className='space-y-3 text-sm'>
-                <p className='text-muted-foreground line-clamp-3'>
+              <CardContent className="space-y-3 text-sm">
+                <p className="text-muted-foreground line-clamp-3">
                   {p.description || 'No description provided.'}
                 </p>
-                <Link href={`/recruiter/pipelines/${p.id}`} className='text-primary underline'>
+                <Link href={`/recruiter/pipelines/${p.id}`} className="text-primary underline">
                   Open Board
                 </Link>
               </CardContent>
@@ -77,34 +71,34 @@ export default async function PipelinesPage() {
         </div>
       )}
 
-      <Card id='create-pipeline-form' className='max-w-xl'>
+      <Card id="create-pipeline-form" className="max-w-xl scroll-mt-20">
         <CardHeader>
           <CardTitle>Create New Pipeline</CardTitle>
         </CardHeader>
 
         <CardContent>
-          <form action={createAction} className='space-y-5'>
+          <form action={createAction} className="space-y-5">
             <div>
-              <label htmlFor='name' className='mb-1 block text-sm font-medium'>
+              <label htmlFor="name" className="mb-1 block text-sm font-medium">
                 Name
               </label>
-              <Input id='name' name='name' required placeholder='e.g. Backend Engineer May 2025' />
+              <Input id="name" name="name" required placeholder="e.g. Backend Engineer May 2025" />
             </div>
 
             <div>
-              <label htmlFor='description' className='mb-1 block text-sm font-medium'>
+              <label htmlFor="description" className="mb-1 block text-sm font-medium">
                 Description
               </label>
               <textarea
-                id='description'
-                name='description'
+                id="description"
+                name="description"
                 rows={4}
-                className='border-border w-full rounded-md border p-2 text-sm'
-                placeholder='Optional summary of the role, seniority, location, etc.'
+                className="border-border w-full rounded-md border p-2 text-sm"
+                placeholder="Optional summary of the role, seniority, location, etc."
               />
             </div>
 
-            <Button type='submit'>Create Pipeline</Button>
+            <Button type="submit">Create Pipeline</Button>
           </form>
         </CardContent>
       </Card>
