@@ -25,27 +25,20 @@ import { Button } from '@/components/ui/button'
 import { useUser } from '@/lib/auth'
 
 /* -------------------------------------------------------------------------- */
-/*                               STATIC NAV ITEMS                             */
+/*                                T Y P E S                                   */
 /* -------------------------------------------------------------------------- */
 
-const MAIN_NAV: SidebarNavItem[] = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/invitations', icon: Mail, label: 'Invitations' },
-  { href: '/pricing', icon: Tag, label: 'Pricing' },
-]
-
-const SETTINGS_NAV: SidebarNavItem[] = [
-  { href: '/settings/general', icon: Cog, label: 'General' },
-  { href: '/settings/team', icon: UsersIcon, label: 'Team' },
-  { href: '/settings/activity', icon: Activity, label: 'Activity' },
-  { href: '/settings/security', icon: Shield, label: 'Security' },
-]
+type PendingCounts = {
+  invitations: number
+  issuerRequests: number
+  adminPendingIssuers: number
+}
 
 /* -------------------------------------------------------------------------- */
-/*                          ROLE‑SPECIFIC NAV HELPERS                         */
+/*                               N A V   H E L P                              */
 /* -------------------------------------------------------------------------- */
 
-function roleNav(role?: string): SidebarNavItem[] {
+function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
   switch (role) {
     case 'candidate':
       return [
@@ -61,14 +54,24 @@ function roleNav(role?: string): SidebarNavItem[] {
       ]
     case 'issuer':
       return [
-        { href: '/issuer/requests', icon: Mail, label: 'Requests' },
+        {
+          href: '/issuer/requests',
+          icon: Mail,
+          label: 'Requests',
+          badgeCount: counts?.issuerRequests,
+        },
         { href: '/issuer/onboard', icon: ShieldCheck, label: 'Organisation' },
       ]
     case 'admin':
       return [
         { href: '/admin/users', icon: Users, label: 'Users' },
         { href: '/admin/credentials', icon: Award, label: 'Credentials' },
-        { href: '/admin/issuers', icon: ShieldCheck, label: 'Issuers' },
+        {
+          href: '/admin/issuers',
+          icon: ShieldCheck,
+          label: 'Issuers',
+          badgeCount: counts?.adminPendingIssuers,
+        },
       ]
     default:
       return []
@@ -98,42 +101,69 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const { userPromise } = useUser()
 
   const [user, setUser] = useState<any | null | undefined>(undefined)
+  const [counts, setCounts] = useState<PendingCounts>({
+    invitations: 0,
+    issuerRequests: 0,
+    adminPendingIssuers: 0,
+  })
 
-  // Resolve the promise client‑side to avoid mismatched HTML on hydration
+  /* Resolve user client‑side */
   useEffect(() => {
     let mounted = true
-    userPromise.then((u) => {
-      if (mounted) setUser(u)
-    })
+    userPromise.then((u) => mounted && setUser(u))
     return () => {
       mounted = false
     }
   }, [userPromise])
 
-  // Until the promise resolves, fall back to no intrinsic nav (keeps markup identical)
-  const intrinsicNav = roleNav(user?.role)
+  /* Fetch pending counts */
+  useEffect(() => {
+    fetch('/api/pending-counts', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) =>
+        setCounts({
+          invitations: data.invitations ?? 0,
+          issuerRequests: data.issuerRequests ?? 0,
+          adminPendingIssuers: data.adminPendingIssuers ?? 0,
+        }),
+      )
+      .catch(() => {})
+  }, [])
 
-  /* ----------------------------- Sidebar markup ---------------------------- */
+  /* ------------------------- Build nav arrays ------------------------- */
+  const mainNav: SidebarNavItem[] = [
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { href: '/invitations', icon: Mail, label: 'Invitations', badgeCount: counts.invitations },
+    { href: '/pricing', icon: Tag, label: 'Pricing' },
+  ]
+
+  const settingsNav: SidebarNavItem[] = [
+    { href: '/settings/general', icon: Cog, label: 'General' },
+    { href: '/settings/team', icon: UsersIcon, label: 'Team' },
+    { href: '/settings/activity', icon: Activity, label: 'Activity' },
+    { href: '/settings/security', icon: Shield, label: 'Security' },
+  ]
+
+  const intrinsicNav = roleNav(user?.role, counts)
+
+  /* ------------------------- Sidebar content -------------------------- */
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   function SidebarContent() {
     return (
       <>
-        <SidebarNav title='Main' items={MAIN_NAV} />
-
+        <SidebarNav title='Main' items={mainNav} />
         {intrinsicNav.length > 0 && (
           <SidebarNav title={roleTitle(user?.role)} items={intrinsicNav} />
         )}
-
-        {user && <SidebarNav title='Settings' items={SETTINGS_NAV} />}
+        {user && <SidebarNav title='Settings' items={settingsNav} />}
       </>
     )
   }
 
-  /* ------------------------------- Template ------------------------------- */
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
+  /* --------------------------- Template --------------------------- */
   return (
     <>
-      {/* Local toaster ensures all dashboard pages inherit bottom‑right positioning */}
       <Toaster richColors position='bottom-right' />
 
       <div className='mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl'>

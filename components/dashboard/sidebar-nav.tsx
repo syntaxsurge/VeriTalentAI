@@ -14,6 +14,8 @@ export interface SidebarNavItem {
   href: string
   icon: LucideIcon
   label: string
+  /** Optional numeric badge – hidden when zero/undefined */
+  badgeCount?: number
 }
 
 interface SidebarNavProps {
@@ -46,7 +48,7 @@ export function SidebarNav({ title, items, className }: SidebarNavProps) {
       )}
 
       <ul className='mt-2 space-y-1'>
-        {items.map(({ href, icon: Icon, label }) => {
+        {items.map(({ href, icon: Icon, label, badgeCount }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`)
           return (
             <li key={href}>
@@ -62,6 +64,12 @@ export function SidebarNav({ title, items, className }: SidebarNavProps) {
               >
                 <Icon className='h-4 w-4 flex-shrink-0' />
                 <span className='truncate'>{label}</span>
+
+                {badgeCount !== undefined && badgeCount > 0 && (
+                  <span className='ml-auto inline-flex min-w-[1rem] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground'>
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </span>
+                )}
               </Link>
             </li>
           )
