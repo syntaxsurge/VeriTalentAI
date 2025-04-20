@@ -1,77 +1,38 @@
 import { and, eq } from 'drizzle-orm'
 
 import { hashPassword } from '@/lib/auth/session'
-
 import { db } from '../drizzle'
 import { users, teams, teamMembers } from '../schema'
 
 /**
- * Seed initial users (admin, candidate, issuer, recruiter) and a shared demo team.
- *
- * • The first admin user is created up‑front so we always have a valid
- *   creator_user_id when inserting the demo team.
- * • If an existing team is missing creator_user_id (from a previous run),
- *   we patch it to point at the admin user.
+ * Seed four demo users — admin, candidate, issuer and recruiter —
+ * then for each user:
+ *   • create a personal team they own,
+ *   • ensure they are added to the shared “Test Team” where the admin is owner.
  *
  * All seeded accounts share the plaintext password: `myPassword`.
  */
 export async function seedUserTeam() {
-  console.log('Seeding users and team…')
+  console.log('Seeding users and teams…')
 
   /* ------------------------------------------------------------------ */
-  /* Shared demo password – hashed once                                 */
+  /* Common password hash                                               */
   /* ------------------------------------------------------------------ */
-  const password = 'myPassword'
-  const passwordHash = await hashPassword(password)
+  const passwordHash = await hashPassword('myPassword')
 
   /* ------------------------------------------------------------------ */
-  /* Ensure the admin account exists                                    */
+  /* Create or fetch users                                              */
   /* ------------------------------------------------------------------ */
-  let [adminUser] = await db.select().from(users).where(eq(users.email, 'admin@test.com')).limit(1)
-
-  if (!adminUser) {
-    ;[adminUser] = await db
-      .insert(users)
-      .values({ email: 'admin@test.com', passwordHash, role: 'admin' })
-      .returning()
-    console.log(`✅ Created user: ${adminUser.email} (admin)`)
-  } else {
-    console.log('ℹ️ Admin user already exists.')
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Ensure the demo team exists with a creator                         */
-  /* ------------------------------------------------------------------ */
-  const teamName = 'Test Team'
-  let [team] = await db.select().from(teams).where(eq(teams.name, teamName)).limit(1)
-
-  if (!team) {
-    ;[team] = await db
-      .insert(teams)
-      .values({ name: teamName, creatorUserId: adminUser.id })
-      .returning()
-    console.log(`✅ Created team: ${teamName}`)
-  } else {
-    if (team.creatorUserId === null) {
-      await db.update(teams).set({ creatorUserId: adminUser.id }).where(eq(teams.id, team.id))
-      console.log(`✅ Patched team "${teamName}" with creator_user_id ${adminUser.id}`)
-    } else {
-      console.log(`ℹ️ Team "${teamName}" already exists.`)
-    }
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Seed the remaining default users                                   */
-  /* ------------------------------------------------------------------ */
-  const defaultUsers = [
-    { email: 'admin@test.com', role: 'admin' as const, teamRole: 'owner' },
-    { email: 'candidate@test.com', role: 'candidate' as const, teamRole: 'member' },
-    { email: 'issuer@test.com', role: 'issuer' as const, teamRole: 'member' },
-    { email: 'recruiter@test.com', role: 'recruiter' as const, teamRole: 'member' },
+  const SEED_USERS = [
+    { email: 'admin@test.com', role: 'admin' as const },
+    { email: 'candidate@test.com', role: 'candidate' as const },
+    { email: 'issuer@test.com', role: 'issuer' as const },
+    { email: 'recruiter@test.com', role: 'recruiter' as const },
   ]
 
-  for (const entry of defaultUsers) {
-    /* Upsert user */
+  const userMap = new Map<string, number>() // email → id
+
+  for (const entry of SEED_USERS) {
     let [user] = await db.select().from(users).where(eq(users.email, entry.email)).limit(1)
 
     if (!user) {
@@ -84,20 +45,76 @@ export async function seedUserTeam() {
       console.log(`ℹ️ User ${entry.email} already exists.`)
     }
 
-    /* Ensure membership */
+    userMap.set(entry.email, user.id)
+
+    /* -------------------------------------------------------------- */
+    /* Personal team (owner)                                          */
+    /* -------------------------------------------------------------- */
+    const personalTeamName = `${entry.email}'s Team`
+    let [personalTeam] = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.name, personalTeamName))
+      .limit(1)
+
+    if (!personalTeam) {
+      ;[personalTeam] = await db
+        .insert(teams)
+        .values({ name: personalTeamName, creatorUserId: user.id })
+        .returning()
+      console.log(`✅ Created personal team for ${entry.email}`)
+    }
+
+    const personalMembership = await db
+      .select()
+      .from(teamMembers)
+      .where(and(eq(teamMembers.teamId, personalTeam.id), eq(teamMembers.userId, user.id)))
+      .limit(1)
+
+    if (personalMembership.length === 0) {
+      await db
+        .insert(teamMembers)
+        .values({ teamId: personalTeam.id, userId: user.id, role: 'owner' })
+      console.log(`✅ Added ${entry.email} as owner of personal team`)
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Shared “Test Team” with admin owner                                */
+  /* ------------------------------------------------------------------ */
+  const adminId = userMap.get('admin@test.com')!
+  const sharedName = 'Test Team'
+
+  let [shared] = await db.select().from(teams).where(eq(teams.name, sharedName)).limit(1)
+
+  if (!shared) {
+    ;[shared] = await db
+      .insert(teams)
+      .values({ name: sharedName, creatorUserId: adminId })
+      .returning()
+    console.log(`✅ Created shared team: ${sharedName}`)
+  } else if (shared.creatorUserId === null) {
+    await db.update(teams).set({ creatorUserId: adminId }).where(eq(teams.id, shared.id))
+    console.log(`✅ Patched shared team with creator_user_id ${adminId}`)
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Add all users to shared team (admin owner, others members)         */
+  /* ------------------------------------------------------------------ */
+  for (const entry of SEED_USERS) {
+    const userId = userMap.get(entry.email)!
+    const isAdmin = entry.email === 'admin@test.com'
+    const role = isAdmin ? 'owner' : 'member'
+
     const membership = await db
       .select()
       .from(teamMembers)
-      .where(and(eq(teamMembers.teamId, team.id), eq(teamMembers.userId, user.id)))
+      .where(and(eq(teamMembers.teamId, shared.id), eq(teamMembers.userId, userId)))
       .limit(1)
 
     if (membership.length === 0) {
-      await db
-        .insert(teamMembers)
-        .values({ teamId: team.id, userId: user.id, role: entry.teamRole })
-      console.log(`✅ Added ${entry.email} to "${teamName}" as ${entry.teamRole}.`)
-    } else {
-      console.log(`ℹ️ ${entry.email} is already a member of "${teamName}".`)
+      await db.insert(teamMembers).values({ teamId: shared.id, userId, role })
+      console.log(`✅ Added ${entry.email} to "${sharedName}" as ${role}.`)
     }
   }
 
