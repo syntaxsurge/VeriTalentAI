@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { ChevronDown, Check } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -66,7 +66,6 @@ export function RequestsStatusFilter() {
             >
               <Checkbox checked={active} className='h-4 w-4' />
               {s}
-              {active && <Check className='ml-auto h-4 w-4 text-primary' />}
             </DropdownMenuItem>
           )
         })}
