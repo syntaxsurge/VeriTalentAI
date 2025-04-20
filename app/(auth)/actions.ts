@@ -296,6 +296,8 @@ export const removeTeamMember = validatedActionWithUser(
     const userWithTeam = await getUserWithTeam(user.id)
     if (!userWithTeam?.teamId) return { error: 'User is not part of a team' }
 
+    const teamId = userWithTeam.teamId
+
     await db.transaction(async (tx) => {
       /* -------------------------------------------------------------- */
       /* Load the membership row to find the kicked user's ID           */
@@ -303,7 +305,7 @@ export const removeTeamMember = validatedActionWithUser(
       const [membership] = await tx
         .select()
         .from(teamMembers)
-        .where(and(eq(teamMembers.id, memberId), eq(teamMembers.teamId, userWithTeam.teamId)))
+        .where(and(eq(teamMembers.id, memberId), eq(teamMembers.teamId, teamId)))
         .limit(1)
 
       if (!membership) throw new Error('Member not found or not in your team.')
@@ -346,7 +348,7 @@ export const removeTeamMember = validatedActionWithUser(
       }
     })
 
-    await logActivity(userWithTeam.teamId, user.id, ActivityType.REMOVE_TEAM_MEMBER)
+    await logActivity(teamId, user.id, ActivityType.REMOVE_TEAM_MEMBER)
     return { success: 'Team member removed successfully.' }
   },
 )

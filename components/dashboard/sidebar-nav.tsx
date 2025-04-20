@@ -66,7 +66,10 @@ export function SidebarNav({ title, items, className }: SidebarNavProps) {
                 <span className='truncate'>{label}</span>
 
                 {badgeCount !== undefined && badgeCount > 0 && (
-                  <span className='ml-auto inline-flex min-w-[1rem] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground'>
+                  <span
+                    className='ml-auto inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary/90 px-1.5 text-[11px] font-semibold leading-none text-primary-foreground shadow'
+                    aria-label={`${badgeCount} pending`}
+                  >
                     {badgeCount > 99 ? '99+' : badgeCount}
                   </span>
                 )}
