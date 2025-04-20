@@ -18,6 +18,8 @@ import {
   Tag,
 } from 'lucide-react'
 
+import { Toaster } from 'sonner'
+
 import { SidebarNav, type SidebarNavItem } from '@/components/dashboard/sidebar-nav'
 import { Button } from '@/components/ui/button'
 import { useUser } from '@/lib/auth'
@@ -129,31 +131,36 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className='mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl'>
-      {/* Desktop sidebar */}
-      <aside className='sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-sm ring-1 ring-border/30 lg:block'>
-        <SidebarContent />
-      </aside>
+    <>
+      {/* Local toaster ensures all dashboard pages inherit bottom‑right positioning */}
+      <Toaster richColors position='bottom-right' />
 
-      {/* Mobile & content wrapper */}
-      <div className='flex flex-1 min-w-0 flex-col'>
-        {/* Mobile header */}
-        <div className='sticky top-16 z-20 flex items-center justify-between border-b bg-background p-4 lg:hidden'>
-          <span className='font-medium capitalize'>{user?.role ?? 'Dashboard'}</span>
-          <Button variant='ghost' size='icon' onClick={() => setSidebarOpen((p) => !p)}>
-            <Menu className='h-6 w-6' />
-            <span className='sr-only'>Toggle sidebar</span>
-          </Button>
+      <div className='mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl'>
+        {/* Desktop sidebar */}
+        <aside className='sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-sm ring-1 ring-border/30 lg:block'>
+          <SidebarContent />
+        </aside>
+
+        {/* Mobile & content wrapper */}
+        <div className='flex flex-1 min-w-0 flex-col'>
+          {/* Mobile header */}
+          <div className='sticky top-16 z-20 flex items-center justify-between border-b bg-background p-4 lg:hidden'>
+            <span className='font-medium capitalize'>{user?.role ?? 'Dashboard'}</span>
+            <Button variant='ghost' size='icon' onClick={() => setSidebarOpen((p) => !p)}>
+              <Menu className='h-6 w-6' />
+              <span className='sr-only'>Toggle sidebar</span>
+            </Button>
+          </div>
+
+          {sidebarOpen && (
+            <aside className='fixed top-16 z-40 h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-md ring-1 ring-border/30 lg:hidden'>
+              <SidebarContent />
+            </aside>
+          )}
+
+          <main className='flex-1 overflow-y-auto p-4'>{children}</main>
         </div>
-
-        {sidebarOpen && (
-          <aside className='fixed top-16 z-40 h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-md ring-1 ring-border/30 lg:hidden'>
-            <SidebarContent />
-          </aside>
-        )}
-
-        <main className='flex-1 overflow-y-auto p-4'>{children}</main>
       </div>
-    </div>
+    </>
   )
 }
