@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from 'next'
 
 import SiteHeader from '@/components/site-header'
 import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from 'sonner'
 import { UserProvider } from '@/lib/auth'
 import { getUser } from '@/lib/db/queries'
 
@@ -39,6 +40,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           enableSystem
           disableTransitionOnChange
         >
+          {/* Global toast provider */}
+          <Toaster richColors position='top-right' />
+
           <UserProvider userPromise={userPromise}>
             {/* Global header */}
             <SiteHeader />
