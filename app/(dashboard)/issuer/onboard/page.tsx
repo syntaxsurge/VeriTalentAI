@@ -67,11 +67,14 @@ function Detail({
   icon: Icon,
   label,
   value,
+  capitalize = false,
   className,
 }: {
   icon: any
   label: string
   value: string
+  /** Enables Tailwind’s <code>capitalize</code> utility when <code>true</code>. */
+  capitalize?: boolean
   className?: string
 }) {
   return (
@@ -79,7 +82,7 @@ function Detail({
       <Icon className='mt-0.5 h-5 w-5 text-muted-foreground' />
       <div>
         <p className='text-xs font-medium uppercase text-muted-foreground'>{label}</p>
-        <p className='break-all font-medium capitalize'>{value}</p>
+        <p className={cn('break-all font-medium', capitalize && 'capitalize')}>{value}</p>
       </div>
     </div>
   )
@@ -124,11 +127,17 @@ export default async function IssuerOnboardPage() {
             <div className='space-y-2'>
               <Detail icon={Building2} label='Name' value={issuer.name} />
               <Detail icon={AtSign} label='Domain' value={issuer.domain} />
-              <Detail icon={Tag} label='Category' value={prettify(issuer.category)} />
+              <Detail
+                icon={Tag}
+                label='Category'
+                value={prettify(issuer.category)}
+                capitalize
+              />
               <Detail
                 icon={BriefcaseBusiness}
                 label='Industry'
                 value={prettify(issuer.industry)}
+                capitalize
               />
             </div>
 
@@ -200,11 +209,17 @@ export default async function IssuerOnboardPage() {
         </CardHeader>
         <CardContent className='grid gap-6 p-6 sm:grid-cols-2'>
           <Detail icon={AtSign} label='Domain' value={issuer.domain} />
-          <Detail icon={Tag} label='Category' value={prettify(issuer.category)} />
+          <Detail
+            icon={Tag}
+            label='Category'
+            value={prettify(issuer.category)}
+            capitalize
+          />
           <Detail
             icon={BriefcaseBusiness}
             label='Industry'
             value={prettify(issuer.industry)}
+            capitalize
           />
           {issuer.did && (
             <Detail
