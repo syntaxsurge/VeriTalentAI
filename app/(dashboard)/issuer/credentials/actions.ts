@@ -21,6 +21,7 @@ import {
 export const approveCredentialAction = validatedActionWithUser(
   z.object({ credentialId: z.coerce.number() }),
   async ({ credentialId }, _, user) => {
+    /* ------------------ issuer validation ------------------ */
     const [issuer] = await db
       .select()
       .from(issuers)
@@ -30,6 +31,7 @@ export const approveCredentialAction = validatedActionWithUser(
     if (!issuer) return { error: 'Issuer not found.' }
     if (!issuer.did) return { error: 'Link a DID before approving credentials.' }
 
+    /* ------------------ credential lookup ------------------ */
     const [cred] = await db
       .select()
       .from(candidateCredentials)
@@ -42,40 +44,43 @@ export const approveCredentialAction = validatedActionWithUser(
       .limit(1)
 
     if (!cred) return { error: 'Credential not found for this issuer.' }
-
-    /* Only allow approve if not already verified */
-    if (cred.status === CredentialStatus.VERIFIED) {
+    if (cred.status === CredentialStatus.VERIFIED)
       return { error: 'Credential is already verified.' }
+
+    /* ------------------ VC handling ------------------------ */
+    let vcJwt = cred.vcIssuedId ?? undefined
+
+    /* If no previous VC, generate a new one */
+    if (!vcJwt) {
+      /* Candidate info for VC subject */
+      const [cand] = await db
+        .select({ cand: candidates, candUser: users })
+        .from(candidates)
+        .leftJoin(users, eq(candidates.userId, users.id))
+        .where(eq(candidates.id, cred.candidateId))
+        .limit(1)
+
+      const subjectDid =
+        process.env.SUBJECT_DID || `did:cheqd:testnet:candidate-${cred.candidateId}`
+
+      try {
+        const vc = await issueCredential({
+          issuerDid: issuer.did,
+          subjectDid,
+          attributes: {
+            credentialTitle: cred.title,
+            candidateName: cand.candUser?.name || cand.candUser?.email || 'Unknown',
+          },
+          credentialName: cred.type,
+        })
+        vcJwt = vc?.proof?.jwt
+      } catch (err) {
+        console.error('VC issuance failed:', err)
+        return { error: 'Failed to issue verifiable credential.' }
+      }
     }
 
-    /* Candidate info for VC subject */
-    const [cand] = await db
-      .select({ cand: candidates, candUser: users })
-      .from(candidates)
-      .leftJoin(users, eq(candidates.userId, users.id))
-      .where(eq(candidates.id, cred.candidateId))
-      .limit(1)
-
-    const subjectDid =
-      process.env.SUBJECT_DID || `did:cheqd:testnet:candidate-${cred.candidateId}`
-
-    /* Issue the VC */
-    let vcJwt: string | undefined
-    try {
-      const vc = await issueCredential({
-        issuerDid: issuer.did,
-        subjectDid,
-        attributes: {
-          credentialTitle: cred.title,
-          candidateName: cand.candUser?.name || cand.candUser?.email || 'Unknown',
-        },
-        credentialName: cred.type,
-      })
-      vcJwt = vc?.proof?.jwt
-    } catch (err) {
-      console.error('VC issuance failed:', err)
-    }
-
+    /* ------------------ persist changes -------------------- */
     await db
       .update(candidateCredentials)
       .set({
@@ -86,7 +91,7 @@ export const approveCredentialAction = validatedActionWithUser(
       })
       .where(eq(candidateCredentials.id, cred.id))
 
-    return { success: 'Credential approved and signed.' }
+    return { success: 'Credential approved.' }
   },
 )
 
@@ -151,17 +156,17 @@ export const unverifyCredentialAction = validatedActionWithUser(
       .limit(1)
 
     if (!cred) return { error: 'Credential not found for this issuer.' }
-    if (cred.status !== CredentialStatus.VERIFIED) {
+    if (cred.status !== CredentialStatus.VERIFIED)
       return { error: 'Only verified credentials can be unverified.' }
-    }
 
+    /* Preserve existing VC ID so it can be reused later */
     await db
       .update(candidateCredentials)
       .set({
         status: CredentialStatus.UNVERIFIED,
         verified: false,
         verifiedAt: null,
-        vcIssuedId: null,
+        // vcIssuedId intentionally left unchanged
       })
       .where(eq(candidateCredentials.id, cred.id))
 
