@@ -14,18 +14,38 @@ interface Props {
   addCredentialAction: (formData: FormData) => Promise<void>
 }
 
+/**
+ * Credential‑addition form with enhanced toast feedback.
+ * Interprets the special NEXT_REDIRECT digest emitted by Next.js redirects as a success,
+ * preventing the misleading “Next Redirect” error toast.
+ */
 export default function AddCredentialForm({ issuers, addCredentialAction }: Props) {
   const [isPending, startTransition] = useTransition()
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
+
+    // Display an updatable loading toast
+    const toastId = toast.loading('Adding credential…')
+
     startTransition(async () => {
       try {
         await addCredentialAction(fd)
-        toast.success('Credential added.')
+        // If the server action completes without redirecting, mark success
+        toast.success('Credential added.', { id: toastId })
       } catch (err: any) {
-        toast.error(err?.message ?? 'Something went wrong.')
+        /**
+         * A server‑side `redirect()` throws a NEXT_REDIRECT digest error;
+         * this signifies success, so convert it into a success toast.
+         */
+        if (err?.digest === 'NEXT_REDIRECT' || err?.message === 'NEXT_REDIRECT') {
+          toast.success('Credential added.', { id: toastId })
+          return
+        }
+
+        // Any other error should be surfaced to the user
+        toast.error(err?.message ?? 'Something went wrong.', { id: toastId })
       }
     })
   }
