@@ -38,7 +38,7 @@ export interface RowType {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               H E L P E R S                                */
+/*                                   Utils                                    */
 /* -------------------------------------------------------------------------- */
 
 function StatusBadge({ status }: { status: string }) {
@@ -51,7 +51,9 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={`${cls} capitalize`}>{status.toLowerCase()}</span>
 }
 
-/* ------------------------------ Row actions ------------------------------- */
+/* -------------------------------------------------------------------------- */
+/*                               Row Actions                                  */
+/* -------------------------------------------------------------------------- */
 
 function RowActions({ id, status }: { id: number; status: string }) {
   const router = useRouter()
@@ -89,6 +91,7 @@ function RowActions({ id, status }: { id: number; status: string }) {
           <span className='sr-only'>Open menu</span>
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
@@ -130,7 +133,7 @@ function RowActions({ id, status }: { id: number; status: string }) {
         <DropdownMenuItem
           onClick={destroy}
           disabled={isPending}
-          className='text-rose-600 dark:text-rose-400 font-semibold hover:bg-rose-500/10 focus:bg-rose-500/10'
+          className='font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
         >
           <Trash2 className='mr-2 h-4 w-4' />
           Delete
@@ -140,7 +143,9 @@ function RowActions({ id, status }: { id: number; status: string }) {
   )
 }
 
-/* ------------------------------ Columns ----------------------------------- */
+/* -------------------------------------------------------------------------- */
+/*                                Columns                                     */
+/* -------------------------------------------------------------------------- */
 
 const columns: Column<RowType>[] = [
   {
@@ -148,13 +153,20 @@ const columns: Column<RowType>[] = [
     header: 'Name / Domain',
     sortable: true,
     render: (_v, row) => (
-      <div>
-        {row.name}
-        <div className='text-muted-foreground text-xs'>{row.domain}</div>
+      <div className='min-w-[180px]'>
+        <p className='truncate font-medium'>{row.name}</p>
+        <p className='truncate text-xs text-muted-foreground'>{row.domain}</p>
       </div>
     ),
   },
-  { key: 'owner', header: 'Owner', sortable: true },
+  {
+    key: 'owner',
+    header: 'Owner',
+    sortable: true,
+    className: 'truncate',
+    // Explicit renderer guarantees display even if value is an empty string
+    render: (v) => <span className='break-all'>{(v && String(v).trim()) || '—'}</span>,
+  },
   {
     key: 'category',
     header: 'Category',
@@ -185,7 +197,7 @@ const columns: Column<RowType>[] = [
 ]
 
 /* -------------------------------------------------------------------------- */
-/*                       B U L K   A C T I O N S                              */
+/*                           Bulk‑Selection Actions                           */
 /* -------------------------------------------------------------------------- */
 
 export default function AdminIssuersTable({ rows }: { rows: RowType[] }) {
