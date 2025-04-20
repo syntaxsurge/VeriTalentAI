@@ -11,16 +11,27 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
 import { Checkbox } from '@/components/ui/checkbox'
+import { CredentialStatus } from '@/lib/db/schema/viskify'
 
-const STATUSES = ['PENDING', 'VERIFIED', 'REJECTED'] as const
+/** Canonical selectable statuses (lower‑case values that match the DB). */
+const STATUSES = [
+  CredentialStatus.PENDING,
+  CredentialStatus.VERIFIED,
+  CredentialStatus.REJECTED,
+] as const
 
 export function RequestsStatusFilter() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const param = searchParams.get('status') ?? 'PENDING'
-  const selected = new Set(param.split(',').filter(Boolean).map((s) => s.toUpperCase()))
+  const param = searchParams.get('status') ?? CredentialStatus.PENDING
+  const selected = new Set(
+    param
+      .split(',')
+      .filter(Boolean)
+      .map((s) => s.toLowerCase()),
+  )
 
   function toggle(status: string) {
     const next = new Set(selected)
@@ -29,8 +40,8 @@ export function RequestsStatusFilter() {
     } else {
       next.add(status)
     }
-    /* always keep at least one status (fallback → PENDING) */
-    if (next.size === 0) next.add('PENDING')
+    /* Ensure at least one status (fallback → pending) */
+    if (next.size === 0) next.add(CredentialStatus.PENDING)
 
     const params = new URLSearchParams(searchParams)
     params.set('status', Array.from(next).join(','))
@@ -54,7 +65,7 @@ export function RequestsStatusFilter() {
               className='flex cursor-pointer items-center gap-2 capitalize'
             >
               <Checkbox checked={active} className='h-4 w-4' />
-              {s.toLowerCase()}
+              {s}
               {active && <Check className='ml-auto h-4 w-4 text-primary' />}
             </DropdownMenuItem>
           )

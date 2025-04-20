@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import { rejectCredentialAction } from '@/app/(dashboard)/issuer/credentials/actions'
+import { CredentialStatus } from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -18,7 +19,7 @@ export interface RowType {
   title: string
   type: string
   candidate: string
-  status: string
+  status: CredentialStatus
 }
 
 /* -------------------------------------------------------------------------- */
@@ -65,16 +66,16 @@ const columns: Column<RowType>[] = [
     sortable: true,
     className: 'capitalize',
     render: (v) => {
-      const s = v as string
+      const s = v as CredentialStatus
       const cls =
-        s === 'VERIFIED'
+        s === CredentialStatus.VERIFIED
           ? 'text-emerald-600'
-          : s === 'PENDING'
+          : s === CredentialStatus.PENDING
             ? 'text-amber-600'
-            : s === 'REJECTED'
+            : s === CredentialStatus.REJECTED
               ? 'text-rose-600'
               : 'text-muted-foreground'
-      return <span className={cls}>{s.toLowerCase()}</span>
+      return <span className={cls}>{s}</span>
     },
   },
   {

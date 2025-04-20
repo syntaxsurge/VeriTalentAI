@@ -37,11 +37,13 @@ export default async function RequestsPage({
   if (!issuer) redirect('/issuer/onboard')
 
   /* ------------------- status filter ------------------- */
-  const statusParam = searchParams?.status ?? CredentialStatus.PENDING
+  const statusParam = (searchParams?.status ?? CredentialStatus.PENDING).toLowerCase()
   const statuses = statusParam
     .split(',')
-    .map((s) => s.trim().toUpperCase())
-    .filter((s) => s !== '') as (keyof typeof CredentialStatus)[]
+    .map((s) => s.trim().toLowerCase())
+    .filter((s): s is CredentialStatus =>
+      Object.values(CredentialStatus).includes(s as CredentialStatus),
+    )
 
   /* Ensure at least pending when invalid */
   if (statuses.length === 0) {
