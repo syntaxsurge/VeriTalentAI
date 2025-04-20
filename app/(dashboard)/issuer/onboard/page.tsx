@@ -125,7 +125,7 @@ export default async function IssuerOnboardPage() {
               )}
               {issuer.did && (
                 <p className='break-all'>
-                  <span className='font-medium'>DID:</span> {issuer.did}
+                  <span className='font-medium'>Cheqd DID:</span> {issuer.did}
                 </p>
               )}
             </CardContent>
