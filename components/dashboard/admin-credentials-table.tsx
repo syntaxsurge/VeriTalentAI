@@ -61,7 +61,7 @@ function RowActions({ id }: { id: number }) {
         <DropdownMenuItem
           onClick={destroy}
           disabled={isPending}
-          className='text-rose-600 dark:text-rose-400 font-semibold hover:bg-rose-500/10 focus:bg-rose-500/10 cursor-pointer'
+          className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
         >
           <Trash2 className='mr-2 h-4 w-4' />
           Delete
@@ -76,13 +76,24 @@ function RowActions({ id }: { id: number }) {
 /* -------------------------------------------------------------------------- */
 
 const columns: Column<RowType>[] = [
-  { key: 'title', header: 'Title', sortable: true },
-  { key: 'candidate', header: 'Candidate', sortable: true },
+  {
+    key: 'title',
+    header: 'Title',
+    sortable: true,
+    /** Explicit render ensures value is shown even if empty string / null */
+    render: (v) => (v ? (v as string) : '—'),
+  },
+  {
+    key: 'candidate',
+    header: 'Candidate',
+    sortable: true,
+    render: (v) => (v ? (v as string) : '—'),
+  },
   {
     key: 'issuer',
     header: 'Issuer',
     sortable: true,
-    render: (v) => v || '—',
+    render: (v) => (v as string | null) || '—',
   },
   {
     key: 'status',
@@ -147,11 +158,6 @@ export default function AdminCredentialsTable({ rows }: { rows: RowType[] }) {
   const bulkActions = buildBulkActions(router)
 
   return (
-    <DataTable
-      columns={columns}
-      rows={rows}
-      filterKey='title'
-      bulkActions={bulkActions}
-    />
+    <DataTable columns={columns} rows={rows} filterKey='title' bulkActions={bulkActions} />
   )
 }

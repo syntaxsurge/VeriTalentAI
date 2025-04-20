@@ -2,9 +2,7 @@ import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import AdminCredentialsTable, {
-  RowType,
-} from '@/components/dashboard/admin-credentials-table'
+import AdminCredentialsTable, { RowType } from '@/components/dashboard/admin-credentials-table'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { users as usersTable } from '@/lib/db/schema/core'
@@ -22,19 +20,28 @@ export default async function AdminCredentialsPage() {
   if (!currentUser) redirect('/sign-in')
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
+  /* ------------------------------------------------------------------ */
+  /* Query credentials with explicit columns                            */
+  /* ------------------------------------------------------------------ */
   const rows = await db
-    .select({ cred: credsT, candUser: usersTable, issuer: issuersTable })
+    .select({
+      id: credsT.id,
+      title: credsT.title,
+      status: credsT.status,
+      candidateEmail: usersTable.email,
+      issuerName: issuersTable.name,
+    })
     .from(credsT)
     .leftJoin(candT, eq(credsT.candidateId, candT.id))
     .leftJoin(usersTable, eq(candT.userId, usersTable.id))
     .leftJoin(issuersTable, eq(credsT.issuerId, issuersTable.id))
 
   const tableRows: RowType[] = rows.map((r) => ({
-    id: r.cred.id,
-    title: r.cred.title,
-    candidate: r.candUser?.name || r.candUser?.email || 'Unknown',
-    issuer: r.issuer?.name || null,
-    status: r.cred.status as CredentialStatus,
+    id: r.id,
+    title: r.title,
+    candidate: r.candidateEmail || 'Unknown',
+    issuer: r.issuerName || null,
+    status: r.status as CredentialStatus,
   }))
 
   return (
