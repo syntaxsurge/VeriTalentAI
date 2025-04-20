@@ -2,16 +2,92 @@ import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
+import {
+  Building2,
+  AtSign,
+  Tag,
+  BriefcaseBusiness,
+  Link as LinkIcon,
+  BadgeCheck,
+  Hourglass,
+  XCircle,
+} from 'lucide-react'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
+import { cn } from '@/lib/utils'
 
 import { CreateIssuerForm } from './create-issuer-form'
 import { EditIssuerForm } from './edit-issuer-form'
 import { LinkDidForm } from './link-did-form'
 
 export const revalidate = 0
+
+/* -------------------------------------------------------------------------- */
+/*                                   HELPERS                                  */
+/* -------------------------------------------------------------------------- */
+
+function prettify(text?: string | null) {
+  return text ? text.replaceAll('_', ' ').toLowerCase() : '—'
+}
+
+function StatusPill({ status }: { status: string }) {
+  const base =
+    'inline-flex items-center rounded-full px-3 py-0.5 text-sm font-semibold capitalize'
+  const map: Record<string, string> = {
+    [IssuerStatus.ACTIVE]:
+      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    [IssuerStatus.PENDING]:
+      'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    [IssuerStatus.REJECTED]:
+      'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+  }
+  return (
+    <span className={cn(base, map[status] ?? 'bg-muted text-foreground/80')}>
+      {status.toLowerCase()}
+    </span>
+  )
+}
+
+function StatusIcon({ status }: { status: string }) {
+  const base = 'h-6 w-6 flex-shrink-0'
+  switch (status) {
+    case IssuerStatus.ACTIVE:
+      return <BadgeCheck className={cn(base, 'text-emerald-500')} />
+    case IssuerStatus.REJECTED:
+      return <XCircle className={cn(base, 'text-rose-500')} />
+    default:
+      return <Hourglass className={cn(base, 'text-amber-500')} />
+  }
+}
+
+function Detail({
+  icon: Icon,
+  label,
+  value,
+  className,
+}: {
+  icon: any
+  label: string
+  value: string
+  className?: string
+}) {
+  return (
+    <div className={cn('flex items-start gap-3', className)}>
+      <Icon className='mt-0.5 h-5 w-5 text-muted-foreground' />
+      <div>
+        <p className='text-xs font-medium uppercase text-muted-foreground'>{label}</p>
+        <p className='break-all font-medium capitalize'>{value}</p>
+      </div>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                     PAGE                                   */
+/* -------------------------------------------------------------------------- */
 
 export default async function IssuerOnboardPage() {
   const user = await getUser()
@@ -23,123 +99,132 @@ export default async function IssuerOnboardPage() {
     .where(eq(issuers.ownerUserId, user.id))
     .limit(1)
 
-  /* --------------------------- helpers --------------------------- */
-  const prettify = (text?: string | null) =>
-    text ? text.replaceAll('_', ' ').toLowerCase() : '—'
+  /* ----------------------- First‑time creation ----------------------- */
+  if (!issuer) {
+    return (
+      <section className='mx-auto max-w-lg space-y-8'>
+        <h2 className='text-2xl font-bold tracking-tight'>Create Your Organisation</h2>
+        <CreateIssuerForm />
+      </section>
+    )
+  }
 
-  /* ----------------------------- UI ----------------------------- */
-  return (
-    <section className='max-w-xl space-y-8'>
-      <h2 className='text-xl font-semibold'>Issuer Onboarding</h2>
+  /* --------------------------- Rejected flow ------------------------- */
+  if (issuer.status === IssuerStatus.REJECTED) {
+    return (
+      <section className='mx-auto max-w-xl space-y-8'>
+        <h2 className='text-2xl font-bold tracking-tight'>Fix &amp; Resubmit</h2>
 
-      {/* First‑time create */}
-      {!issuer && <CreateIssuerForm />}
-
-      {/* Rejected → edit */}
-      {issuer && issuer.status === IssuerStatus.REJECTED && (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle className='text-lg font-medium'>Previous Submission</CardTitle>
-            </CardHeader>
-            <CardContent className='space-y-1 text-sm'>
-              <p>
-                <span className='font-medium'>Name:</span> {issuer.name}
-              </p>
-              <p>
-                <span className='font-medium'>Domain:</span> {issuer.domain}
-              </p>
-              <p>
-                <span className='font-medium'>Category:</span> {prettify(issuer.category)}
-              </p>
-              <p>
-                <span className='font-medium'>Industry:</span> {prettify(issuer.industry)}
-              </p>
-              {issuer.logoUrl && (
-                <div className='mt-2 flex flex-col'>
-                  <span className='font-medium'>Logo preview:</span>
-                  <Image
-                    src={issuer.logoUrl}
-                    alt={`${issuer.name} logo`}
-                    width={96}
-                    height={96}
-                    className='mt-1 h-24 w-auto rounded-md border object-contain'
-                  />
-                </div>
-              )}
-              {issuer.rejectionReason && (
-                <p className='mt-2 rounded-md bg-red-50 p-3 text-xs text-red-700 dark:bg-red-900/20 dark:text-red-300'>
-                  <span className='font-medium'>Rejection reason:</span> {issuer.rejectionReason}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <EditIssuerForm issuer={issuer} />
-        </>
-      )}
-
-      {/* Pending / active */}
-      {issuer && issuer.status !== IssuerStatus.REJECTED && (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle className='text-lg font-medium'>Organisation Details</CardTitle>
-            </CardHeader>
-            <CardContent className='space-y-2 text-sm'>
-              <p>
-                <span className='font-medium'>Name:</span> {issuer.name}
-              </p>
-              <p>
-                <span className='font-medium'>Status:</span>{' '}
-                <span
-                  className={
-                    issuer.status === IssuerStatus.ACTIVE
-                      ? 'text-emerald-600'
-                      : 'text-amber-600'
-                  }
-                >
-                  {issuer.status.toLowerCase()}
-                </span>
-              </p>
-              <p>
-                <span className='font-medium'>Domain:</span> {issuer.domain}
-              </p>
-              <p>
-                <span className='font-medium'>Category:</span> {prettify(issuer.category)}
-              </p>
-              <p>
-                <span className='font-medium'>Industry:</span> {prettify(issuer.industry)}
-              </p>
-              {issuer.logoUrl && (
-                <div className='flex flex-col'>
-                  <span className='font-medium'>Logo preview:</span>
-                  <Image
-                    src={issuer.logoUrl}
-                    alt={`${issuer.name} logo`}
-                    width={96}
-                    height={96}
-                    className='mt-1 h-24 w-auto rounded-md border object-contain'
-                  />
-                </div>
-              )}
-              {issuer.did && (
-                <p className='break-all'>
-                  <span className='font-medium'>Cheqd DID:</span> {issuer.did}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          {!issuer.did && issuer.status === IssuerStatus.ACTIVE && <LinkDidForm />}
-
-          {issuer.status === IssuerStatus.PENDING && (
-            <div className='rounded-md bg-muted p-4 text-sm'>
-              Your issuer is awaiting admin approval. You’ll receive an email once it becomes
-              active.
+        {/* Previous submission summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle className='text-lg font-medium'>Previous Submission</CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div className='space-y-2'>
+              <Detail icon={Building2} label='Name' value={issuer.name} />
+              <Detail icon={AtSign} label='Domain' value={issuer.domain} />
+              <Detail icon={Tag} label='Category' value={prettify(issuer.category)} />
+              <Detail
+                icon={BriefcaseBusiness}
+                label='Industry'
+                value={prettify(issuer.industry)}
+              />
             </div>
+
+            {issuer.logoUrl && (
+              <div className='flex flex-col gap-2'>
+                <p className='text-xs font-medium uppercase text-muted-foreground'>
+                  Logo Preview
+                </p>
+                <Image
+                  src={issuer.logoUrl}
+                  alt={`${issuer.name} logo`}
+                  width={112}
+                  height={112}
+                  className='h-28 w-auto rounded-md border object-contain'
+                />
+              </div>
+            )}
+
+            {issuer.rejectionReason && (
+              <p className='rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-900/20 dark:text-rose-300'>
+                <span className='font-semibold'>Rejection reason:</span>{' '}
+                {issuer.rejectionReason}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <EditIssuerForm issuer={issuer} />
+      </section>
+    )
+  }
+
+  /* ---------------------- Active / Pending flow ---------------------- */
+  return (
+    <section className='mx-auto max-w-2xl space-y-8'>
+      {/* Hero section */}
+      <Card className='overflow-hidden shadow-sm'>
+        <CardContent className='flex flex-col items-center gap-6 p-6 sm:flex-row'>
+          {issuer.logoUrl ? (
+            <Image
+              src={issuer.logoUrl}
+              alt={`${issuer.name} logo`}
+              width={96}
+              height={96}
+              className='h-24 w-24 flex-shrink-0 rounded-lg border object-contain'
+            />
+          ) : (
+            <Building2 className='h-24 w-24 flex-shrink-0 rounded-lg bg-muted p-4 text-muted-foreground' />
           )}
-        </>
+
+          <div className='flex-1 space-y-1'>
+            <h1 className='text-3xl font-extrabold leading-tight tracking-tight'>
+              {issuer.name}
+            </h1>
+            <p className='text-muted-foreground text-sm'>Organisation profile</p>
+          </div>
+
+          <div className='flex items-center gap-2'>
+            <StatusIcon status={issuer.status} />
+            <StatusPill status={issuer.status} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Detail grid */}
+      <Card className='shadow-sm'>
+        <CardHeader>
+          <CardTitle className='text-lg font-semibold'>Organisation Details</CardTitle>
+        </CardHeader>
+        <CardContent className='grid gap-6 p-6 sm:grid-cols-2'>
+          <Detail icon={AtSign} label='Domain' value={issuer.domain} />
+          <Detail icon={Tag} label='Category' value={prettify(issuer.category)} />
+          <Detail
+            icon={BriefcaseBusiness}
+            label='Industry'
+            value={prettify(issuer.industry)}
+          />
+          {issuer.did && (
+            <Detail
+              icon={LinkIcon}
+              label='Cheqd DID'
+              value={issuer.did}
+              className='sm:col-span-2'
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* DID linking & status alerts */}
+      {!issuer.did && issuer.status === IssuerStatus.ACTIVE && <LinkDidForm />}
+
+      {issuer.status === IssuerStatus.PENDING && (
+        <div className='rounded-md border-l-4 border-amber-500 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-400 dark:bg-amber-900/20 dark:text-amber-200'>
+          Your issuer is awaiting admin approval. You’ll receive an email once it
+          becomes active.
+        </div>
       )}
     </section>
   )
