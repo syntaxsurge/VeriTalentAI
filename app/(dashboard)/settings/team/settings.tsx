@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState, useActionState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 import { removeTeamMember } from '@/app/(auth)/actions'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -12,12 +14,85 @@ import { customerPortalAction } from '@/lib/payments/actions'
 
 import { InviteTeamMember } from './invite-team'
 
-type ActionState = { error?: string; success?: string }
+/* -------------------------------------------------------------------------- */
+/*                               H E L P E R S                                */
+/* -------------------------------------------------------------------------- */
+
+function displayName(u: Pick<User, 'name' | 'email'>) {
+  return u.name || u.email || 'Unknown'
+}
+
+/* -------------------------------------------------------------------------- */
+/*                           M E M B E R   R O W                              */
+/* -------------------------------------------------------------------------- */
+
+type MemberRowProps = {
+  member: TeamDataWithMembers['teamMembers'][number]
+  /** whether the current viewer (team owner) can remove this member */
+  canRemove: boolean
+}
+
+function MemberRow({ member, canRemove }: MemberRowProps) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+
+  function handleRemove() {
+    startTransition(async () => {
+      const res = await removeTeamMember({ memberId: member.id }, new FormData())
+      if (res?.error) {
+        toast.error(res.error)
+      } else {
+        toast.success(res?.success ?? 'Member removed.')
+      }
+      router.refresh()
+    })
+  }
+
+  return (
+    <li className='flex items-center justify-between'>
+      <div className='flex items-center space-x-4'>
+        <Avatar>
+          {member.user.imageUrl ? (
+            <AvatarImage src={member.user.imageUrl} alt={displayName(member.user)} />
+          ) : (
+            <AvatarFallback>
+              {displayName(member.user)
+                .split(' ')
+                .map((n) => n[0])
+                .join('')}
+            </AvatarFallback>
+          )}
+        </Avatar>
+        <div>
+          <p className='font-medium'>{displayName(member.user)}</p>
+          <p className='text-muted-foreground text-sm capitalize'>{member.role}</p>
+        </div>
+      </div>
+
+      {canRemove && (
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={isPending}
+          onClick={handleRemove}
+          className='whitespace-nowrap'
+        >
+          {isPending ? 'Removing…' : 'Remove'}
+        </Button>
+      )}
+    </li>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                S E T T I N G S                             */
+/* -------------------------------------------------------------------------- */
 
 export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
   const { userPromise } = useUser()
   const [user, setUser] = useState<User | null | undefined>(undefined)
 
+  /* Resolve current user client‑side */
   useEffect(() => {
     let mounted = true
     userPromise.then((u) => mounted && setUser(u as User | null))
@@ -29,15 +104,11 @@ export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
   const isOwner =
     !!teamData.teamMembers.find((m) => m.role === 'owner' && m.user.id === user?.id)
 
-  const [removeState, removeAction, removing] = useActionState<ActionState, FormData>(
-    removeTeamMember,
-    { error: '', success: '' },
-  )
-
-  const displayName = (u: Pick<User, 'name' | 'email'>) => u.name || u.email || 'Unknown'
-
   if (user === undefined) return null
 
+  /* ---------------------------------------------------------------------- */
+  /*                                 UI                                     */
+  /* ---------------------------------------------------------------------- */
   return (
     <section className='flex-1 p-4 lg:p-8'>
       <h1 className='mb-6 text-lg font-medium lg:text-2xl'>Team Settings</h1>
@@ -95,40 +166,9 @@ export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
         <CardContent>
           <ul className='space-y-4'>
             {teamData.teamMembers.map((m, i) => (
-              <li key={m.id} className='flex items-center justify-between'>
-                <div className='flex items-center space-x-4'>
-                  <Avatar>
-                    <AvatarFallback>
-                      {displayName(m.user)
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className='font-medium'>{displayName(m.user)}</p>
-                    <p className='text-muted-foreground text-sm capitalize'>{m.role}</p>
-                  </div>
-                </div>
-
-                {i > 1 && isOwner && (
-                  <form action={removeAction}>
-                    <input type='hidden' name='memberId' value={m.id} />
-                    <Button type='submit' size='sm' variant='outline' disabled={removing}>
-                      {removing ? 'Removing…' : 'Remove'}
-                    </Button>
-                  </form>
-                )}
-              </li>
+              <MemberRow key={m.id} member={m} canRemove={i > 1 && isOwner} />
             ))}
           </ul>
-
-          {removeState.error && (
-            <p className='text-destructive-foreground mt-4 text-sm'>{removeState.error}</p>
-          )}
-          {removeState.success && (
-            <p className='text-emerald-600 mt-4 text-sm'>{removeState.success}</p>
-          )}
         </CardContent>
       </Card>
 
