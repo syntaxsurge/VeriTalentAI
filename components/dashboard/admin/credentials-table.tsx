@@ -3,6 +3,7 @@
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { MoreHorizontal, Trash2, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import {
   DropdownMenu,
@@ -32,11 +33,17 @@ function RowActions({ id }: { id: number }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  function destroy() {
+  async function destroy() {
     startTransition(async () => {
       const fd = new FormData()
       fd.append('credentialId', id.toString())
-      await deleteCredentialAction({}, fd)
+      const res = await deleteCredentialAction({}, fd)
+
+      if (res?.error) {
+        toast.error(res.error)
+      } else {
+        toast.success(res?.success ?? 'Credential deleted.')
+      }
       router.refresh()
     })
   }
@@ -80,7 +87,6 @@ const columns: Column<RowType>[] = [
     key: 'title',
     header: 'Title',
     sortable: true,
-    /** Explicit render ensures value is shown even if empty string / null */
     render: (v) => (v ? (v as string) : '—'),
   },
   {
@@ -136,13 +142,19 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
       variant: 'destructive',
       onClick: (selected) =>
         startTransition(async () => {
-          await Promise.all(
+          const results = await Promise.all(
             selected.map(async (cred) => {
               const fd = new FormData()
               fd.append('credentialId', cred.id.toString())
-              await deleteCredentialAction({}, fd)
+              return deleteCredentialAction({}, fd)
             }),
           )
+          const errors = results.filter((r) => r?.error).map((r) => r!.error)
+          if (errors.length) {
+            toast.error(errors.join('\n'))
+          } else {
+            toast.success('Selected credentials deleted.')
+          }
           router.refresh()
         }),
     },

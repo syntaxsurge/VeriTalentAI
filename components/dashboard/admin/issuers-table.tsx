@@ -10,6 +10,7 @@ import {
   XCircle,
   Trash2,
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import {
   updateIssuerStatusAction,
@@ -59,22 +60,36 @@ function RowActions({ id, status }: { id: number; status: string }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  function mutate(next: keyof typeof IssuerStatus, reason?: string) {
+  async function mutate(next: keyof typeof IssuerStatus, reason?: string) {
     startTransition(async () => {
+      const toastId = toast.loading('Updating issuer…')
       const fd = new FormData()
       fd.append('issuerId', id.toString())
       fd.append('status', next)
       if (reason) fd.append('rejectionReason', reason)
-      await updateIssuerStatusAction({}, fd)
+      const res = await updateIssuerStatusAction({}, fd)
+
+      if (res?.error) {
+        toast.error(res.error, { id: toastId })
+      } else {
+        toast.success(res?.success ?? 'Issuer updated.', { id: toastId })
+      }
       router.refresh()
     })
   }
 
-  function destroy() {
+  async function destroy() {
     startTransition(async () => {
+      const toastId = toast.loading('Deleting issuer…')
       const fd = new FormData()
       fd.append('issuerId', id.toString())
-      await deleteIssuerAction({}, fd)
+      const res = await deleteIssuerAction({}, fd)
+
+      if (res?.error) {
+        toast.error(res.error, { id: toastId })
+      } else {
+        toast.success(res?.success ?? 'Issuer deleted.', { id: toastId })
+      }
       router.refresh()
     })
   }
@@ -164,7 +179,6 @@ const columns: Column<RowType>[] = [
     header: 'Owner',
     sortable: true,
     className: 'truncate',
-    // Explicit renderer guarantees display even if value is an empty string
     render: (v) => <span className='break-all'>{(v && String(v).trim()) || '—'}</span>,
   },
   {
@@ -202,38 +216,47 @@ const columns: Column<RowType>[] = [
 
 export default function AdminIssuersTable({ rows }: { rows: RowType[] }) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
 
   async function bulkUpdate(
     selected: RowType[],
     status: keyof typeof IssuerStatus,
     reason?: string,
   ) {
-    startTransition(async () => {
-      await Promise.all(
-        selected.map(async (row) => {
-          const fd = new FormData()
-          fd.append('issuerId', row.id.toString())
-          fd.append('status', status)
-          if (reason) fd.append('rejectionReason', reason)
-          await updateIssuerStatusAction({}, fd)
-        }),
-      )
-      router.refresh()
-    })
+    const toastId = toast.loading('Updating issuers…')
+    const results = await Promise.all(
+      selected.map(async (row) => {
+        const fd = new FormData()
+        fd.append('issuerId', row.id.toString())
+        fd.append('status', status)
+        if (reason) fd.append('rejectionReason', reason)
+        return updateIssuerStatusAction({}, fd)
+      }),
+    )
+    const errors = results.filter((r) => r?.error).map((r) => r!.error)
+    if (errors.length) {
+      toast.error(errors.join('\n'), { id: toastId })
+    } else {
+      toast.success('Issuers updated.', { id: toastId })
+    }
+    router.refresh()
   }
 
   async function bulkDelete(selected: RowType[]) {
-    startTransition(async () => {
-      await Promise.all(
-        selected.map(async (row) => {
-          const fd = new FormData()
-          fd.append('issuerId', row.id.toString())
-          await deleteIssuerAction({}, fd)
-        }),
-      )
-      router.refresh()
-    })
+    const toastId = toast.loading('Deleting issuers…')
+    const results = await Promise.all(
+      selected.map(async (row) => {
+        const fd = new FormData()
+        fd.append('issuerId', row.id.toString())
+        return deleteIssuerAction({}, fd)
+      }),
+    )
+    const errors = results.filter((r) => r?.error).map((r) => r!.error)
+    if (errors.length) {
+      toast.error(errors.join('\n'), { id: toastId })
+    } else {
+      toast.success('Issuers deleted.', { id: toastId })
+    }
+    router.refresh()
   }
 
   const bulkActions: BulkAction<RowType>[] = [

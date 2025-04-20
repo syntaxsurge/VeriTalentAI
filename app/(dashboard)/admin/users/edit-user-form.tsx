@@ -15,19 +15,15 @@ import { updateUserAction } from './actions'
 const ROLES = ['candidate', 'recruiter', 'issuer', 'admin'] as const
 
 export interface EditUserFormProps {
-  /** unique user id */
   id: number
   defaultName: string | null
   defaultEmail: string
   defaultRole: string
-  /** called when the form successfully saves */
   onDone: () => void
 }
 
-/**
- * Form used inside the admin “Edit User” dialog.
- * Shows a muted spinner while saving and fires success/error toasts.
- */
+type ActionState = { error?: string; success?: string }
+
 export default function EditUserForm({
   id,
   defaultName,
@@ -35,12 +31,14 @@ export default function EditUserForm({
   defaultRole,
   onDone,
 }: EditUserFormProps) {
-  type ActionState = { error?: string; success?: string }
   const [state, action, pending] = useActionState<ActionState, FormData>(updateUserAction, {
     error: '',
     success: '',
   })
   const router = useRouter()
+
+  /* ------------- toast de‑dupe ------------- */
+  const toastId = React.useRef(`edit-user-${id}`)
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -49,15 +47,17 @@ export default function EditUserForm({
     startTransition(() => action(fd))
   }
 
-  /* toast + side‑effects */
   React.useEffect(() => {
-    if (state.error) toast.error(state.error)
+    if (state.error) {
+      toast.error(state.error, { id: toastId.current })
+    }
     if (state.success) {
-      toast.success(state.success)
+      toast.success(state.success, { id: toastId.current })
       onDone()
       router.refresh()
     }
-  }, [state.error, state.success, onDone, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.error, state.success])
 
   return (
     <form onSubmit={handleSubmit} className='space-y-4'>
