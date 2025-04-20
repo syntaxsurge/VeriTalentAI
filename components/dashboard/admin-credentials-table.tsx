@@ -2,12 +2,17 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  MoreHorizontal,
-  Trash2,
-  Loader2,
-} from 'lucide-react'
+import { MoreHorizontal, Trash2, Loader2 } from 'lucide-react'
 
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
 
@@ -20,7 +25,7 @@ export interface RowType {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                            Row‑level actions                               */
+/*                              Row‑level actions                             */
 /* -------------------------------------------------------------------------- */
 
 function RowActions({ id }: { id: number }) {
@@ -37,14 +42,32 @@ function RowActions({ id }: { id: number }) {
   }
 
   return (
-    <button
-      className='flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-50'
-      onClick={destroy}
-      disabled={isPending}
-      title='Delete credential'
-    >
-      {isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : <MoreHorizontal className='h-4 w-4' />}
-    </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
+          {isPending ? (
+            <Loader2 className='h-4 w-4 animate-spin' />
+          ) : (
+            <MoreHorizontal className='h-4 w-4' />
+          )}
+          <span className='sr-only'>Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={destroy}
+          disabled={isPending}
+          className='text-rose-600 dark:text-rose-400 font-semibold hover:bg-rose-500/10 focus:bg-rose-500/10 cursor-pointer'
+        >
+          <Trash2 className='mr-2 h-4 w-4' />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -72,8 +95,10 @@ const columns: Column<RowType>[] = [
         s === 'VERIFIED'
           ? 'text-emerald-600'
           : s === 'PENDING'
-          ? 'text-amber-600'
-          : 'text-rose-600'
+            ? 'text-amber-600'
+            : s === 'REJECTED'
+              ? 'text-rose-600'
+              : 'text-muted-foreground'
       return <span className={cls}>{s.toLowerCase()}</span>
     },
   },
@@ -114,7 +139,7 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                  View                                      */
+/*                                   View                                     */
 /* -------------------------------------------------------------------------- */
 
 export default function AdminCredentialsTable({ rows }: { rows: RowType[] }) {
