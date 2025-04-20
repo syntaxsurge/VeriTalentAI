@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PieChart } from '@/components/ui/charts/pie-chart'
 import { BarChart } from '@/components/ui/charts/bar-chart'
-import { type ChartConfig } from '@/components/ui/chart'
+import { type ChartConfig } from '@/components/ui/charts/chart'
 
 interface StageDatum {
   stage: string

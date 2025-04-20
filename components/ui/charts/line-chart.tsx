@@ -14,7 +14,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from '@/components/ui/chart'
+} from '@/components/ui/charts/chart'
 
 interface LineChartProps<D extends Record<string, any> = any> {
   /** Source array */

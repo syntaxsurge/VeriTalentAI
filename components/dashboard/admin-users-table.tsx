@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/data-table'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import {
   deleteUserAction,
   updateUserAction,

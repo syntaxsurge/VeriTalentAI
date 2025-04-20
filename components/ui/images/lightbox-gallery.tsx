@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 
-import ImageLightbox from '@/components/ui/image-lightbox'
+import ImageLightbox from '@/components/ui/images/image-lightbox'
 
 interface LightboxGalleryProps {
   /** Array of image URLs to display */

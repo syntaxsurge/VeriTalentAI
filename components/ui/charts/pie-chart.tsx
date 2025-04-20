@@ -10,7 +10,7 @@ import {
   ChartLegend,
   ChartLegendContent,
   type ChartConfig,
-} from '@/components/ui/chart'
+} from '@/components/ui/charts/chart'
 import { cn } from '@/lib/utils'
 
 interface PieChartProps<D extends Record<string, any> = any> {

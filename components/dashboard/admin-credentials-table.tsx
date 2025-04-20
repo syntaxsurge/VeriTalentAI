@@ -8,7 +8,7 @@ import {
   Loader2,
 } from 'lucide-react'
 
-import { DataTable, type Column, type BulkAction } from '@/components/ui/data-table'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
 
 export interface RowType {

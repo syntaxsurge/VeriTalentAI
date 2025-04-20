@@ -15,7 +15,7 @@ import {
   updateIssuerStatusAction,
   deleteIssuerAction,
 } from '@/app/(dashboard)/admin/issuers/actions'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/data-table'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import {
   DropdownMenu,
   DropdownMenuTrigger,

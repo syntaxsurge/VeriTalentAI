@@ -40,7 +40,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/tables/table"
 
 /* -------------------------------------------------------------------------- */
 /*                              P U B L I C  T Y P E S                        */
