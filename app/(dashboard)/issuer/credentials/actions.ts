@@ -14,13 +14,12 @@ import {
   candidates,
 } from '@/lib/db/schema/viskify'
 
-/* ------------------------------------------------------------- */
-/*                     A P P R O V E   C R E D                   */
-/* ------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/*                       A P P R O V E  /  S I G N  V C                       */
+/* -------------------------------------------------------------------------- */
+
 export const approveCredentialAction = validatedActionWithUser(
-  z.object({
-    credentialId: z.coerce.number(),
-  }),
+  z.object({ credentialId: z.coerce.number() }),
   async ({ credentialId }, _, user) => {
     const [issuer] = await db
       .select()
@@ -28,12 +27,8 @@ export const approveCredentialAction = validatedActionWithUser(
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
 
-    if (!issuer) {
-      return { error: 'Issuer not found.' }
-    }
-    if (!issuer.did) {
-      return { error: 'Link a DID before approving credentials.' }
-    }
+    if (!issuer) return { error: 'Issuer not found.' }
+    if (!issuer.did) return { error: 'Link a DID before approving credentials.' }
 
     const [cred] = await db
       .select()
@@ -47,25 +42,24 @@ export const approveCredentialAction = validatedActionWithUser(
       .limit(1)
 
     if (!cred) return { error: 'Credential not found for this issuer.' }
-    if (cred.status !== CredentialStatus.PENDING)
-      return { error: 'Credential is not pending review.' }
 
-    /* Candidate profile for subject DID / name */
+    /* Only allow approve if not already verified */
+    if (cred.status === CredentialStatus.VERIFIED) {
+      return { error: 'Credential is already verified.' }
+    }
+
+    /* Candidate info for VC subject */
     const [cand] = await db
-      .select({
-        cand: candidates,
-        candUser: users,
-      })
+      .select({ cand: candidates, candUser: users })
       .from(candidates)
       .leftJoin(users, eq(candidates.userId, users.id))
       .where(eq(candidates.id, cred.candidateId))
       .limit(1)
 
-    /* Fallback subject DID if candidate hasn't created one yet */
     const subjectDid =
       process.env.SUBJECT_DID || `did:cheqd:testnet:candidate-${cred.candidateId}`
 
-    /* Issue the VC via cheqd */
+    /* Issue the VC */
     let vcJwt: string | undefined
     try {
       const vc = await issueCredential({
@@ -80,7 +74,6 @@ export const approveCredentialAction = validatedActionWithUser(
       vcJwt = vc?.proof?.jwt
     } catch (err) {
       console.error('VC issuance failed:', err)
-      /* If issuing fails we still mark verified but without VC */
     }
 
     await db
@@ -97,13 +90,12 @@ export const approveCredentialAction = validatedActionWithUser(
   },
 )
 
-/* ------------------------------------------------------------- */
-/*                     R E J E C T   C R E D                     */
-/* ------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/*                              R E J E C T                                   */
+/* -------------------------------------------------------------------------- */
+
 export const rejectCredentialAction = validatedActionWithUser(
-  z.object({
-    credentialId: z.coerce.number(),
-  }),
+  z.object({ credentialId: z.coerce.number() }),
   async ({ credentialId }, _, user) => {
     const [issuer] = await db
       .select()
@@ -119,6 +111,7 @@ export const rejectCredentialAction = validatedActionWithUser(
         status: CredentialStatus.REJECTED,
         verified: false,
         verifiedAt: new Date(),
+        vcIssuedId: null,
       })
       .where(
         and(
@@ -128,5 +121,50 @@ export const rejectCredentialAction = validatedActionWithUser(
       )
 
     return { success: 'Credential rejected.' }
+  },
+)
+
+/* -------------------------------------------------------------------------- */
+/*                            U N V E R I F Y                                 */
+/* -------------------------------------------------------------------------- */
+
+export const unverifyCredentialAction = validatedActionWithUser(
+  z.object({ credentialId: z.coerce.number() }),
+  async ({ credentialId }, _, user) => {
+    const [issuer] = await db
+      .select()
+      .from(issuers)
+      .where(eq(issuers.ownerUserId, user.id))
+      .limit(1)
+
+    if (!issuer) return { error: 'Issuer not found.' }
+
+    const [cred] = await db
+      .select()
+      .from(candidateCredentials)
+      .where(
+        and(
+          eq(candidateCredentials.id, credentialId),
+          eq(candidateCredentials.issuerId, issuer.id),
+        ),
+      )
+      .limit(1)
+
+    if (!cred) return { error: 'Credential not found for this issuer.' }
+    if (cred.status !== CredentialStatus.VERIFIED) {
+      return { error: 'Only verified credentials can be unverified.' }
+    }
+
+    await db
+      .update(candidateCredentials)
+      .set({
+        status: CredentialStatus.UNVERIFIED,
+        verified: false,
+        verifiedAt: null,
+        vcIssuedId: null,
+      })
+      .where(eq(candidateCredentials.id, cred.id))
+
+    return { success: 'Credential status set to unverified.' }
   },
 )

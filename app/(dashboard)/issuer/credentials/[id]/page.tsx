@@ -94,13 +94,14 @@ export default async function CredentialDetailPage({
   if (!data) redirect('/issuer/requests')
 
   const { cred, candUser } = data
+  const status = cred.status as CredentialStatus
 
   /* ----------------------------- UI ----------------------------- */
   return (
     <section className='mx-auto max-w-2xl space-y-6'>
       {/* Hero header */}
       <div className='flex items-center gap-4'>
-        <StatusIcon status={cred.status as CredentialStatus} />
+        <StatusIcon status={status} />
         <div className='flex-1'>
           <h2 className='text-3xl font-extrabold leading-tight tracking-tight'>
             {cred.title}
@@ -112,7 +113,7 @@ export default async function CredentialDetailPage({
             </span>
           </p>
         </div>
-        <StatusBadge status={cred.status as CredentialStatus} />
+        <StatusBadge status={status} />
       </div>
 
       {/* Details card */}
@@ -154,11 +155,13 @@ export default async function CredentialDetailPage({
           )}
         </CardContent>
 
-        {/* Action buttons for pending credentials */}
-        {cred.status === CredentialStatus.PENDING && (
+        {/* Action buttons for editable statuses */}
+        {[CredentialStatus.PENDING, CredentialStatus.REJECTED, CredentialStatus.VERIFIED, CredentialStatus.UNVERIFIED].includes(
+          status,
+        ) && (
           <CardFooter className='border-t bg-muted/50 py-4'>
             <div className='ml-auto'>
-              <CredentialActions credentialId={cred.id} />
+              <CredentialActions credentialId={cred.id} status={status} />
             </div>
           </CardFooter>
         )}
