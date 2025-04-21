@@ -11,7 +11,6 @@ import {
   IssuerStatus,
 } from '@/lib/db/schema/issuer'
 import { db } from '@/lib/db/drizzle'
-import { ReadonlyURLSearchParams } from 'next/navigation'
 
 export const revalidate = 0
 
@@ -19,27 +18,40 @@ export const revalidate = 0
 /*                                H E L P E R S                               */
 /* -------------------------------------------------------------------------- */
 
+/** Case‑insensitive substring match. */
 function includesCI(hay: string, needle: string) {
   return hay.toLowerCase().includes(needle.toLowerCase())
 }
 
+/** Converts ENUM_SNAKE_CASE → "snake case". */
 function prettify(text: string) {
   return text.replaceAll('_', ' ').toLowerCase()
+}
+
+/** Safely extract the first string value for a query key. */
+function getQueryValue(
+  params: Record<string, string | string[] | undefined>,
+  key: string,
+): string {
+  const value = params[key]
+  return Array.isArray(value) ? value[0] ?? '' : value ?? ''
 }
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
 /* -------------------------------------------------------------------------- */
 
+type SearchParams = Record<string, string | string[] | undefined>
+
 export default async function IssuerDirectory({
   searchParams,
 }: {
-  searchParams: ReadonlyURLSearchParams
+  searchParams: SearchParams
 }) {
   /* --------------------------- Parse search params --------------------------- */
-  const keyword = (searchParams.get('q') ?? '').trim()
-  const category = searchParams.get('category') ?? 'ALL'
-  const industry = searchParams.get('industry') ?? 'ALL'
+  const keyword = getQueryValue(searchParams, 'q').trim()
+  const category = getQueryValue(searchParams, 'category') || 'ALL'
+  const industry = getQueryValue(searchParams, 'industry') || 'ALL'
 
   /* ---------------------------- Load active issuers --------------------------- */
   const rows = await db
