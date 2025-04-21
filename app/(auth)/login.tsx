@@ -3,9 +3,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { useActionState } from 'react'
-
+import { useActionState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
@@ -34,6 +34,14 @@ export function Login({ mode = 'signin', fixedRole }: LoginProps) {
     mode === 'signin' ? signIn : signUp,
     { error: '' },
   )
+
+  /* ------------------------------------------------------------------ */
+  /*                               Toasts                               */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    if (state?.error) toast.error(state.error)
+    if ((state as any)?.success) toast.success((state as any).success)
+  }, [state])
 
   /* ---------------------------------------------------------------------- */
   /*                                  Helpers                               */
@@ -120,7 +128,7 @@ export function Login({ mode = 'signin', fixedRole }: LoginProps) {
                 name='email'
                 type='email'
                 autoComplete='email'
-                defaultValue={state.email}
+                defaultValue={(state as any).email}
                 required
                 maxLength={50}
                 placeholder='you@example.com'
@@ -143,7 +151,7 @@ export function Login({ mode = 'signin', fixedRole }: LoginProps) {
               />
             </div>
 
-            {state?.error && <p className='text-destructive text-sm'>{state.error}</p>}
+            {/* Error handled via toast; no inline message */}
 
             <Button
               type='submit'
