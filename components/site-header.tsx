@@ -5,7 +5,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { ChevronDown, LayoutDashboard, LogOut, Settings } from 'lucide-react'
+import {
+  ChevronDown,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+} from 'lucide-react'
 
 import { signOut } from '@/app/(auth)/actions'
 import { ModeToggle } from '@/components/theme-toggle'
@@ -36,6 +41,9 @@ export default function SiteHeader() {
   const { userPromise } = useUser()
   const [user, setUser] = useState<Awaited<typeof userPromise> | null>(null)
 
+  /* -------------------------------------------------------------------------- */
+  /*                        R E S O L V E   U S E R   P R O M I S E             */
+  /* -------------------------------------------------------------------------- */
   useEffect(() => {
     let active = true
     const value: unknown = userPromise
@@ -51,6 +59,10 @@ export default function SiteHeader() {
       active = false
     }
   }, [userPromise])
+
+  /* -------------------------------------------------------------------------- */
+  /*                               H A N D L E R S                              */
+  /* -------------------------------------------------------------------------- */
 
   async function handleSignOut() {
     await signOut()
@@ -152,21 +164,23 @@ export default function SiteHeader() {
 
               <DropdownMenuContent
                 align='end'
-                className='w-64 rounded-lg p-1 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out'
+                className='w-56 sm:w-64 max-w-[90vw] rounded-lg p-1 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out'
               >
                 {/* User card → link to Team Settings */}
                 <DropdownMenuItem
                   asChild
-                  className='select-none cursor-pointer px-3 py-3 focus:bg-muted'
+                  className='flex select-none cursor-pointer flex-col items-start gap-1 rounded-md px-3 py-2 text-left focus:bg-muted'
                 >
-                  <Link href='/settings/team' className='flex flex-col text-left w-full'>
+                  <Link href='/settings/team' className='w-full'>
                     <p className='truncate text-sm font-medium'>
                       {user.name || user.email || 'Unnamed User'}
                     </p>
                     {user.email && (
-                      <p className='truncate text-xs text-muted-foreground'>{user.email}</p>
+                      <p className='truncate text-xs text-muted-foreground break-all'>
+                        {user.email}
+                      </p>
                     )}
-                    <span className='mt-2 inline-block rounded bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
+                    <span className='inline-block rounded bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
                       {user.role}
                     </span>
                   </Link>
@@ -174,23 +188,26 @@ export default function SiteHeader() {
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem asChild>
-                  <Link href='/dashboard'>
-                    <LayoutDashboard className='mr-2 h-4 w-4' /> Dashboard
+                <DropdownMenuItem asChild className='cursor-pointer rounded-md px-3 py-2'>
+                  <Link href='/dashboard' className='flex items-center gap-2'>
+                    <LayoutDashboard className='h-4 w-4' />
+                    <span className='text-sm'>Dashboard</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href='/settings/general'>
-                    <Settings className='mr-2 h-4 w-4' /> Settings
+                <DropdownMenuItem asChild className='cursor-pointer rounded-md px-3 py-2'>
+                  <Link href='/settings/general' className='flex items-center gap-2'>
+                    <Settings className='h-4 w-4' />
+                    <span className='text-sm'>Settings</span>
                   </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
 
                 <form action={handleSignOut} className='w-full'>
-                  <button type='submit' className='flex w-full'>
-                    <DropdownMenuItem className='flex-1 cursor-pointer'>
-                      <LogOut className='mr-2 h-4 w-4' /> Sign out
+                  <button type='submit' className='w-full'>
+                    <DropdownMenuItem className='flex items-center gap-2 rounded-md px-3 py-2 text-rose-600 hover:bg-rose-600/10 dark:text-rose-400'>
+                      <LogOut className='h-4 w-4' />
+                      <span className='text-sm'>Sign out</span>
                     </DropdownMenuItem>
                   </button>
                 </form>
