@@ -17,19 +17,18 @@ export async function seedUserTeam() {
   /* ---------- common demo password ---------- */
   const passwordHash = await hashPassword('myPassword')
 
-  /* ---------- users to seed ---------- */
+  /* ---------- users to seed (explicit names + emails) ---------- */
   const SEED = [
-    { email: 'admin@test.com', role: 'admin' as const },
-    { email: 'candidate@test.com', role: 'candidate' as const },
-    { email: 'issuer@test.com', role: 'issuer' as const },
-    { email: 'recruiter@test.com', role: 'recruiter' as const },
+    { name: 'Alice Admin', email: 'alice.admin@example.com', role: 'admin' as const },
+    { name: 'Carlos Candidate', email: 'carlos.candidate@example.com', role: 'candidate' as const },
+    { name: 'Ivy Issuer', email: 'ivy.issuer@example.com', role: 'issuer' as const },
+    { name: 'Rafael Recruiter', email: 'rafael.recruiter@example.com', role: 'recruiter' as const },
   ]
 
   const ids = new Map<string, number>() // email → id
 
   /* ---------- ensure users + placeholder teams (no membership) ---------- */
-  for (const { email, role } of SEED) {
-    const name = email.split('@')[0] // derive simple display name (e.g. "admin")
+  for (const { name, email, role } of SEED) {
     let [u] = await db.select().from(users).where(eq(users.email, email)).limit(1)
 
     if (!u) {
@@ -39,16 +38,19 @@ export async function seedUserTeam() {
         .returning()
       console.log(`✅ Created user ${email} (${name})`)
     } else {
-      if (!u.name) {
-        await db.update(users).set({ name }).where(eq(users.id, u.id))
-        console.log(`🔄 Added missing name for ${email} → ${name}`)
+      const updates: Partial<typeof users.$inferInsert> = {}
+      if (u.name !== name) updates.name = name
+      if (u.role !== role) updates.role = role
+      if (Object.keys(updates).length) {
+        await db.update(users).set(updates).where(eq(users.id, u.id))
+        console.log(`🔄 Updated user ${email} →`, updates)
       } else {
         console.log(`ℹ️ User ${email} exists`)
       }
     }
     ids.set(email, u.id)
 
-    const personalName = `${email}'s Team`
+    const personalName = `${name}'s Team`
     const [existingTeam] = await db.select().from(teams).where(eq(teams.name, personalName)).limit(1)
 
     if (!existingTeam) {
@@ -60,7 +62,7 @@ export async function seedUserTeam() {
   }
 
   /* ---------- shared Test Team ---------- */
-  const adminId = ids.get('admin@test.com')!
+  const adminId = ids.get('alice.admin@example.com')!
   const sharedName = 'Test Team'
 
   let [shared] = await db.select().from(teams).where(eq(teams.name, sharedName)).limit(1)
@@ -77,7 +79,7 @@ export async function seedUserTeam() {
   /* ---------- add memberships (single team per user) ---------- */
   for (const { email } of SEED) {
     const userId = ids.get(email)!
-    const role = email === 'admin@test.com' ? 'owner' : 'member'
+    const role = email === 'alice.admin@example.com' ? 'owner' : 'member'
 
     const existing = await db
       .select()
