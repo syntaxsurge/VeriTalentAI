@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { getUser } from '@/lib/db/queries'
 import UpdateDidForm from './update-did-form'
 
@@ -13,15 +14,26 @@ export default async function PlatformDidPage() {
   const existingDid = process.env.PLATFORM_ISSUER_DID ?? null
 
   return (
-    <section className='max-w-xl space-y-6'>
-      <h2 className='text-2xl font-semibold'>Platform Decentralized Identifier (DID)</h2>
+    <section className="space-y-6 max-w-2xl">
+      <h2 className="text-2xl font-semibold">
+        Platform Decentralized Identifier&nbsp;(DID)
+      </h2>
 
-      <p className='text-muted-foreground text-sm'>
-        Viskify uses this DID when the platform itself acts as an issuer. You can paste an
-        existing DID or let the system generate a fresh one.
+      <p className="text-muted-foreground text-sm">
+        The platform uses this DID whenever Viskify itself issues verifiable credentials.
+        Paste an existing value or generate a fresh one below.
       </p>
 
-      <UpdateDidForm defaultDid={existingDid} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-medium">
+            Manage Platform DID
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UpdateDidForm defaultDid={existingDid} />
+        </CardContent>
+      </Card>
     </section>
   )
 }

@@ -1,18 +1,25 @@
 'use client'
 
 import * as React from 'react'
-import { useActionState, startTransition } from 'react'
-import { Loader2, RefreshCcw, Pencil, X } from 'lucide-react'
+import { startTransition } from 'react'
+import { Pencil, Loader2, RefreshCcw } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { upsertPlatformDidAction } from './actions'
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog'
 
-/* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
-/* -------------------------------------------------------------------------- */
+import { upsertPlatformDidAction } from './actions'
 
 type ActionState = { error?: string; success?: string; did?: string }
 
@@ -21,168 +28,203 @@ interface Props {
   defaultDid: string | null
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   VIEW                                     */
-/* -------------------------------------------------------------------------- */
-
+/**
+ * Modernized form for editing or generating the platform DID.
+ */
 export default function UpdateDidForm({ defaultDid }: Props) {
-  /* --------------------------- local state --------------------------- */
-  const inputRef = React.useRef<HTMLInputElement>(null)
-  const [editing, setEditing] = React.useState(false)
+  /* -------------------------------------------------------------------------- */
+  /*                                S T A T E                                   */
+  /* -------------------------------------------------------------------------- */
+  const [currentDid, setCurrentDid] = React.useState<string>(defaultDid ?? '')
+  const [didInput, setDidInput] = React.useState<string>(currentDid)
+  const [editing, setEditing] = React.useState<boolean>(false)
 
-  /* separate hooks so each button owns its own pending flag */
-  const [saveState, saveAction, saving] = useActionState<ActionState, FormData>(
+  const [saveState, saveAction, saving] = React.useActionState<ActionState, FormData>(
     upsertPlatformDidAction,
-    { error: '', success: '', did: '' },
+    {},
   )
-  const [genState, genAction, generating] = useActionState<ActionState, FormData>(
+  const [genState, genAction, generating] = React.useActionState<ActionState, FormData>(
     upsertPlatformDidAction,
-    { error: '', success: '', did: '' },
+    {},
   )
 
-  /* --------------------------- effect helpers --------------------------- */
+  /* -------------------------------------------------------------------------- */
+  /*                               E F F E C T S                                */
+  /* -------------------------------------------------------------------------- */
   React.useEffect(() => {
-    if (saveState.error) toast.error(saveState.error)
-    if (saveState.success) {
+    if (saveState?.error) toast.error(saveState.error)
+    if (saveState?.success) {
       toast.success(saveState.success)
+      if (saveState.did) {
+        setCurrentDid(saveState.did)
+        setDidInput(saveState.did)
+      }
       setEditing(false)
     }
-    if (saveState.did && inputRef.current) inputRef.current.value = saveState.did
   }, [saveState])
 
   React.useEffect(() => {
-    if (genState.error) toast.error(genState.error)
-    if (genState.success) {
+    if (genState?.error) toast.error(genState.error)
+    if (genState?.success) {
       toast.success(genState.success)
+      if (genState.did) {
+        setCurrentDid(genState.did)
+        setDidInput(genState.did)
+      }
       setEditing(false)
     }
-    if (genState.did && inputRef.current) inputRef.current.value = genState.did
   }, [genState])
 
-  /* --------------------------- handlers --------------------------- */
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (!editing) return
-    if (
-      !window.confirm(
-        'Saving will overwrite the existing Platform DID in your .env file and cannot be undone. Continue?',
-      )
-    )
-      return
-    const fd = new FormData(e.currentTarget)
+  /* -------------------------------------------------------------------------- */
+  /*                                 Helpers                                    */
+  /* -------------------------------------------------------------------------- */
+  function confirmSave() {
+    const fd = new FormData()
+    fd.append('did', didInput.trim())
     startTransition(() => saveAction(fd))
   }
 
-  function handleGenerate() {
-    if (
-      !window.confirm(
-        'Generating a new DID will permanently replace the current Platform DID in your .env file. This action is irreversible. Continue?',
-      )
-    )
-      return
+  function confirmGenerate() {
     startTransition(() => genAction(new FormData()))
   }
 
-  function cancelEdit() {
-    if (inputRef.current) {
-      inputRef.current.value =
-        saveState.did ?? genState.did ?? defaultDid ?? ''
-    }
-    setEditing(false)
-  }
-
-  /* --------------------------- JSX --------------------------- */
+  /* -------------------------------------------------------------------------- */
+  /*                                   UI                                       */
+  /* -------------------------------------------------------------------------- */
   return (
-    <div className='space-y-6'>
-      {/* DID display / edit field */}
-      <form onSubmit={handleSubmit} className='space-y-4'>
-        <div className='space-y-2'>
-          <Label htmlFor='did'>Platform DID</Label>
-          <Input
-            id='did'
-            name='did'
-            ref={inputRef}
-            defaultValue={defaultDid ?? ''}
-            placeholder='did:cheqd:testnet:xxxx'
-            disabled={!editing}
-            readOnly={!editing}
-            required
-          />
-        </div>
+    <div className="space-y-6">
+      {/* DID field */}
+      <Input
+        value={didInput}
+        onChange={(e) => setDidInput(e.target.value)}
+        readOnly={!editing}
+        disabled={!editing}
+        placeholder="did:cheqd:testnet:xxxx"
+        className="font-mono"
+      />
 
-        {editing ? (
-          <div className='flex flex-wrap items-center gap-2'>
-            <Button
-              type='submit'
-              disabled={saving}
-              className='sm:w-auto w-full'
-            >
-              {saving ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Saving…
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={cancelEdit}
-              disabled={saving}
-              className='sm:w-auto w-full'
-            >
-              <X className='mr-2 h-4 w-4' />
-              Cancel
-            </Button>
-          </div>
-        ) : (
+      {/* Edit / Save controls */}
+      {editing ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Save with confirmation */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button disabled={saving} className="sm:w-auto w-full">
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Overwrite Platform DID?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently replace the stored value and cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmSave} disabled={saving}>
+                  {saving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    'Save'
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* Cancel edit */}
           <Button
-            type='button'
-            variant='outline'
-            onClick={() => setEditing(true)}
-            className='sm:w-auto w-full'
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setDidInput(currentDid)
+              setEditing(false)
+            }}
+            disabled={saving}
+            className="sm:w-auto w-full"
           >
-            <Pencil className='mr-2 h-4 w-4' />
-            Edit
+            Cancel
           </Button>
-        )}
-
-        {/* irreversible warning */}
-        <p className='text-xs text-destructive'>
-          Warning: saving or generating a new DID will permanently overwrite the
-          existing value in&nbsp;<code>.env</code>&nbsp;and cannot be undone.
-        </p>
-      </form>
+        </div>
+      ) : (
+        /* Edit button with confirmation */
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" className="sm:w-auto w-full">
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Edit Platform DID</AlertDialogTitle>
+              <AlertDialogDescription>
+                Editing lets you update the DID; changes are only saved after confirmation.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Close</AlertDialogCancel>
+              <AlertDialogAction onClick={() => setEditing(true)}>
+                Continue
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       {/* Divider */}
-      <div className='relative'>
-        <span className='absolute inset-x-0 top-1/2 -translate-y-1/2 border-t' />
-        <span className='relative mx-auto bg-background px-3 text-xs uppercase text-muted-foreground'>
+      <div className="relative">
+        <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t" />
+        <span className="relative mx-auto bg-background px-3 text-xs uppercase text-muted-foreground">
           or
         </span>
       </div>
 
       {/* Generate new DID */}
-      <Button
-        variant='outline'
-        onClick={handleGenerate}
-        disabled={generating}
-        className='w-full sm:w-auto'
-      >
-        {generating ? (
-          <>
-            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-            Generating…
-          </>
-        ) : (
-          <>
-            <RefreshCcw className='mr-2 h-4 w-4' />
-            Generate New DID
-          </>
-        )}
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="outline" className="w-full sm:w-auto" disabled={generating}>
+            {generating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating…
+              </>
+            ) : (
+              <>
+                <RefreshCcw className="mr-2 h-4 w-4" />
+                Generate New DID
+              </>
+            )}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Generate a fresh DID?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A brand‑new DID will be created via cheqd and will permanently replace the existing
+              one.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmGenerate} disabled={generating}>
+              {generating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                'Generate'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
