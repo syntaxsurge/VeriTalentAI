@@ -46,6 +46,7 @@ export default async function TalentSearchPage({
   const searchTerm = (getParam(params, 'q') ?? '').trim()
   const verifiedOnly = getParam(params, 'verifiedOnly') === '1'
   const skillMin = Math.max(0, Number(getParam(params, 'skillMin') ?? '0'))
+  const skillMax = Math.min(100, Number(getParam(params, 'skillMax') ?? '100'))
 
   /* ---------------------------- Data fetch ------------------------------- */
   const { candidates, hasNext } = await getTalentSearchPage(
@@ -56,6 +57,7 @@ export default async function TalentSearchPage({
     searchTerm,
     verifiedOnly,
     skillMin,
+    skillMax,
   )
 
   const rows: RowType[] = candidates.map((c) => ({
@@ -77,7 +79,7 @@ export default async function TalentSearchPage({
   add('sort')
   add('order')
   add('q') // retain search term for filters + table search
-  // Note: skillMin & verifiedOnly will be controlled by the filter component
+  // skillMin and skillMax handled separately below
 
   /* ------------------------------- View ---------------------------------- */
   return (
@@ -89,6 +91,7 @@ export default async function TalentSearchPage({
         basePath="/recruiter/talent"
         initialParams={initialParams}
         skillMin={skillMin}
+        skillMax={skillMax}
         verifiedOnly={verifiedOnly}
       />
 
@@ -99,7 +102,12 @@ export default async function TalentSearchPage({
           sort={sort}
           order={order as 'asc' | 'desc'}
           basePath="/recruiter/talent"
-          initialParams={{ ...initialParams, skillMin: String(skillMin), verifiedOnly: verifiedOnly ? '1' : '' }}
+          initialParams={{
+            ...initialParams,
+            skillMin: String(skillMin),
+            skillMax: String(skillMax),
+            verifiedOnly: verifiedOnly ? '1' : '',
+          }}
           searchQuery={searchTerm}
         />
       </div>
@@ -108,7 +116,12 @@ export default async function TalentSearchPage({
         page={page}
         hasNext={hasNext}
         basePath="/recruiter/talent"
-        initialParams={{ ...initialParams, skillMin: String(skillMin), verifiedOnly: verifiedOnly ? '1' : '' }}
+        initialParams={{
+          ...initialParams,
+          skillMin: String(skillMin),
+          skillMax: String(skillMax),
+          verifiedOnly: verifiedOnly ? '1' : '',
+        }}
         pageSize={pageSize}
       />
     </section>

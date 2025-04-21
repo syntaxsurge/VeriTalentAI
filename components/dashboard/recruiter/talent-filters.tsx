@@ -7,10 +7,16 @@ import { Slider } from '@/components/ui/slider'
 
 interface TalentFiltersProps {
   basePath: string
+  /** Existing query params excluding skillMin/skillMax (e.g. sort, order, q…). */
   initialParams: Record<string, string>
   skillMin: number
+  skillMax: number
   verifiedOnly: boolean
 }
+
+/* -------------------------------------------------------------------------- */
+/*                               Helpers                                      */
+/* -------------------------------------------------------------------------- */
 
 function buildLink(
   basePath: string,
@@ -29,42 +35,54 @@ function buildLink(
   return `${basePath}${qs ? `?${qs}` : ''}`
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                   View                                     */
+/* -------------------------------------------------------------------------- */
+
 export default function TalentFilters({
   basePath,
   initialParams,
-  skillMin: initialSkillMin,
+  skillMin: initialMin,
+  skillMax: initialMax,
   verifiedOnly: initialVerifiedOnly,
 }: TalentFiltersProps) {
   const router = useRouter()
-  const [skillMin, setSkillMin] = useState<number>(initialSkillMin)
+  const [range, setRange] = useState<[number, number]>([initialMin, initialMax])
   const [verifiedOnly, setVerifiedOnly] = useState<boolean>(initialVerifiedOnly)
 
-  /* Push updated query string on change */
+  /* Push updated query string whenever filters change */
   useEffect(() => {
+    const [min, max] = range
     const href = buildLink(basePath, initialParams, {
-      skillMin: skillMin || '',
+      skillMin: min === 0 ? '' : min,
+      skillMax: max === 100 ? '' : max,
       verifiedOnly: verifiedOnly ? '1' : '',
-      page: 1, // reset pagination on filter change
+      page: 1, // reset pagination
     })
     router.push(href, { scroll: false })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [skillMin, verifiedOnly])
+  }, [range, verifiedOnly])
 
   return (
     <div className="mb-6 flex flex-wrap items-end gap-4">
-      {/* Minimum skill score */}
+      {/* Skill‑score range */}
       <div className="flex flex-col">
-        <label htmlFor="skillMin" className="mb-2 text-sm font-medium">
-          Min&nbsp;Skill&nbsp;Score&nbsp;({skillMin})
+        <label htmlFor="skillRange" className="mb-2 text-sm font-medium">
+          Skill&nbsp;Score&nbsp;({range[0]}–{range[1]})
         </label>
         <Slider
-          id="skillMin"
+          id="skillRange"
           min={0}
           max={100}
           step={1}
-          value={[skillMin]}
-          onValueChange={(v) => setSkillMin(v[0] ?? 0)}
-          className="w-48"
+          value={range}
+          onValueChange={(v) =>
+            setRange([
+              Math.min(Math.max(0, v[0] ?? 0), 100),
+              Math.max(Math.min(100, v[1] ?? 100), 0),
+            ])
+          }
+          className="w-56"
         />
       </div>
 

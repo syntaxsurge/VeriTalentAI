@@ -29,6 +29,7 @@ export async function getTalentSearchPage(
   searchTerm = '',
   verifiedOnly = false,
   skillMin = 0,
+  skillMax = 100,
 ): Promise<{ candidates: TalentRow[]; hasNext: boolean }> {
   const offset = (page - 1) * pageSize
 
@@ -62,13 +63,34 @@ export async function getTalentSearchPage(
 
   if (verifiedOnly) {
     filters.push(
-      sql`EXISTS (SELECT 1 FROM candidate_credentials cc WHERE cc.candidate_id = ${candidates.id} AND cc.verified)`,
+      sql`EXISTS (
+        SELECT 1
+        FROM candidate_credentials cc
+        WHERE cc.candidate_id = ${candidates.id}
+          AND cc.verified
+      )`,
     )
   }
 
+  /* Skill‑score range */
   if (skillMin > 0) {
     filters.push(
-      sql`${skillMin} <= (SELECT COALESCE(MAX(score),0) FROM quiz_attempts qa WHERE qa.candidate_id = ${candidates.id} AND qa.pass = 1)`,
+      sql`${skillMin} <= (
+        SELECT COALESCE(MAX(score), 0)
+        FROM quiz_attempts qa
+        WHERE qa.candidate_id = ${candidates.id}
+          AND qa.pass = 1
+      )`,
+    )
+  }
+  if (skillMax < 100) {
+    filters.push(
+      sql`${skillMax} >= (
+        SELECT COALESCE(MAX(score), 0)
+        FROM quiz_attempts qa
+        WHERE qa.candidate_id = ${candidates.id}
+          AND qa.pass = 1
+      )`,
     )
   }
 
