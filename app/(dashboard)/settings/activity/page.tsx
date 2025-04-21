@@ -12,48 +12,52 @@ import ActivityLogsTable, {
 
 export const revalidate = 0
 
-/**
- * Activity log for the current user.
- *
- * Notes on search params:
- * ──────────────────────
- * Direct property access on the `searchParams` object (e.g. `searchParams.page`)
- * triggers the "sync‑dynamic APIs” warning in the latest Next.js release.
- * To avoid this, we copy the object to a local alias (`params`) and read from that
- * instead of touching `searchParams` directly.
- */
+/* -------------------------------------------------------------------------- */
+/*                                   Helpers                                  */
+/* -------------------------------------------------------------------------- */
+
+type Query = Record<string, string | string[] | undefined>
+
+/** Safely return the first value of a query param. */
+function getParam(params: Query, key: string): string | undefined {
+  const v = params[key]
+  return Array.isArray(v) ? v[0] : v
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                    Page                                    */
+/* -------------------------------------------------------------------------- */
+
 export default async function ActivityPage({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>
+  /** Next 15 passes searchParams as an async object — await it first. */
+  searchParams: Promise<Query> | Query
 }) {
+  /* ---------------------- Resolve dynamic API first ----------------------- */
+  const params = (await searchParams) as Query
+
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
-  /* --------------------------- Query Params --------------------------- */
-  const params = searchParams ?? {}
+  /* --------------------------- Query params ------------------------------ */
+  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
 
-  const getParam = (key: string, fallback = '') => {
-    const value = params[key]
-    return Array.isArray(value) ? value[0] ?? fallback : value ?? fallback
-  }
-
-  const page = Math.max(1, Number(getParam('page', '1')))
-  const sizeRaw = Number(getParam('size', '10'))
+  const sizeRaw = Number(getParam(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
-  const sort = getParam('sort', 'timestamp')
-  const order = getParam('order') === 'asc' ? 'asc' : 'desc'
-  const searchQuery = getParam('q').trim()
+  const sort = getParam(params, 'sort') ?? 'timestamp'
+  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (getParam(params, 'q') ?? '').trim()
 
-  /* ------------------------- Data Fetching --------------------------- */
+  /* -------------------------- Data fetching ------------------------------ */
   const { logs, hasNext } = await getActivityLogsPage(
     user.id,
     page,
     pageSize,
     sort as 'timestamp' | 'action',
     order as 'asc' | 'desc',
-    searchQuery,
+    searchTerm,
   )
 
   const rows: RowType[] = logs.map((log) => ({
@@ -66,15 +70,18 @@ export default async function ActivityPage({
         : String(log.timestamp),
   }))
 
-  /* Build base params (exclude "page” for helper links) */
+  /* ------------------------ Build initialParams -------------------------- */
   const initialParams: Record<string, string> = {}
-  Object.entries(params).forEach(([k, v]) => {
-    if (k !== 'page' && typeof v === 'string' && v.length > 0) {
-      initialParams[k] = v
-    }
-  })
+  const add = (k: string) => {
+    const val = getParam(params, k)
+    if (val) initialParams[k] = val
+  }
+  add('size')
+  add('sort')
+  add('order')
+  if (searchTerm) initialParams['q'] = searchTerm
 
-  /* ------------------------------ View ------------------------------- */
+  /* ------------------------------ View ----------------------------------- */
   return (
     <section className='flex-1 p-4 lg:p-8'>
       <h1 className='mb-6 text-lg font-medium lg:text-2xl'>Activity Log</h1>
@@ -90,7 +97,7 @@ export default async function ActivityPage({
             order={order as 'asc' | 'desc'}
             basePath='/settings/activity'
             initialParams={initialParams}
-            searchQuery={searchQuery}
+            searchQuery={searchTerm}
           />
 
           <TablePagination
