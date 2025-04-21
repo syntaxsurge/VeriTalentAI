@@ -1,49 +1,77 @@
 import { redirect } from 'next/navigation'
-import { eq } from 'drizzle-orm'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import AdminCredentialsTable, { RowType } from '@/components/dashboard/admin/credentials-table'
-import { db } from '@/lib/db/drizzle'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
+import AdminCredentialsTable, {
+  type RowType,
+} from '@/components/dashboard/admin/credentials-table'
 import { getUser } from '@/lib/db/queries/queries'
-import { users as usersTable } from '@/lib/db/schema/core'
-import { issuers as issuersTable } from '@/lib/db/schema/issuer'
-import {
-  candidateCredentials as credsT,
-  candidates as candT,
-  CredentialStatus,
-} from '@/lib/db/schema/viskify'
+import { getAdminCredentialsPage } from '@/lib/db/queries/admin-credentials'
 
 export const revalidate = 0
 
-export default async function AdminCredentialsPage() {
+/* -------------------------------------------------------------------------- */
+/*                                   Helpers                                  */
+/* -------------------------------------------------------------------------- */
+
+type Query = Record<string, string | string[] | undefined>
+const first = (p: Query, k: string) =>
+  Array.isArray(p[k]) ? p[k]?.[0] : p[k]
+
+/* -------------------------------------------------------------------------- */
+/*                                    Page                                    */
+/* -------------------------------------------------------------------------- */
+
+export default async function AdminCredentialsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Query> | Query
+}) {
+  const params = (await searchParams) as Query
+
   const currentUser = await getUser()
   if (!currentUser) redirect('/sign-in')
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
-  /* ------------------------------------------------------------------ */
-  /* Query credentials with explicit columns                            */
-  /* ------------------------------------------------------------------ */
-  const rows = await db
-    .select({
-      id: credsT.id,
-      title: credsT.title,
-      status: credsT.status,
-      candidateEmail: usersTable.email,
-      issuerName: issuersTable.name,
-    })
-    .from(credsT)
-    .leftJoin(candT, eq(credsT.candidateId, candT.id))
-    .leftJoin(usersTable, eq(candT.userId, usersTable.id))
-    .leftJoin(issuersTable, eq(credsT.issuerId, issuersTable.id))
+  /* --------------------------- Query params ------------------------------ */
+  const page = Math.max(1, Number(first(params, 'page') ?? '1'))
 
-  const tableRows: RowType[] = rows.map((r) => ({
-    id: r.id,
-    title: r.title,
-    candidate: r.candidateEmail || 'Unknown',
-    issuer: r.issuerName || null,
-    status: r.status as CredentialStatus,
+  const sizeRaw = Number(first(params, 'size') ?? '10')
+  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
+
+  const sort = first(params, 'sort') ?? 'id'
+  const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (first(params, 'q') ?? '').trim()
+
+  /* ---------------------------- Data fetch ------------------------------- */
+  const { credentials, hasNext } = await getAdminCredentialsPage(
+    page,
+    pageSize,
+    sort as 'title' | 'candidate' | 'issuer' | 'status' | 'id',
+    order as 'asc' | 'desc',
+    searchTerm,
+  )
+
+  const rows: RowType[] = credentials.map((c) => ({
+    id: c.id,
+    title: c.title,
+    candidate: c.candidate,
+    issuer: c.issuer,
+    status: c.status as any,
   }))
 
+  /* ------------------------ Build initialParams -------------------------- */
+  const initialParams: Record<string, string> = {}
+  const keep = (k: string) => {
+    const v = first(params, k)
+    if (v) initialParams[k] = v
+  }
+  keep('size')
+  keep('sort')
+  keep('order')
+  if (searchTerm) initialParams.q = searchTerm
+
+  /* ------------------------------ View ----------------------------------- */
   return (
     <section className="space-y-6">
       <h2 className="text-2xl font-semibold">All Credentials</h2>
@@ -53,7 +81,22 @@ export default async function AdminCredentialsPage() {
           <CardTitle>Credentials Overview</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <AdminCredentialsTable rows={tableRows} />
+          <AdminCredentialsTable
+            rows={rows}
+            sort={sort}
+            order={order as 'asc' | 'desc'}
+            basePath="/admin/credentials"
+            initialParams={initialParams}
+            searchQuery={searchTerm}
+          />
+
+          <TablePagination
+            page={page}
+            hasNext={hasNext}
+            basePath="/admin/credentials"
+            initialParams={initialParams}
+            pageSize={pageSize}
+          />
         </CardContent>
       </Card>
     </section>
