@@ -1,35 +1,78 @@
 import { redirect } from 'next/navigation'
-import { eq } from 'drizzle-orm'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import AdminIssuersTable, { RowType } from '@/components/dashboard/admin/issuers-table'
-import { db } from '@/lib/db/drizzle'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
+import AdminIssuersTable, {
+  RowType,
+} from '@/components/dashboard/admin/issuers-table'
 import { getUser } from '@/lib/db/queries/queries'
-import { users as usersTable } from '@/lib/db/schema/core'
-import { issuers as issuersTable } from '@/lib/db/schema/issuer'
+import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
 
 export const revalidate = 0
 
-export default async function AdminIssuersPage() {
+/* -------------------------------------------------------------------------- */
+/*                                   Helpers                                  */
+/* -------------------------------------------------------------------------- */
+
+type Query = Record<string, string | string[] | undefined>
+const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
+
+/* -------------------------------------------------------------------------- */
+/*                                    Page                                    */
+/* -------------------------------------------------------------------------- */
+
+export default async function AdminIssuersPage({
+  searchParams,
+}: {
+  searchParams: Promise<Query> | Query
+}) {
+  const params = (await searchParams) as Query
+
   const currentUser = await getUser()
   if (!currentUser) redirect('/sign-in')
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
-  const rows = await db
-    .select({ issuer: issuersTable, owner: usersTable })
-    .from(issuersTable)
-    .leftJoin(usersTable, eq(issuersTable.ownerUserId, usersTable.id))
+  /* --------------------------- Query params ------------------------------ */
+  const page = Math.max(1, Number(first(params, 'page') ?? '1'))
 
-  const tableRows: RowType[] = rows.map(({ issuer, owner }) => ({
-    id: issuer.id,
-    name: issuer.name,
-    domain: issuer.domain,
-    owner: owner?.name || owner?.email || '—',
-    category: issuer.category,
-    industry: issuer.industry,
-    status: issuer.status,
+  const sizeRaw = Number(first(params, 'size') ?? '10')
+  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
+
+  const sort = first(params, 'sort') ?? 'id'
+  const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (first(params, 'q') ?? '').trim()
+
+  /* ---------------------------- Data fetch ------------------------------- */
+  const { issuers, hasNext } = await getAdminIssuersPage(
+    page,
+    pageSize,
+    sort as 'name' | 'domain' | 'owner' | 'category' | 'industry' | 'status' | 'id',
+    order as 'asc' | 'desc',
+    searchTerm,
+  )
+
+  const rows: RowType[] = issuers.map((i) => ({
+    id: i.id,
+    name: i.name,
+    domain: i.domain,
+    owner: i.owner,
+    category: i.category,
+    industry: i.industry,
+    status: i.status,
   }))
 
+  /* ------------------------ Build initialParams -------------------------- */
+  const initialParams: Record<string, string> = {}
+  const keep = (k: string) => {
+    const v = first(params, k)
+    if (v) initialParams[k] = v
+  }
+  keep('size')
+  keep('sort')
+  keep('order')
+  if (searchTerm) initialParams.q = searchTerm
+
+  /* ------------------------------ View ----------------------------------- */
   return (
     <section className="space-y-6">
       <h2 className="text-2xl font-semibold">Issuer Management</h2>
@@ -39,7 +82,22 @@ export default async function AdminIssuersPage() {
           <CardTitle>All Issuers</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <AdminIssuersTable rows={tableRows} />
+          <AdminIssuersTable
+            rows={rows}
+            sort={sort}
+            order={order as 'asc' | 'desc'}
+            basePath="/admin/issuers"
+            initialParams={initialParams}
+            searchQuery={searchTerm}
+          />
+
+          <TablePagination
+            page={page}
+            hasNext={hasNext}
+            basePath="/admin/issuers"
+            initialParams={initialParams}
+            pageSize={pageSize}
+          />
         </CardContent>
       </Card>
     </section>
