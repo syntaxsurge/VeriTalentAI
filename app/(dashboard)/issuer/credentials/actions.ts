@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { issueCredential } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
-import { users } from '@/lib/db/schema/core'
+import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 import {
   candidateCredentials,
@@ -18,9 +18,8 @@ import {
 /*                               U T I L S                                    */
 /* -------------------------------------------------------------------------- */
 
-/** Helper to build consistent error objects with extra debugging context. */
 function buildError(message: string, ctx?: Record<string, unknown>) {
-  if (ctx) console.error('[VC‑Issue] Context:', ctx) // server‑side only
+  if (ctx) console.error('[VC‑Issue] Context:', ctx)
   return { error: message }
 }
 
@@ -39,7 +38,8 @@ export const approveCredentialAction = validatedActionWithUser(
       .limit(1)
 
     if (!issuer) return buildError('Issuer not found.')
-    if (!issuer.did) return buildError('Link a DID before approving credentials.')
+    if (!issuer.did)
+      return buildError('Link a DID before approving credentials.')
 
     /* ------------------ credential lookup ------------------ */
     const [cred] = await db
@@ -57,6 +57,29 @@ export const approveCredentialAction = validatedActionWithUser(
     if (cred.status === CredentialStatus.VERIFIED)
       return buildError('Credential is already verified.')
 
+    /* ------------------ candidate & DID -------------------- */
+    const [cand] = await db
+      .select({ cand: candidates, candUser: users })
+      .from(candidates)
+      .leftJoin(users, eq(candidates.userId, users.id))
+      .where(eq(candidates.id, cred.candidateId))
+      .limit(1)
+
+    if (!cand) return buildError('Candidate not found.')
+
+    const [teamRow] = await db
+      .select({ did: teams.did })
+      .from(teamMembers)
+      .leftJoin(teams, eq(teamMembers.teamId, teams.id))
+      .where(eq(teamMembers.userId, cand.candUser.id))
+      .limit(1)
+
+    const subjectDid = teamRow?.did
+    if (!subjectDid)
+      return buildError(
+        'Candidate has no DID – ask them to generate one before verification.',
+      )
+
     /* ------------------ VC handling ------------------------ */
     let vcJwt = cred.vcIssuedId ?? undefined
     const debugCtx: Record<string, unknown> = {
@@ -64,34 +87,21 @@ export const approveCredentialAction = validatedActionWithUser(
       issuerId: issuer.id,
       issuerDid: issuer.did,
       credentialStatus: cred.status,
+      subjectDid,
     }
 
     try {
-      /* Only create a new VC when none exists */
       if (!vcJwt) {
-        /* ----- Candidate info for VC subject ----- */
-        const [cand] = await db
-          .select({ cand: candidates, candUser: users })
-          .from(candidates)
-          .leftJoin(users, eq(candidates.userId, users.id))
-          .where(eq(candidates.id, cred.candidateId))
-          .limit(1)
-
-        const subjectDid =
-          process.env.SUBJECT_DID || `did:cheqd:testnet:candidate-${cred.candidateId}`
-
-        debugCtx.subjectDid = subjectDid
-
         const vc = await issueCredential({
           issuerDid: issuer.did,
           subjectDid,
           attributes: {
             credentialTitle: cred.title,
-            candidateName: cand.candUser?.name || cand.candUser?.email || 'Unknown',
+            candidateName:
+              cand.candUser?.name || cand.candUser?.email || 'Unknown',
           },
           credentialName: cred.type,
         })
-
         vcJwt = vc?.proof?.jwt
         if (!vcJwt) {
           return buildError(
@@ -102,7 +112,9 @@ export const approveCredentialAction = validatedActionWithUser(
       }
     } catch (err: any) {
       return buildError(
-        `Failed to issue verifiable credential: ${err?.message || String(err)}`,
+        `Failed to issue verifiable credential: ${
+          err?.message || String(err)
+        }`,
         { ...debugCtx, err },
       )
     }
@@ -191,14 +203,12 @@ export const unverifyCredentialAction = validatedActionWithUser(
     if (cred.status !== CredentialStatus.VERIFIED)
       return buildError('Only verified credentials can be unverified.')
 
-    /* Preserve existing VC ID so it can be reused later */
     await db
       .update(candidateCredentials)
       .set({
         status: CredentialStatus.UNVERIFIED,
         verified: false,
         verifiedAt: null,
-        // vcIssuedId intentionally left unchanged
       })
       .where(eq(candidateCredentials.id, cred.id))
 
