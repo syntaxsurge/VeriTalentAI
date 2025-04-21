@@ -1,8 +1,16 @@
 'use client'
 
-import { useTransition } from 'react'
+import * as React from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MoreHorizontal, Trash2, Loader2, FileText, type LucideProps } from 'lucide-react'
+import {
+  MoreHorizontal,
+  Trash2,
+  FileText,
+  Loader2,
+  ArrowUpDown,
+  type LucideProps,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -17,6 +25,10 @@ import { Button } from '@/components/ui/button'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import { deleteCredentialAction } from '@/app/(dashboard)/candidate/credentials/actions'
 
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
+
 export interface RowType {
   id: number
   title: string
@@ -26,9 +38,33 @@ export interface RowType {
   fileUrl: string | null
 }
 
+interface Props {
+  rows: RowType[]
+  sort: string
+  order: 'asc' | 'desc'
+  basePath: string
+  initialParams: Record<string, string>
+  /** Current URL search term. */
+  searchQuery: string
+}
+
 /* -------------------------------------------------------------------------- */
-/*                                   ICONS                                    */
+/*                                Helpers                                     */
 /* -------------------------------------------------------------------------- */
+
+function buildLink(
+  basePath: string,
+  init: Record<string, string>,
+  overrides: Record<string, any>,
+) {
+  const sp = new URLSearchParams(init)
+  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
+  Array.from(sp.entries()).forEach(([k, v]) => {
+    if (v === '') sp.delete(k)
+  })
+  const qs = sp.toString()
+  return `${basePath}${qs ? `?${qs}` : ''}`
+}
 
 const ViewIcon = (props: LucideProps) => (
   <FileText {...props} className='mr-2 h-4 w-4 text-sky-600 dark:text-sky-400' />
@@ -40,7 +76,7 @@ const ViewIcon = (props: LucideProps) => (
 
 function RowActions({ row }: { row: RowType }) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = React.useTransition()
 
   async function destroy() {
     startTransition(async () => {
@@ -102,46 +138,11 @@ function RowActions({ row }: { row: RowType }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                  Columns                                   */
-/* -------------------------------------------------------------------------- */
-
-const columns: Column<RowType>[] = [
-  { key: 'title', header: 'Title', sortable: true, render: (v) => v as string },
-  { key: 'type', header: 'Type', sortable: true, className: 'capitalize', render: (v) => v as string },
-  { key: 'issuer', header: 'Issuer', sortable: true, render: (v) => (v as string | null) || '—' },
-  {
-    key: 'status',
-    header: 'Status',
-    sortable: true,
-    className: 'capitalize',
-    render: (v) => {
-      const s = v as string
-      const cls =
-        s === 'VERIFIED'
-          ? 'text-emerald-600'
-          : s === 'PENDING'
-            ? 'text-amber-600'
-            : s === 'REJECTED'
-              ? 'text-rose-600'
-              : 'text-muted-foreground'
-      return <span className={cls}>{s.toLowerCase()}</span>
-    },
-  },
-  {
-    key: 'id',
-    header: '',
-    enableHiding: false,
-    sortable: false,
-    render: (_v, row) => <RowActions row={row} />,
-  },
-]
-
-/* -------------------------------------------------------------------------- */
 /*                               Bulk actions                                 */
 /* -------------------------------------------------------------------------- */
 
 function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = React.useTransition()
 
   return [
     {
@@ -161,16 +162,116 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
           toast.success('Selected credentials deleted.', { id: toastId })
           router.refresh()
         }),
+      isDisabled: () => isPending,
     },
   ]
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                   View                                     */
+/*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
-export default function CandidateCredentialsTable({ rows }: { rows: RowType[] }) {
+export default function CandidateCredentialsTable({
+  rows,
+  sort,
+  order,
+  basePath,
+  initialParams,
+  searchQuery,
+}: Props) {
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
-  return <DataTable columns={columns} rows={rows} filterKey='title' bulkActions={bulkActions} />
+
+  /* ----------------------------- Search ----------------------------------- */
+  const [search, setSearch] = React.useState(searchQuery)
+  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+
+  function handleSearchChange(value: string) {
+    setSearch(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
+      router.push(href, { scroll: false })
+    }, 400)
+  }
+
+  /* --------------------------- Sort headers ------------------------------- */
+  const sortHeader = (label: string, key: string) => {
+    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
+    const href = buildLink(basePath, initialParams, {
+      sort: key,
+      order: nextOrder,
+      page: 1,
+      q: search,
+    })
+    return (
+      <Link href={href} scroll={false} className='flex items-center gap-1'>
+        {label} <ArrowUpDown className='h-4 w-4' />
+      </Link>
+    )
+  }
+
+  const columns = React.useMemo<Column<RowType>[]>(() => {
+    return [
+      {
+        key: 'title',
+        header: sortHeader('Title', 'title'),
+        sortable: false,
+        render: (v) => <span className='font-medium'>{v as string}</span>,
+      },
+      {
+        key: 'type',
+        header: sortHeader('Type', 'type'),
+        sortable: false,
+        className: 'capitalize',
+        render: (v) => v as string,
+      },
+      {
+        key: 'issuer',
+        header: sortHeader('Issuer', 'issuer'),
+        sortable: false,
+        render: (v) => (v as string | null) || '—',
+      },
+      {
+        key: 'status',
+        header: sortHeader('Status', 'status'),
+        sortable: false,
+        className: 'capitalize',
+        render: (v) => {
+          const s = v as string
+          const cls =
+            s === 'VERIFIED'
+              ? 'text-emerald-600'
+              : s === 'PENDING'
+                ? 'text-amber-600'
+                : s === 'REJECTED'
+                  ? 'text-rose-600'
+                  : 'text-muted-foreground'
+          return <span className={cls}>{s.toLowerCase()}</span>
+        },
+      },
+      {
+        key: 'id',
+        header: '',
+        enableHiding: false,
+        sortable: false,
+        render: (_v, row) => <RowActions row={row} />,
+      },
+    ]
+  }, [sort, order, basePath, initialParams, search])
+
+  /* All rows fit on one client page; server handles real paging */
+  return (
+    <DataTable
+      columns={columns}
+      rows={rows}
+      filterKey='title'
+      filterValue={search}
+      onFilterChange={handleSearchChange}
+      bulkActions={bulkActions}
+      pageSize={rows.length}
+      pageSizeOptions={[rows.length]}
+      hidePagination
+    />
+  )
 }
