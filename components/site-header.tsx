@@ -5,12 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import {
-  ChevronDown,
-  LayoutDashboard,
-  LogOut,
-  Settings,
-} from 'lucide-react'
+import { ChevronDown, LayoutDashboard, LogOut, Settings } from 'lucide-react'
 
 import { signOut } from '@/app/(auth)/actions'
 import { ModeToggle } from '@/components/theme-toggle'
@@ -30,10 +25,10 @@ import { useUser } from '@/lib/auth'
 const LANDING_SECTIONS = [
   { id: 'overview', label: 'Overview' },
   { id: 'features', label: 'Features' },
-  { id: 'deep-dive', label: 'Deep Dive' },
+  { id: 'deep-dive', label: 'Deep Dive' },
   { id: 'workflow', label: 'Workflow' },
   { id: 'pricing', label: 'Pricing' },
-  { id: 'cta', label: 'Get Started' },
+  { id: 'cta', label: 'Get Started' },
 ] as const
 
 export default function SiteHeader() {
@@ -42,7 +37,7 @@ export default function SiteHeader() {
   const [user, setUser] = useState<Awaited<typeof userPromise> | null>(null)
 
   /* -------------------------------------------------------------------------- */
-  /*                        R E S O L V E   U S E R   P R O M I S E             */
+  /*                       R E S O L V E   U S E R   P R O M I S E              */
   /* -------------------------------------------------------------------------- */
   useEffect(() => {
     let active = true
@@ -63,7 +58,6 @@ export default function SiteHeader() {
   /* -------------------------------------------------------------------------- */
   /*                               H A N D L E R S                              */
   /* -------------------------------------------------------------------------- */
-
   async function handleSignOut() {
     await signOut()
     router.refresh()
@@ -71,9 +65,8 @@ export default function SiteHeader() {
   }
 
   /* -------------------------------------------------------------------------- */
-  /*                               R E N D E R                                   */
+  /*                               R E N D E R                                  */
   /* -------------------------------------------------------------------------- */
-
   return (
     <header className='border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b shadow-sm backdrop-blur'>
       <div className='mx-auto grid h-16 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-6 px-4 md:px-6'>
@@ -150,7 +143,10 @@ export default function SiteHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className='cursor-pointer'>
-                  <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
+                  <AvatarImage
+                    src={(user as any)?.image ?? undefined}
+                    alt={(user as any)?.name ?? (user as any)?.email}
+                  />
                   <AvatarFallback>
                     {(user.name || user.email || 'U')
                       .split(' ')
@@ -164,19 +160,19 @@ export default function SiteHeader() {
 
               <DropdownMenuContent
                 align='end'
-                className='w-56 sm:w-64 max-w-[90vw] rounded-lg p-1 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out'
+                className='max-w-[90vw] w-56 sm:w-64 rounded-lg p-1 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out'
               >
-                {/* User card → link to Team Settings */}
+                {/* User card → Team Settings */}
                 <DropdownMenuItem
                   asChild
                   className='flex select-none cursor-pointer flex-col items-start gap-1 rounded-md px-3 py-2 text-left focus:bg-muted'
                 >
                   <Link href='/settings/team' className='w-full'>
                     <p className='truncate text-sm font-medium'>
-                      {user.name || user.email || 'Unnamed User'}
+                      {user.name || user.email || 'Unnamed User'}
                     </p>
                     {user.email && (
-                      <p className='truncate text-xs text-muted-foreground break-all'>
+                      <p className='break-all truncate text-xs text-muted-foreground'>
                         {user.email}
                       </p>
                     )}
@@ -205,9 +201,9 @@ export default function SiteHeader() {
 
                 <form action={handleSignOut} className='w-full'>
                   <button type='submit' className='w-full'>
-                    <DropdownMenuItem className='flex items-center gap-2 rounded-md px-3 py-2 text-rose-600 hover:bg-rose-600/10 dark:text-rose-400'>
+                    <DropdownMenuItem className='flex items-center gap-2 rounded-md px-3 py-2 text-foreground hover:bg-muted/40 focus:bg-muted/40'>
                       <LogOut className='h-4 w-4' />
-                      <span className='text-sm'>Sign out</span>
+                      <span className='text-sm'>Sign out</span>
                     </DropdownMenuItem>
                   </button>
                 </form>
@@ -217,11 +213,11 @@ export default function SiteHeader() {
             <>
               <Link href='/sign-in' className='shrink-0'>
                 <Button variant='ghost' size='sm'>
-                  Sign in
+                  Sign in
                 </Button>
               </Link>
               <Link href='/sign-up' className='shrink-0'>
-                <Button size='sm'>Get started</Button>
+                <Button size='sm'>Get started</Button>
               </Link>
             </>
           )}
