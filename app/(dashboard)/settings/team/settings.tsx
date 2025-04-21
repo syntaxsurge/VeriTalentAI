@@ -9,8 +9,13 @@ import { InviteTeamMember } from './invite-team'
 import { Button } from '@/components/ui/button'
 import { customerPortalAction } from '@/lib/payments/actions'
 
+/**
+ * Returns the user's name (or "—” when absent) without ever
+ * falling back to their email address.
+ */
 function displayName(u: Pick<User, 'name' | 'email'>) {
-  return u.name || u.email || 'Unknown'
+  const name = u.name?.trim()
+  return name && name.length > 0 ? name : '—'
 }
 
 export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
@@ -56,8 +61,8 @@ export function Settings({ teamData }: { teamData: TeamDataWithMembers }) {
                 {teamData.subscriptionStatus === 'active'
                   ? 'Billed monthly'
                   : teamData.subscriptionStatus === 'trialing'
-                    ? 'Trial period'
-                    : 'No active subscription'}
+                  ? 'Trial period'
+                  : 'No active subscription'}
               </p>
             </div>
             <form action={customerPortalAction}>
