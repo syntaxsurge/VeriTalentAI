@@ -72,6 +72,7 @@ function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
           label: 'Issuers',
           badgeCount: counts?.adminPendingIssuers,
         },
+        { href: '/admin/platform-did', icon: Key, label: 'Platform DID' },
       ]
     default:
       return []
