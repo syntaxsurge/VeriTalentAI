@@ -1,3 +1,4 @@
+// same imports ─ unchanged
 'use server'
 
 import { cookies } from 'next/headers'
@@ -24,6 +25,14 @@ import {
   invitations,
 } from '@/lib/db/schema'
 import { createCheckoutSession } from '@/lib/payments/stripe'
+
+/* -------------------------------------------------------------------------- */
+/*                               H E L P E R S                                */
+/* -------------------------------------------------------------------------- */
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
 
 /* -------------------------------------------------------------------------- */
 /*                               A C T I V I T Y                              */
@@ -55,7 +64,8 @@ const signInSchema = z.object({
 })
 
 export const signIn = validatedAction(signInSchema, async (data, formData) => {
-  const { email, password } = data
+  const { password } = data
+  const email = normalizeEmail(data.email)
 
   const userWithTeam = await db
     .select({ user: users, team: teams })
@@ -103,7 +113,8 @@ const signUpSchema = z.object({
 })
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
-  const { name, email, password, inviteId } = data
+  const { name, password, inviteId } = data
+  const email = normalizeEmail(data.email)
 
   const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1)
   if (existingUser.length > 0) {
@@ -129,7 +140,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const personalTeamData: NewTeam = {
     name: `${email}'s Team`,
     creatorUserId: createdUser.id,
-  } as NewTeam
+  }
 
   const [personalTeam] = await db.insert(teams).values(personalTeamData).returning()
   await db.insert(teamMembers).values({
@@ -166,10 +177,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     } as NewTeamMember)
 
     await Promise.all([
-      db
-        .update(invitations)
-        .set({ status: 'accepted' })
-        .where(eq(invitations.id, invitation.id)),
+      db.update(invitations).set({ status: 'accepted' }).where(eq(invitations.id, invitation.id)),
       logActivity(invitation.teamId, createdUser.id, ActivityType.ACCEPT_INVITATION),
     ])
   }

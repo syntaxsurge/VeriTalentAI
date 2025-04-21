@@ -5,9 +5,8 @@ import { db } from '../drizzle'
 import { users, teams, teamMembers } from '../schema'
 
 /**
- * Seed four demo users then:
- *   • create a personal placeholder team for each (no memberships),
- *   • add every user to the shared "Test Team”, with admin as owner.
+ * Seed demo users, create personal placeholder teams, and add everyone to a shared
+ * "Test Team" with the primary admin as owner.
  *
  * All accounts use the plaintext password: `myPassword`.
  */
@@ -17,8 +16,9 @@ export async function seedUserTeam() {
   /* ---------- common demo password ---------- */
   const passwordHash = await hashPassword('myPassword')
 
-  /* ---------- users to seed (explicit names + emails) ---------- */
+  /* ---------- users to seed ---------- */
   const SEED = [
+    { name: 'Platform Admin', email: 'admin@test.com', role: 'admin' as const },
     { name: 'Alice Admin', email: 'alice.admin@example.com', role: 'admin' as const },
     { name: 'Carlos Candidate', email: 'carlos.candidate@example.com', role: 'candidate' as const },
     { name: 'Ivy Issuer', email: 'ivy.issuer@example.com', role: 'issuer' as const },
@@ -29,26 +29,27 @@ export async function seedUserTeam() {
 
   /* ---------- ensure users + placeholder teams (no membership) ---------- */
   for (const { name, email, role } of SEED) {
-    let [u] = await db.select().from(users).where(eq(users.email, email)).limit(1)
+    const lowerEmail = email.toLowerCase()
+    let [u] = await db.select().from(users).where(eq(users.email, lowerEmail)).limit(1)
 
     if (!u) {
       ;[u] = await db
         .insert(users)
-        .values({ name, email, passwordHash, role })
+        .values({ name, email: lowerEmail, passwordHash, role })
         .returning()
-      console.log(`✅ Created user ${email} (${name})`)
+      console.log(`✅ Created user ${lowerEmail} (${name})`)
     } else {
       const updates: Partial<typeof users.$inferInsert> = {}
       if (u.name !== name) updates.name = name
       if (u.role !== role) updates.role = role
       if (Object.keys(updates).length) {
         await db.update(users).set(updates).where(eq(users.id, u.id))
-        console.log(`🔄 Updated user ${email} →`, updates)
+        console.log(`🔄 Updated user ${lowerEmail} →`, updates)
       } else {
-        console.log(`ℹ️ User ${email} exists`)
+        console.log(`ℹ️ User ${lowerEmail} exists`)
       }
     }
-    ids.set(email, u.id)
+    ids.set(lowerEmail, u.id)
 
     const personalName = `${name}'s Team`
     const [existingTeam] = await db.select().from(teams).where(eq(teams.name, personalName)).limit(1)
@@ -57,12 +58,12 @@ export async function seedUserTeam() {
       await db.insert(teams).values({ name: personalName, creatorUserId: u.id })
       console.log(`✅ Created placeholder team "${personalName}"`)
     } else {
-      console.log(`ℹ️ Placeholder team for ${email} exists`)
+      console.log(`ℹ️ Placeholder team for ${lowerEmail} exists`)
     }
   }
 
   /* ---------- shared Test Team ---------- */
-  const adminId = ids.get('alice.admin@example.com')!
+  const adminId = ids.get('admin@test.com')!
   const sharedName = 'Test Team'
 
   let [shared] = await db.select().from(teams).where(eq(teams.name, sharedName)).limit(1)
@@ -76,10 +77,10 @@ export async function seedUserTeam() {
     console.log(`ℹ️ Shared team "${sharedName}" exists`)
   }
 
-  /* ---------- add memberships (single team per user) ---------- */
+  /* ---------- add memberships ---------- */
   for (const { email } of SEED) {
-    const userId = ids.get(email)!
-    const role = email === 'alice.admin@example.com' ? 'owner' : 'member'
+    const userId = ids.get(email.toLowerCase())!
+    const role = email.toLowerCase() === 'admin@test.com' ? 'owner' : 'member'
 
     const existing = await db
       .select()
