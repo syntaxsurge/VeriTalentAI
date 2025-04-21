@@ -135,7 +135,6 @@ export function Login({ mode = 'signin', fixedRole }: LoginProps) {
                 name='password'
                 type='password'
                 autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                defaultValue={state.password}
                 required
                 minLength={8}
                 maxLength={100}

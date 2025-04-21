@@ -66,14 +66,14 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
     .limit(1)
 
   if (userWithTeam.length === 0) {
-    return { error: 'Invalid email or password. Please try again.', email, password }
+    return { error: 'No account found for this email.', email }
   }
 
   const { user: foundUser, team: foundTeam } = userWithTeam[0]
   const isPasswordValid = await comparePasswords(password, foundUser.passwordHash)
 
   if (!isPasswordValid) {
-    return { error: 'Invalid email or password. Please try again.', email, password }
+    return { error: 'Invalid password. Please try again.', email }
   }
 
   await Promise.all([
