@@ -59,11 +59,8 @@ export interface BulkAction<T extends Record<string, any>> {
   label: string
   icon: LucideIcon
   onClick: (selectedRows: T[]) => void | Promise<void>
-  /** optional colour accent */
   variant?: "default" | "destructive" | "outline"
-  /** Determines if the item should be shown given current selection (default → true) */
   isAvailable?: (selectedRows: T[]) => boolean
-  /** Determines if the item is disabled (in addition to empty‑selection check) */
   isDisabled?: (selectedRows: T[]) => boolean
 }
 
@@ -71,7 +68,6 @@ interface DataTableProps<T extends Record<string, any>> {
   columns: Column<T>[]
   rows: T[]
   filterKey?: keyof T
-  /** optional bulk actions shown when rows are selected */
   bulkActions?: BulkAction<T>[]
 }
 
@@ -118,7 +114,6 @@ function buildColumnDefs<T extends Record<string, any>>(
             <SortableHeader column={column} title={col.header} />
           )
         : col.header,
-      // non‑null assertion prevents TS 2722 when render is present
       cell: col.render
         ? ({ row }) => col.render!(row.original[col.key], row.original)
         : undefined,
@@ -139,7 +134,8 @@ export function DataTable<T extends Record<string, any>>({
   filterKey,
   bulkActions = [],
 }: DataTableProps<T>) {
-  /* -------------------- state -------------------- */
+  const includeSelection = bulkActions.length > 0
+
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] =
@@ -147,8 +143,11 @@ export function DataTable<T extends Record<string, any>>({
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
 
-  /* -------------------- columns ------------------ */
   const columnDefs = React.useMemo<ColumnDef<T>[]>(() => {
+    const base = buildColumnDefs(columns)
+
+    if (!includeSelection) return base
+
     const selectCol: ColumnDef<T> = {
       id: "select",
       header: ({ table }) => (
@@ -173,10 +172,9 @@ export function DataTable<T extends Record<string, any>>({
       enableSorting: false,
       enableHiding: false,
     }
-    return [selectCol, ...buildColumnDefs(columns)]
-  }, [columns])
+    return [selectCol, ...base]
+  }, [columns, includeSelection])
 
-  /* -------------------- table instance ----------- */
   const table = useReactTable({
     data: rows,
     columns: columnDefs,
@@ -198,20 +196,16 @@ export function DataTable<T extends Record<string, any>>({
     [selectedRows],
   )
 
-  /* Pre‑compute filter column to avoid optional‑call error */
   const filterColumn = React.useMemo(() => {
     return filterKey ? table.getColumn(filterKey as string) : undefined
   }, [table, filterKey])
 
-  /* ------------------------- render ------------------------- */
   return (
     <div className="w-full overflow-x-auto">
-      {/* toolbar */}
       {(filterKey ||
         table.getAllColumns().some((c) => c.getCanHide()) ||
         bulkActions.length > 0) && (
         <div className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center">
-          {/* filter input */}
           {filterKey && (
             <Input
               placeholder={`Filter ${String(filterKey)}…`}
@@ -221,7 +215,6 @@ export function DataTable<T extends Record<string, any>>({
             />
           )}
 
-          {/* bulk actions – always visible */}
           {bulkActions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -273,7 +266,6 @@ export function DataTable<T extends Record<string, any>>({
             </DropdownMenu>
           )}
 
-          {/* column toggle */}
           {table.getAllColumns().some((c) => c.getCanHide()) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -304,7 +296,6 @@ export function DataTable<T extends Record<string, any>>({
         </div>
       )}
 
-      {/* table */}
       <div className="rounded-md border">
         <Table className="w-full table-auto">
           <TableHeader>
@@ -357,7 +348,6 @@ export function DataTable<T extends Record<string, any>>({
         </Table>
       </div>
 
-      {/* footer */}
       <div className="flex flex-col items-center justify-between gap-2 py-4 sm:flex-row">
         <span className="text-sm text-muted-foreground">
           {selectedCount} of {table.getFilteredRowModel().rows.length} row(s) selected.
