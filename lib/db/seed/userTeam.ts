@@ -5,8 +5,8 @@ import { db } from '../drizzle'
 import { users, teams, teamMembers } from '../schema'
 
 /**
- * Seed demo users, create personal placeholder teams, and add everyone to a shared
- * "Test Team" with the primary admin as owner.
+ * Seed core demo users (admin, candidate, issuer, recruiter), create personal placeholder
+ * teams for each, and add everyone to a shared "Test Team” with the primary admin as owner.
  *
  * All accounts use the plaintext password: `myPassword`.
  */
@@ -18,27 +18,10 @@ export async function seedUserTeam() {
 
   /* ---------- users to seed ---------- */
   const SEED = [
-    // Core platform admin account
     { name: 'Platform Admin', email: 'admin@test.com', role: 'admin' as const },
-
-    // Simple role‑specific test accounts for QA / demos
     { name: 'Test Candidate', email: 'candidate@test.com', role: 'candidate' as const },
     { name: 'Test Issuer', email: 'issuer@test.com', role: 'issuer' as const },
     { name: 'Test Recruiter', email: 'recruiter@test.com', role: 'recruiter' as const },
-
-    // Additional sample users
-    { name: 'Alice Admin', email: 'alice.admin@example.com', role: 'admin' as const },
-    {
-      name: 'Carlos Candidate',
-      email: 'carlos.candidate@example.com',
-      role: 'candidate' as const,
-    },
-    { name: 'Ivy Issuer', email: 'ivy.issuer@example.com', role: 'issuer' as const },
-    {
-      name: 'Rafael Recruiter',
-      email: 'rafael.recruiter@example.com',
-      role: 'recruiter' as const,
-    },
   ]
 
   const ids = new Map<string, number>() // email → id
