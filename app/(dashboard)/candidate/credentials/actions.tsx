@@ -12,9 +12,10 @@ import {
   CredentialStatus,
 } from '@/lib/db/schema/viskify'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
+import { teams, teamMembers } from '@/lib/db/schema/core'
 
 /* -------------------------------------------------------------------------- */
-/*                              A D D  C R E D                                */
+/*                               A D D  C R E D                               */
 /* -------------------------------------------------------------------------- */
 
 export const addCredential = validatedActionWithUser(
@@ -25,7 +26,7 @@ export const addCredential = validatedActionWithUser(
     issuerId: z.coerce.number().optional(),
   }),
   async ({ title, type, fileUrl, issuerId }, _, user) => {
-    // link issuer if active
+    /* Resolve issuer (if any) */
     let linkedIssuerId: number | undefined
     let status: CredentialStatus = CredentialStatus.UNVERIFIED
 
@@ -41,7 +42,21 @@ export const addCredential = validatedActionWithUser(
       }
     }
 
-    // ensure candidate exists
+    /* If submitting to an issuer, enforce DID requirement */
+    if (linkedIssuerId) {
+      const [teamRow] = await db
+        .select({ did: teams.did })
+        .from(teamMembers)
+        .leftJoin(teams, eq(teamMembers.teamId, teams.id))
+        .where(eq(teamMembers.userId, user.id))
+        .limit(1)
+
+      if (!teamRow?.did) {
+        return { error: 'Create your team DID before submitting credentials to an issuer.' }
+      }
+    }
+
+    /* Ensure candidate row exists */
     let [candidate] = await db
       .select()
       .from(candidates)
@@ -70,15 +85,12 @@ export const addCredential = validatedActionWithUser(
 )
 
 /* -------------------------------------------------------------------------- */
-/*                          D E L E T E  C R E D                              */
+/*                             D E L E T E  C R E D                           */
 /* -------------------------------------------------------------------------- */
 
 export const deleteCredentialAction = validatedActionWithUser(
-  z.object({
-    credentialId: z.coerce.number(),
-  }),
+  z.object({ credentialId: z.coerce.number() }),
   async ({ credentialId }, _formData, user) => {
-    // verify ownership
     const [candidate] = await db
       .select()
       .from(candidates)

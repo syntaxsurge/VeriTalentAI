@@ -19,12 +19,9 @@ export async function startQuizAction(formData: FormData) {
 
   const quizId = formData.get('quizId')
   const answer = formData.get('answer')
-  if (!quizId || !answer)
-    return { score: 0, message: 'Invalid request.' }
+  if (!quizId || !answer) return { score: 0, message: 'Invalid request.' }
 
-  /* ------------------------------------------------------------------ */
-  /* Ensure candidate record exists                                     */
-  /* ------------------------------------------------------------------ */
+  /* Ensure candidate record exists */
   let [candidateRow] = await db
     .select()
     .from(candidates)
@@ -39,28 +36,7 @@ export async function startQuizAction(formData: FormData) {
     candidateRow = newCand
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Quiz lookup                                                        */
-  /* ------------------------------------------------------------------ */
-  const [quiz] = await db
-    .select()
-    .from(skillQuizzes)
-    .where(eq(skillQuizzes.id, Number(quizId)))
-    .limit(1)
-  if (!quiz) return { score: 0, message: 'Quiz not found.' }
-
-  /* ------------------------------------------------------------------ */
-  /* AI score                                                           */
-  /* ------------------------------------------------------------------ */
-  const maxScore = 100
-  const { aiScore } = await openAIAssess(String(answer), quiz.title)
-  const passThreshold = 70
-  const passed = aiScore >= passThreshold
-  let vcIssuedId: string | undefined
-
-  /* ------------------------------------------------------------------ */
-  /* Resolve candidate (subject) DID                                    */
-  /* ------------------------------------------------------------------ */
+  /* Require team DID */
   const [teamRow] = await db
     .select({ did: teams.did })
     .from(teamMembers)
@@ -69,14 +45,28 @@ export async function startQuizAction(formData: FormData) {
     .limit(1)
 
   const subjectDid = teamRow?.did ?? null
+  if (!subjectDid) {
+    return { score: 0, message: 'Please create your team DID before taking a quiz.' }
+  }
 
+  /* Quiz lookup */
+  const [quiz] = await db
+    .select()
+    .from(skillQuizzes)
+    .where(eq(skillQuizzes.id, Number(quizId)))
+    .limit(1)
+  if (!quiz) return { score: 0, message: 'Quiz not found.' }
+
+  /* AI grading */
+  const { aiScore } = await openAIAssess(String(answer), quiz.title)
+  const passed = aiScore >= 70
+  let vcIssuedId: string | undefined
   let message = `You scored ${aiScore}. ${passed ? 'You passed!' : 'You failed.'}`
 
-  if (passed && subjectDid) {
+  if (passed) {
     try {
       const vc = await issueCredential({
-        issuerDid:
-          process.env.PLATFORM_ISSUER_DID || "",
+        issuerDid: process.env.PLATFORM_ISSUER_DID || '',
         subjectDid,
         attributes: {
           skillQuiz: quiz.title,
@@ -90,19 +80,14 @@ export async function startQuizAction(formData: FormData) {
     } catch (err: any) {
       message += ` (VC issuance failed: ${String(err)})`
     }
-  } else if (passed && !subjectDid) {
-    message +=
-      ' (Create your team DID first so we can issue a verifiable credential.)'
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Persist attempt                                                    */
-  /* ------------------------------------------------------------------ */
+  /* Persist attempt */
   await db.insert(quizAttempts).values({
     candidateId: candidateRow.id,
     quizId: quiz.id,
     score: aiScore,
-    maxScore,
+    maxScore: 100,
     pass: passed ? 1 : 0,
     vcIssuedId,
   })
