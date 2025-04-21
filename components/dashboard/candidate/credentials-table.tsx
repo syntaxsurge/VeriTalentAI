@@ -24,6 +24,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import { deleteCredentialAction } from '@/app/(dashboard)/candidate/credentials/actions'
+import { StatusBadge } from '@/components/ui/status-badge'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -69,14 +70,6 @@ function buildLink(
 const ViewIcon = (props: LucideProps) => (
   <FileText {...props} className="mr-2 h-4 w-4 text-sky-600 dark:text-sky-400" />
 )
-
-/* Status → text‑color map (handles lowercase values returned by the DB) */
-const STATUS_COLOR: Record<string, string> = {
-  verified: 'text-emerald-600',
-  pending: 'text-amber-600',
-  rejected: 'text-rose-600',
-  unverified: 'text-muted-foreground',
-}
 
 /* -------------------------------------------------------------------------- */
 /*                               Row actions                                  */
@@ -244,12 +237,7 @@ export default function CandidateCredentialsTable({
         key: 'status',
         header: sortHeader('Status', 'status'),
         sortable: false,
-        className: 'capitalize',
-        render: (v) => {
-          const s = String(v).toLowerCase()
-          const cls = STATUS_COLOR[s] ?? 'text-muted-foreground'
-          return <span className={cls}>{s}</span>
-        },
+        render: (v) => <StatusBadge status={String(v)} />,
       },
       {
         key: 'id',

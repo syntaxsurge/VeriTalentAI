@@ -17,11 +17,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
+import { StatusBadge } from '@/components/ui/status-badge'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -201,19 +202,7 @@ export default function AdminCredentialsTable({
       key: 'status',
       header: sortableHeader('Status', 'status'),
       sortable: false,
-      className: 'capitalize',
-      render: (v) => {
-        const s = String(v)
-        const cls =
-          s === 'VERIFIED'
-            ? 'text-emerald-600'
-            : s === 'PENDING'
-              ? 'text-amber-600'
-              : s === 'REJECTED'
-                ? 'text-rose-600'
-                : 'text-muted-foreground'
-        return <span className={cls}>{s.toLowerCase()}</span>
-      },
+      render: (v) => <StatusBadge status={String(v)} />,
     },
     {
       key: 'id',

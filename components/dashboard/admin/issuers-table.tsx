@@ -31,6 +31,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
 import { cn } from '@/lib/utils'
+import { StatusBadge } from '@/components/ui/status-badge'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -71,16 +72,6 @@ function buildLink(
   })
   const qs = sp.toString()
   return `${basePath}${qs ? `?${qs}` : ''}`
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const cls =
-    status === 'ACTIVE'
-      ? 'text-emerald-600'
-      : status === 'PENDING'
-        ? 'text-amber-600'
-        : 'text-rose-600'
-  return <span className={`${cls} capitalize`}>{status.toLowerCase()}</span>
 }
 
 /* -------------------------------------------------------------------------- */
@@ -353,7 +344,7 @@ export default function AdminIssuersTable({
       key: 'status',
       header: sortableHeader('Status', 'status'),
       sortable: false,
-      render: (v) => <StatusBadge status={v as string} />,
+      render: (v) => <StatusBadge status={String(v)} />,
     },
     {
       key: 'id',
