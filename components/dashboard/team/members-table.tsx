@@ -29,6 +29,10 @@ import { Label } from '@/components/ui/label'
 import { removeTeamMember } from '@/app/(auth)/actions'
 import { updateTeamMemberRoleAction } from '@/app/(dashboard)/settings/team/actions'
 
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
+
 export interface RowType {
   id: number
   name: string
@@ -43,7 +47,7 @@ interface MembersTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Edit dialog                                  */
+/*                             Edit member dialog                             */
 /* -------------------------------------------------------------------------- */
 
 const ROLES = ['member', 'owner'] as const
@@ -116,9 +120,18 @@ function RowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  /* dropdown & dialog */
+  /* dropdown & dialog controlled state */
   const [menuOpen, setMenuOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+
+  /* ------------ helpers ------------ */
+  function openEditDialog() {
+    /* Explicitly close the dropdown first, then open the dialog
+       on the next event‑loop tick to avoid the menu getting stuck
+       in a permanently "open” controlled state. */
+    setMenuOpen(false)
+    setTimeout(() => setEditOpen(true), 0)
+  }
 
   function destroy() {
     startTransition(async () => {
@@ -152,7 +165,7 @@ function RowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
 
         <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={() => setEditOpen(true)} className='cursor-pointer'>
+          <DropdownMenuItem onSelect={openEditDialog} className='cursor-pointer'>
             <Pencil className='mr-2 h-4 w-4' /> Edit
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -170,7 +183,9 @@ function RowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Member</DialogTitle>
-            <DialogDescription>Modify the member’s role, then save your changes.</DialogDescription>
+            <DialogDescription>
+              Modify the member’s role, then save your changes.
+            </DialogDescription>
           </DialogHeader>
           <EditMemberForm row={row} onDone={() => setEditOpen(false)} />
         </DialogContent>
