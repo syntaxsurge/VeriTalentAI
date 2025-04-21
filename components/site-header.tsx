@@ -184,13 +184,22 @@ export default function SiteHeader() {
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem asChild className='cursor-pointer rounded-md px-3 py-2'>
+                {/* Dashboard */}
+                <DropdownMenuItem
+                  asChild
+                  className='flex items-center gap-2 rounded-md px-3 py-2 data-[highlighted]:bg-muted data-[highlighted]:text-foreground'
+                >
                   <Link href='/dashboard' className='flex items-center gap-2'>
                     <LayoutDashboard className='h-4 w-4' />
                     <span className='text-sm'>Dashboard</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className='cursor-pointer rounded-md px-3 py-2'>
+
+                {/* Settings */}
+                <DropdownMenuItem
+                  asChild
+                  className='flex items-center gap-2 rounded-md px-3 py-2 data-[highlighted]:bg-muted data-[highlighted]:text-foreground'
+                >
                   <Link href='/settings/general' className='flex items-center gap-2'>
                     <Settings className='h-4 w-4' />
                     <span className='text-sm'>Settings</span>
@@ -199,6 +208,7 @@ export default function SiteHeader() {
 
                 <DropdownMenuSeparator />
 
+                {/* Sign‑out */}
                 <form action={handleSignOut} className='w-full'>
                   <button type='submit' className='w-full'>
                     <DropdownMenuItem className='flex items-center gap-2 rounded-md px-3 py-2 data-[highlighted]:bg-muted data-[highlighted]:text-foreground'>
