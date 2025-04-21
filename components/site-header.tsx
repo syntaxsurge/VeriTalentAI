@@ -5,12 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import {
-  ChevronDown,
-  LayoutDashboard,
-  LogOut,
-  Settings,
-} from 'lucide-react'
+import { ChevronDown, LayoutDashboard, LogOut, Settings } from 'lucide-react'
 
 import { signOut } from '@/app/(auth)/actions'
 import { ModeToggle } from '@/components/theme-toggle'
@@ -159,18 +154,23 @@ export default function SiteHeader() {
                 align='end'
                 className='w-64 rounded-lg p-1 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out'
               >
-                {/* User card */}
-                <DropdownMenuLabel className='select-none cursor-default px-3 py-3'>
-                  <p className='truncate text-sm font-medium'>
-                    {user.name || user.email || 'Unnamed User'}
-                  </p>
-                  {user.email && (
-                    <p className='truncate text-xs text-muted-foreground'>{user.email}</p>
-                  )}
-                  <span className='mt-2 inline-block rounded bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
-                    {user.role}
-                  </span>
-                </DropdownMenuLabel>
+                {/* User card → link to Team Settings */}
+                <DropdownMenuItem
+                  asChild
+                  className='select-none cursor-pointer px-3 py-3 focus:bg-muted'
+                >
+                  <Link href='/settings/team' className='flex flex-col text-left w-full'>
+                    <p className='truncate text-sm font-medium'>
+                      {user.name || user.email || 'Unnamed User'}
+                    </p>
+                    {user.email && (
+                      <p className='truncate text-xs text-muted-foreground'>{user.email}</p>
+                    )}
+                    <span className='mt-2 inline-block rounded bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
+                      {user.role}
+                    </span>
+                  </Link>
+                </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
 
