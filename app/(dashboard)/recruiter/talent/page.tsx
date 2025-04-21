@@ -3,9 +3,8 @@ import { redirect } from 'next/navigation'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTalentSearchPage } from '@/lib/db/queries/recruiter-talent'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import TalentTable, {
-  RowType,
-} from '@/components/dashboard/recruiter/talent-table'
+import TalentTable, { RowType } from '@/components/dashboard/recruiter/talent-table'
+import TalentFilters from '@/components/dashboard/recruiter/talent-filters'
 
 export const revalidate = 0
 
@@ -77,65 +76,30 @@ export default async function TalentSearchPage({
   add('size')
   add('sort')
   add('order')
-  add('verifiedOnly')
-  add('skillMin')
-  if (searchTerm) initialParams['q'] = searchTerm
+  add('q') // retain search term for filters + table search
+  // Note: skillMin & verifiedOnly will be controlled by the filter component
 
   /* ------------------------------- View ---------------------------------- */
   return (
-    <section className='flex-1 p-4 lg:p-8'>
-      <h1 className='mb-6 text-lg font-medium lg:text-2xl'>Talent Search</h1>
+    <section className="flex-1 p-4 lg:p-8">
+      <h1 className="mb-6 text-lg font-medium lg:text-2xl">Talent Search</h1>
 
       {/* Filters */}
-      <form
-        method='GET'
-        className='mb-6 grid items-end gap-4 sm:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]'
-      >
-        <div>
-          <label htmlFor='skillMin' className='mb-1 block text-sm font-medium'>
-            Min Skill Score
-          </label>
-          <input
-            id='skillMin'
-            name='skillMin'
-            type='number'
-            min={0}
-            max={100}
-            defaultValue={skillMin || ''}
-            className='h-10 w-full rounded-md border px-2 text-sm'
-          />
-        </div>
-
-        <div className='flex items-center gap-2'>
-          <input
-            id='verifiedOnly'
-            name='verifiedOnly'
-            type='checkbox'
-            value='1'
-            defaultChecked={verifiedOnly}
-            className='accent-primary size-4 cursor-pointer'
-          />
-          <label htmlFor='verifiedOnly' className='cursor-pointer text-sm'>
-            Verified only
-          </label>
-        </div>
-
-        <button
-          type='submit'
-          className='h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 sm:col-span-2 lg:col-span-1'
-        >
-          Apply Filters
-        </button>
-      </form>
+      <TalentFilters
+        basePath="/recruiter/talent"
+        initialParams={initialParams}
+        skillMin={skillMin}
+        verifiedOnly={verifiedOnly}
+      />
 
       {/* Results table */}
-      <div className='overflow-x-auto rounded-md border'>
+      <div className="overflow-x-auto rounded-md border">
         <TalentTable
           rows={rows}
           sort={sort}
           order={order as 'asc' | 'desc'}
-          basePath='/recruiter/talent'
-          initialParams={initialParams}
+          basePath="/recruiter/talent"
+          initialParams={{ ...initialParams, skillMin: String(skillMin), verifiedOnly: verifiedOnly ? '1' : '' }}
           searchQuery={searchTerm}
         />
       </div>
@@ -143,8 +107,8 @@ export default async function TalentSearchPage({
       <TablePagination
         page={page}
         hasNext={hasNext}
-        basePath='/recruiter/talent'
-        initialParams={initialParams}
+        basePath="/recruiter/talent"
+        initialParams={{ ...initialParams, skillMin: String(skillMin), verifiedOnly: verifiedOnly ? '1' : '' }}
         pageSize={pageSize}
       />
     </section>
