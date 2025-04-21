@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/tables/table"
 
 /* -------------------------------------------------------------------------- */
-/*                              P U B L I C  T Y P E S                        */
+/*                                P U B L I C                                 */
 /* -------------------------------------------------------------------------- */
 
 export interface Column<T extends Record<string, any>> {
@@ -67,8 +67,14 @@ export interface BulkAction<T extends Record<string, any>> {
 interface DataTableProps<T extends Record<string, any>> {
   columns: Column<T>[]
   rows: T[]
+  /** Column key to use for the filter search input (optional). */
   filterKey?: keyof T
+  /** Bulk‑selection actions (optional). */
   bulkActions?: BulkAction<T>[]
+  /** Initial page size – defaults to 10. */
+  pageSize?: number
+  /** Page‑size options shown in selector – defaults to [10, 20, 50]. */
+  pageSizeOptions?: number[]
 }
 
 /* -------------------------------------------------------------------------- */
@@ -133,6 +139,8 @@ export function DataTable<T extends Record<string, any>>({
   rows,
   filterKey,
   bulkActions = [],
+  pageSize = 10,
+  pageSizeOptions = [10, 20, 50],
 }: DataTableProps<T>) {
   const includeSelection = bulkActions.length > 0
 
@@ -142,7 +150,12 @@ export function DataTable<T extends Record<string, any>>({
     React.useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize,
+  })
 
+  /* --------------------------- Column definitions -------------------------- */
   const columnDefs = React.useMemo<ColumnDef<T>[]>(() => {
     const base = buildColumnDefs(columns)
 
@@ -171,41 +184,53 @@ export function DataTable<T extends Record<string, any>>({
       ),
       enableSorting: false,
       enableHiding: false,
+      size: 48,
+      maxSize: 48,
     }
     return [selectCol, ...base]
   }, [columns, includeSelection])
 
+  /* --------------------------------- Table --------------------------------- */
   const table = useReactTable({
     data: rows,
     columns: columnDefs,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    state: { columnVisibility, columnFilters, rowSelection, sorting, pagination },
     onColumnVisibilityChange: setColumnVisibility,
     onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
-    state: { columnVisibility, columnFilters, rowSelection, sorting },
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    autoResetPageIndex: false,
   })
 
+  /* --------------------------- Derived helpers ----------------------------- */
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const selectedCount = selectedRows.length
   const selectedOriginals = React.useMemo(
     () => selectedRows.map((r) => r.original),
     [selectedRows],
   )
+  const pageIndex = table.getState().pagination.pageIndex
+  const pageCount = table.getPageCount()
 
   const filterColumn = React.useMemo(() => {
     return filterKey ? table.getColumn(filterKey as string) : undefined
   }, [table, filterKey])
 
+  /* ------------------------------------------------------------------------ */
+  /*                                  UI                                     */
+  /* ------------------------------------------------------------------------ */
   return (
     <div className="w-full overflow-x-auto">
       {(filterKey ||
         table.getAllColumns().some((c) => c.getCanHide()) ||
         bulkActions.length > 0) && (
         <div className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center">
+          {/* Filter input */}
           {filterKey && (
             <Input
               placeholder={`Filter ${String(filterKey)}…`}
@@ -215,6 +240,7 @@ export function DataTable<T extends Record<string, any>>({
             />
           )}
 
+          {/* Bulk‑actions */}
           {bulkActions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -266,6 +292,7 @@ export function DataTable<T extends Record<string, any>>({
             </DropdownMenu>
           )}
 
+          {/* Column‑visibility */}
           {table.getAllColumns().some((c) => c.getCanHide()) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -296,6 +323,7 @@ export function DataTable<T extends Record<string, any>>({
         </div>
       )}
 
+      {/* ----------------------------- Table body ----------------------------- */}
       <div className="rounded-md border">
         <Table className="w-full table-auto">
           <TableHeader>
@@ -348,11 +376,31 @@ export function DataTable<T extends Record<string, any>>({
         </Table>
       </div>
 
+      {/* ---------------------------- Pagination ----------------------------- */}
       <div className="flex flex-col items-center justify-between gap-2 py-4 sm:flex-row">
-        <span className="text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           {selectedCount} of {table.getFilteredRowModel().rows.length} row(s) selected.
-        </span>
-        <div className="space-x-2">
+          <span className="hidden sm:inline">•</span>
+          <span className="hidden sm:inline">
+            Page {pageIndex + 1} of {pageCount}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Page‑size selector */}
+          <select
+            value={table.getState().pagination.pageSize}
+            onChange={(e) => table.setPageSize(Number(e.target.value))}
+            className="h-8 rounded-md border px-2 text-sm"
+          >
+            {pageSizeOptions.map((sz) => (
+              <option key={sz} value={sz}>
+                {sz} / page
+              </option>
+            ))}
+          </select>
+
+          {/* Prev / Next */}
           <Button
             variant="outline"
             size="sm"

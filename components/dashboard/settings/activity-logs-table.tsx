@@ -81,7 +81,6 @@ export interface RowType {
 /* -------------------------------------------------------------------------- */
 
 export default function ActivityLogsTable({ rows }: { rows: RowType[] }) {
-  /* Columns definition */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     return [
       {
@@ -89,11 +88,12 @@ export default function ActivityLogsTable({ rows }: { rows: RowType[] }) {
         header: '',
         enableHiding: false,
         sortable: false,
+        className: 'w-[40px]', // fixed narrow width
         render: (_v, row) => {
           const Icon = iconMap[row.type] || Settings
           return (
-            <div className='dark:bg-muted rounded-full bg-orange-100 p-2'>
-              <Icon className='dark:text-muted-foreground h-5 w-5 text-orange-500' />
+            <div className='dark:bg-muted flex h-8 w-8 items-center justify-center rounded-full bg-orange-100'>
+              <Icon className='dark:text-muted-foreground h-4 w-4 text-orange-500' />
             </div>
           )
         },
@@ -123,5 +123,5 @@ export default function ActivityLogsTable({ rows }: { rows: RowType[] }) {
     ]
   }, [])
 
-  return <DataTable columns={columns} rows={rows} />
+  return <DataTable columns={columns} rows={rows} pageSize={10} />
 }
