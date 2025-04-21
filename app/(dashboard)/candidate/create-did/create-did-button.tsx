@@ -29,7 +29,7 @@ export function CreateDidButton() {
   })
 
   /* keep the toast id so we can update it later */
-  const toastId = React.useRef<string | number>()
+  const toastId = React.useRef<string | number | undefined>(undefined)
 
   /* click → show loading toast then trigger server action */
   function handleClick() {
