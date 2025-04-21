@@ -23,9 +23,7 @@ import {
 } from '@/components/ui/dialog'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 
-import {
-  deleteUserAction,
-} from '@/app/(dashboard)/admin/users/actions'
+import { deleteUserAction } from '@/app/(dashboard)/admin/users/actions'
 import EditUserForm from '@/app/(dashboard)/admin/users/edit-user-form'
 
 export interface RowType {
@@ -139,6 +137,12 @@ function RowActions({ row }: { row: RowType }) {
 /* -------------------------------------------------------------------------- */
 
 const columns: Column<RowType>[] = [
+  {
+    key: 'name',
+    header: 'Name',
+    sortable: true,
+    render: (v) => <>{(v as string) || '—'}</>,
+  },
   {
     key: 'email',
     header: 'Email',
