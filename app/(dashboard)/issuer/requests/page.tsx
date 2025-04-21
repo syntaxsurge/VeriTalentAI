@@ -1,18 +1,13 @@
 import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
-import { AlertCircle } from 'lucide-react'
-
-import IssuerRequestsTable, {
-  type RowType,
-} from '@/components/dashboard/issuer/requests-table'
+import IssuerRequestsTable, { type RowType } from '@/components/dashboard/issuer/requests-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { issuers } from '@/lib/db/schema/issuer'
 import { getIssuerRequestsPage } from '@/lib/db/queries/issuer-requests'
-import { CredentialStatus } from '@/lib/db/schema/viskify'
-import { TablePagination } from '@/components/ui/tables/table-pagination'
 
 export const revalidate = 0
 
@@ -90,36 +85,29 @@ export default async function RequestsPage({
     <section className='flex-1 space-y-6'>
       <h2 className='text-xl font-semibold'>Verification Requests</h2>
 
-      {rows.length === 0 ? (
-        <div className='text-muted-foreground flex flex-col items-center gap-2 text-center'>
-          <AlertCircle className='h-8 w-8' />
-          <p>No verification requests found.</p>
-        </div>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Requests Overview</CardTitle>
-          </CardHeader>
-          <CardContent className='overflow-x-auto'>
-            <IssuerRequestsTable
-              rows={rows}
-              sort={sort}
-              order={order as 'asc' | 'desc'}
-              basePath={BASE_PATH}
-              initialParams={initialParams}
-              searchQuery={searchTerm}
-            />
+      <Card>
+        <CardHeader>
+          <CardTitle>Requests Overview</CardTitle>
+        </CardHeader>
+        <CardContent className='overflow-x-auto'>
+          <IssuerRequestsTable
+            rows={rows}
+            sort={sort}
+            order={order as 'asc' | 'desc'}
+            basePath={BASE_PATH}
+            initialParams={initialParams}
+            searchQuery={searchTerm}
+          />
 
-            <TablePagination
-              page={page}
-              hasNext={hasNext}
-              basePath={BASE_PATH}
-              initialParams={initialParams}
-              pageSize={pageSize}
-            />
-          </CardContent>
-        </Card>
-      )}
+          <TablePagination
+            page={page}
+            hasNext={hasNext}
+            basePath={BASE_PATH}
+            initialParams={initialParams}
+            pageSize={pageSize}
+          />
+        </CardContent>
+      </Card>
     </section>
   )
 }
