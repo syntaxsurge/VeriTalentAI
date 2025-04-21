@@ -29,6 +29,9 @@ interface Props {
 export default function UpdateDidForm({ defaultDid }: Props) {
   const initial: State = { error: '', success: '', did: '' }
 
+  /* Direct ref so we can imperatively overwrite the input value */
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
   /* Separate hooks so each button maintains its own pending state */
   const [saveState, saveAction, saving] = useActionState<State, FormData>(
     upsertPlatformDidAction,
@@ -39,15 +42,17 @@ export default function UpdateDidForm({ defaultDid }: Props) {
     initial,
   )
 
-  /* ------------------------ toast effects ------------------------ */
+  /* ------------------------ toast + input updates ------------------------ */
   React.useEffect(() => {
     if (saveState.error) toast.error(saveState.error)
     if (saveState.success) toast.success(saveState.success)
+    if (saveState.did && inputRef.current) inputRef.current.value = saveState.did
   }, [saveState])
 
   React.useEffect(() => {
     if (genState.error) toast.error(genState.error)
     if (genState.success) toast.success(genState.success)
+    if (genState.did && inputRef.current) inputRef.current.value = genState.did
   }, [genState])
 
   /* ------------------------ handlers ----------------------------- */
@@ -61,9 +66,6 @@ export default function UpdateDidForm({ defaultDid }: Props) {
     startTransition(() => genAction(new FormData()))
   }
 
-  /* Prefer newest DID from either action */
-  const currentDid = genState.did || saveState.did
-
   /* ------------------------- JSX ------------------------------ */
   return (
     <div className='space-y-6'>
@@ -74,6 +76,7 @@ export default function UpdateDidForm({ defaultDid }: Props) {
           <Input
             id='did'
             name='did'
+            ref={inputRef}
             placeholder='did:cheqd:testnet:xxxx'
             defaultValue={defaultDid ?? ''}
             required
@@ -119,13 +122,6 @@ export default function UpdateDidForm({ defaultDid }: Props) {
           </>
         )}
       </Button>
-
-      {/* Current DID display (post‑update) */}
-      {currentDid && !(saveState.error || genState.error) && (
-        <p className='break-all rounded-md bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'>
-          Current DID:&nbsp;<strong>{currentDid}</strong>
-        </p>
-      )}
     </div>
   )
 }
