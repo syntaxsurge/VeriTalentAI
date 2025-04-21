@@ -2,10 +2,15 @@
 
 import fs from 'fs/promises'
 import path from 'path'
+import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { createCheqdDID } from '@/lib/cheqd'
+
+/* -------------------------------------------------------------------------- */
+/*                               .env HELPERS                                 */
+/* -------------------------------------------------------------------------- */
 
 const ENV_PATH = path.resolve(process.cwd(), '.env')
 
@@ -14,7 +19,7 @@ async function upsertEnv(key: string, value: string) {
   try {
     contents = await fs.readFile(ENV_PATH, 'utf8')
   } catch {
-    /* .env does not exist yet – will create */
+    /* .env may not exist yet – will create */
   }
 
   const lines = contents.split('\n')
@@ -34,22 +39,46 @@ async function upsertEnv(key: string, value: string) {
   await fs.writeFile(ENV_PATH, newLines.join('\n'), 'utf8')
 }
 
-export const generatePlatformDidAction = validatedActionWithUser(
-  z.object({}),
-  async (_data, _form, user) => {
+/* -------------------------------------------------------------------------- */
+/*                               A C T I O N                                  */
+/* -------------------------------------------------------------------------- */
+
+const schema = z.object({
+  /** Optional DID – when absent we auto‑generate */
+  did: z
+    .string()
+    .trim()
+    .optional()
+    .refine((v) => !v || /^did:[a-z0-9]+:[^\s]+$/i.test(v), {
+      message: 'Invalid DID format.',
+    }),
+})
+
+export const upsertPlatformDidAction = validatedActionWithUser(
+  schema,
+  async ({ did }, _formData, user) => {
     if (user.role !== 'admin') return { error: 'Unauthorized.' }
 
-    if (process.env.PLATFORM_ISSUER_DID) {
-      return { error: 'PLATFORM_ISSUER_DID already exists.' }
+    let newDid = did?.trim()
+
+    /* Create via cheqd when no DID provided */
+    if (!newDid) {
+      try {
+        const res = await createCheqdDID()
+        newDid = res.did
+      } catch (err: any) {
+        return { error: `Failed to generate DID: ${String(err)}` }
+      }
     }
 
     try {
-      const { did } = await createCheqdDID()
-      await upsertEnv('PLATFORM_ISSUER_DID', did)
-      process.env.PLATFORM_ISSUER_DID = did
-      return { success: 'Platform DID generated and saved.', did }
+      await upsertEnv('PLATFORM_ISSUER_DID', newDid!)
+      process.env.PLATFORM_ISSUER_DID = newDid!
     } catch (err: any) {
-      return { error: String(err) }
+      return { error: `Failed to update .env: ${String(err)}` }
     }
+
+    revalidatePath('/admin/platform-did')
+    return { success: 'Platform DID updated.', did: newDid }
   },
 )

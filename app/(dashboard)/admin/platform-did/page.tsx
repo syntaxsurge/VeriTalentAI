@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { getUser } from '@/lib/db/queries'
-import { GenerateDidButton } from './generate-did-button'
+import UpdateDidForm from './update-did-form'
 
 export const revalidate = 0
 
@@ -10,23 +10,18 @@ export default async function PlatformDidPage() {
   if (!user) redirect('/sign-in')
   if (user.role !== 'admin') redirect('/dashboard')
 
-  const existing = process.env.PLATFORM_ISSUER_DID
+  const existingDid = process.env.PLATFORM_ISSUER_DID ?? null
 
   return (
     <section className='max-w-xl space-y-6'>
-      <h2 className='text-2xl font-semibold'>Platform DID</h2>
+      <h2 className='text-2xl font-semibold'>Platform Decentralized Identifier (DID)</h2>
 
-      {existing ? (
-        <p className='break-all rounded-md bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'>
-          Current DID:&nbsp;<strong>{existing}</strong>
-        </p>
-      ) : (
-        <p className='text-muted-foreground text-sm'>
-          No platform DID found. Generate one below.
-        </p>
-      )}
+      <p className='text-muted-foreground text-sm'>
+        Viskify uses this DID when the platform itself acts as an issuer. You can paste an
+        existing DID or let the system generate a fresh one.
+      </p>
 
-      {!existing && <GenerateDidButton />}
+      <UpdateDidForm defaultDid={existingDid} />
     </section>
   )
 }
