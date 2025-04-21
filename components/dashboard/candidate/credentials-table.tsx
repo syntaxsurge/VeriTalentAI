@@ -67,8 +67,16 @@ function buildLink(
 }
 
 const ViewIcon = (props: LucideProps) => (
-  <FileText {...props} className='mr-2 h-4 w-4 text-sky-600 dark:text-sky-400' />
+  <FileText {...props} className="mr-2 h-4 w-4 text-sky-600 dark:text-sky-400" />
 )
+
+/* Status → text‑color map (handles lowercase values returned by the DB) */
+const STATUS_COLOR: Record<string, string> = {
+  verified: 'text-emerald-600',
+  pending: 'text-amber-600',
+  rejected: 'text-rose-600',
+  unverified: 'text-muted-foreground',
+}
 
 /* -------------------------------------------------------------------------- */
 /*                               Row actions                                  */
@@ -95,26 +103,26 @@ function RowActions({ row }: { row: RowType }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
+        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
           {isPending ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <MoreHorizontal className='h-4 w-4' />
+            <MoreHorizontal className="h-4 w-4" />
           )}
-          <span className='sr-only'>Open menu</span>
+          <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
+      <DropdownMenuContent align="end" className="rounded-md p-1 shadow-lg">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
         {row.fileUrl && (
           <DropdownMenuItem asChild>
             <a
               href={row.fileUrl}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='flex cursor-pointer items-center'
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex cursor-pointer items-center"
             >
               <ViewIcon />
               View file
@@ -127,9 +135,9 @@ function RowActions({ row }: { row: RowType }) {
         <DropdownMenuItem
           onClick={destroy}
           disabled={isPending}
-          className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
+          className="cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400"
         >
-          <Trash2 className='mr-2 h-4 w-4' />
+          <Trash2 className="mr-2 h-4 w-4" />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -205,8 +213,8 @@ export default function CandidateCredentialsTable({
       q: search,
     })
     return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
+      <Link href={href} scroll={false} className="flex items-center gap-1">
+        {label} <ArrowUpDown className="h-4 w-4" />
       </Link>
     )
   }
@@ -217,7 +225,7 @@ export default function CandidateCredentialsTable({
         key: 'title',
         header: sortHeader('Title', 'title'),
         sortable: false,
-        render: (v) => <span className='font-medium'>{v as string}</span>,
+        render: (v) => <span className="font-medium">{v as string}</span>,
       },
       {
         key: 'type',
@@ -238,16 +246,9 @@ export default function CandidateCredentialsTable({
         sortable: false,
         className: 'capitalize',
         render: (v) => {
-          const s = v as string
-          const cls =
-            s === 'VERIFIED'
-              ? 'text-emerald-600'
-              : s === 'PENDING'
-                ? 'text-amber-600'
-                : s === 'REJECTED'
-                  ? 'text-rose-600'
-                  : 'text-muted-foreground'
-          return <span className={cls}>{s.toLowerCase()}</span>
+          const s = String(v).toLowerCase()
+          const cls = STATUS_COLOR[s] ?? 'text-muted-foreground'
+          return <span className={cls}>{s}</span>
         },
       },
       {
@@ -265,7 +266,7 @@ export default function CandidateCredentialsTable({
     <DataTable
       columns={columns}
       rows={rows}
-      filterKey='title'
+      filterKey="title"
       filterValue={search}
       onFilterChange={handleSearchChange}
       bulkActions={bulkActions}
