@@ -1,3 +1,5 @@
+// 'use server'
+
 'use server'
 
 import { and, eq } from 'drizzle-orm'
@@ -9,10 +11,11 @@ import { teams, teamMembers } from '@/lib/db/schema'
 
 /**
  * Create a DID for the caller’s team.
- * – Only team owners may run this action.
- * – If a DID already exists, it is returned and no new DID is created.
+ * — Only team owners may run this action.
+ * — If a DID already exists, return an error instead of the DID string.
+ * — On success, return a generic success message (no DID leak).
  */
-export async function createDidAction() {
+export async function createDidAction(): Promise<{ success?: string; error?: string }> {
   /* ------------------------------------------------------------ */
   /*                      A U T H E N T I C A T E                  */
   /* ------------------------------------------------------------ */
@@ -51,9 +54,9 @@ export async function createDidAction() {
     return { error: 'Team not found.' }
   }
 
-  /* If a DID is already set, return it without creating a new one */
+  /* If a DID is already set, disallow creation */
   if (team.did) {
-    return { did: team.did }
+    return { error: 'Your team already has a DID. You cannot create another one.' }
   }
 
   /* ------------------------------------------------------------ */
@@ -62,7 +65,7 @@ export async function createDidAction() {
   try {
     const { did } = await createCheqdDID()
     await db.update(teams).set({ did }).where(eq(teams.id, team.id))
-    return { did }
+    return { success: 'Team DID created successfully.' }
   } catch (err: any) {
     return { error: `Error creating DID: ${String(err)}` }
   }
