@@ -76,6 +76,10 @@ export function TablePagination({
     window.location.href = link(num)
   }
 
+  /* Determine disabled states once to keep JSX readable */
+  const prevDisabled = page <= 1
+  const nextDisabled = !hasNext
+
   return (
     <div className='flex flex-col items-center justify-between gap-3 py-4 sm:flex-row'>
       <span className='text-sm text-muted-foreground'>Page {page}</span>
@@ -100,15 +104,15 @@ export function TablePagination({
         </select>
 
         {/* Previous */}
-        <Button
-          asChild
-          variant='outline'
-          size='sm'
-          disabled={page <= 1}
-          aria-disabled={page <= 1}
-        >
-          <Link href={page <= 1 ? '#' : link(page - 1)}>Previous</Link>
-        </Button>
+        {prevDisabled ? (
+          <Button variant='outline' size='sm' disabled>
+            Previous
+          </Button>
+        ) : (
+          <Button asChild variant='outline' size='sm'>
+            <Link href={link(page - 1)}>Previous</Link>
+          </Button>
+        )}
 
         {/* Page numbers */}
         {pages.map((p, idx) =>
@@ -125,7 +129,7 @@ export function TablePagination({
           ) : (
             <Button
               key={p}
-              asChild
+              asChild={!prevDisabled && !nextDisabled}
               variant={p === page ? 'default' : 'outline'}
               size='sm'
               className='h-8 w-8 p-0'
@@ -136,15 +140,15 @@ export function TablePagination({
         )}
 
         {/* Next */}
-        <Button
-          asChild
-          variant='outline'
-          size='sm'
-          disabled={!hasNext}
-          aria-disabled={!hasNext}
-        >
-          <Link href={hasNext ? link(page + 1) : '#'}>Next</Link>
-        </Button>
+        {nextDisabled ? (
+          <Button variant='outline' size='sm' disabled>
+            Next
+          </Button>
+        ) : (
+          <Button asChild variant='outline' size='sm'>
+            <Link href={link(page + 1)}>Next</Link>
+          </Button>
+        )}
       </div>
 
       <span className='hidden text-sm text-muted-foreground sm:inline' />
