@@ -165,7 +165,7 @@ export default function SiteHeader() {
                 {/* User card → Team Settings */}
                 <DropdownMenuItem
                   asChild
-                  className='flex select-none cursor-pointer flex-col items-start gap-1 rounded-md px-3 py-2 text-left focus:bg-muted'
+                  className='flex select-none cursor-pointer flex-col items-start gap-1 rounded-md px-3 py-2 text-left data-[highlighted]:bg-muted data-[highlighted]:text-foreground'
                 >
                   <Link href='/settings/team' className='w-full'>
                     <p className='truncate text-sm font-medium'>
@@ -201,7 +201,7 @@ export default function SiteHeader() {
 
                 <form action={handleSignOut} className='w-full'>
                   <button type='submit' className='w-full'>
-                    <DropdownMenuItem className='flex items-center gap-2 rounded-md px-3 py-2 text-foreground hover:bg-muted/40 focus:bg-muted/40'>
+                    <DropdownMenuItem className='flex items-center gap-2 rounded-md px-3 py-2 data-[highlighted]:bg-muted data-[highlighted]:text-foreground'>
                       <LogOut className='h-4 w-4' />
                       <span className='text-sm'>Sign out</span>
                     </DropdownMenuItem>
