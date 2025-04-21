@@ -32,16 +32,11 @@ export default function UpdateDidForm({ defaultDid }: Props) {
     { error: '', success: '', did: '' },
   )
 
-  /* Deduplicated toast feedback */
-  const toastId = React.useRef('platform-did-update')
+  /* Show a fresh toast on every state change (even when the message is identical) */
   React.useEffect(() => {
-    if (state.error) {
-      toast.error(state.error, { id: toastId.current })
-    }
-    if (state.success) {
-      toast.success(state.success, { id: toastId.current })
-    }
-  }, [state.error, state.success])
+    if (state.error) toast.error(state.error)
+    if (state.success) toast.success(state.success)
+  }, [state])
 
   /* ------------------------ handlers -------------------------- */
 
