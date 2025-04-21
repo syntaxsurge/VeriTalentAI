@@ -1,4 +1,4 @@
-import { asc, desc, eq, ilike, or } from 'drizzle-orm'
+import { asc, desc, eq, ilike, or, and } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import {
