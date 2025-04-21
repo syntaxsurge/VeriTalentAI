@@ -18,8 +18,6 @@ import {
   Tag,
 } from 'lucide-react'
 
-import { Toaster } from 'sonner'
-
 import { SidebarNav, type SidebarNavItem } from '@/components/dashboard/sidebar-nav'
 import { Button } from '@/components/ui/button'
 import { useUser } from '@/lib/auth'
@@ -164,52 +162,31 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   /* --------------------------- Template --------------------------- */
   return (
-    <>
-      {/* Toast provider with unified modern styling */}
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          classNames: {
-            toast:
-              'pointer-events-auto relative flex w-[360px] items-start overflow-hidden rounded-lg border bg-white/90 dark:bg-zinc-900/90 shadow-lg ring-1 ring-border/50 backdrop-blur-md',
-            title: 'font-semibold text-foreground',
-            description: 'text-sm text-muted-foreground',
-            actionButton:
-              'inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground shadow hover:bg-primary/90',
-            cancelButton:
-              'inline-flex h-8 items-center justify-center rounded-md border px-3 text-sm font-medium hover:bg-muted',
-            closeButton:
-              'p-1 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-          },
-        }}
-      />
+    <div className="mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl">
+      {/* Desktop sidebar */}
+      <aside className="sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-sm ring-1 ring-border/30 lg:block">
+        <SidebarContent />
+      </aside>
 
-      <div className="mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl">
-        {/* Desktop sidebar */}
-        <aside className="sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-sm ring-1 ring-border/30 lg:block">
-          <SidebarContent />
-        </aside>
-
-        {/* Mobile & content wrapper */}
-        <div className="flex min-w-0 flex-1 flex-col">
-          {/* Mobile header */}
-          <div className="sticky top-16 z-20 flex items-center justify-between border-b bg-background p-4 lg:hidden">
-            <span className="font-medium capitalize">{user?.role ?? 'Dashboard'}</span>
-            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen((p) => !p)}>
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Toggle sidebar</span>
-            </Button>
-          </div>
-
-          {sidebarOpen && (
-            <aside className="fixed top-16 z-40 h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-md ring-1 ring-border/30 lg:hidden">
-              <SidebarContent />
-            </aside>
-          )}
-
-          <main className="flex-1 overflow-y-auto p-4">{children}</main>
+      {/* Mobile & content wrapper */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Mobile header */}
+        <div className="sticky top-16 z-20 flex items-center justify-between border-b bg-background p-4 lg:hidden">
+          <span className="font-medium capitalize">{user?.role ?? 'Dashboard'}</span>
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen((p) => !p)}>
+            <Menu className="h-6 w-6" />
+            <span className="sr-only">Toggle sidebar</span>
+          </Button>
         </div>
+
+        {sidebarOpen && (
+          <aside className="fixed top-16 z-40 h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-md ring-1 ring-border/30 lg:hidden">
+            <SidebarContent />
+          </aside>
+        )}
+
+        <main className="flex-1 overflow-y-auto p-4">{children}</main>
       </div>
-    </>
+    </div>
   )
 }
