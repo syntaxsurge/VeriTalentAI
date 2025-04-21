@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import { skillQuizzes } from '@/lib/db/schema/viskify'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import { DidRequiredModal } from '@/components/dashboard/candidate/did-required-modal'

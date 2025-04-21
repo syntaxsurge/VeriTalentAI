@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 
 import Stripe from 'stripe'
 
-import { getTeamByStripeCustomerId, getUser, updateTeamSubscription } from '@/lib/db/queries'
+import { getTeamByStripeCustomerId, getUser, updateTeamSubscription } from '@/lib/db/queries/queries'
 import { Team } from '@/lib/db/schema'
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {

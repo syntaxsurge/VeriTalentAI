@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { and, eq } from 'drizzle-orm'
 
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import { db } from '@/lib/db/drizzle'
 import { invitations } from '@/lib/db/schema'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'

@@ -10,7 +10,7 @@ import { z } from 'zod'
 import { validatedAction, validatedActionWithUser } from '@/lib/auth/middleware'
 import { comparePasswords, hashPassword, setSession } from '@/lib/auth/session'
 import { db } from '@/lib/db/drizzle'
-import { getUser, getUserWithTeam } from '@/lib/db/queries'
+import { getUser, getUserWithTeam } from '@/lib/db/queries/queries'
 import {
   User,
   users,

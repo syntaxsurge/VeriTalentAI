@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 
 import GeneralForm from './general-form'
 

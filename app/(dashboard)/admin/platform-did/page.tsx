@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import UpdateDidForm from './update-did-form'
 
 export const revalidate = 0

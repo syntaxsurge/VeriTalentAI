@@ -15,7 +15,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import { cn } from '@/lib/utils'
 

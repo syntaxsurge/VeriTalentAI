@@ -4,8 +4,8 @@ import { desc, and, eq, isNull } from 'drizzle-orm'
 
 import { verifyToken } from '@/lib/auth/session'
 
-import { db } from './drizzle'
-import { activityLogs, teamMembers, teams, users } from './schema'
+import { db } from '../drizzle'
+import { activityLogs, teamMembers, teams, users } from '../schema'
 
 export async function getUser() {
   const sessionCookie = (await cookies()).get('session')

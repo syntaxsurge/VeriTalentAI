@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import { candidates } from '@/lib/db/schema/viskify'
 
 import ProfileForm from './profile-form'

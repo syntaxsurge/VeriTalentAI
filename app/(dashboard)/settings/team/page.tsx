@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
-import { getUser, getTeamForUser } from '@/lib/db/queries'
+import { getUser, getTeamForUser } from '@/lib/db/queries/queries'
 import { db } from '@/lib/db/drizzle'
 import { teams } from '@/lib/db/schema/core'
 

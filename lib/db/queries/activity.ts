@@ -1,6 +1,6 @@
 import { eq, asc, desc, and, or, ilike } from 'drizzle-orm'
-import { db } from './drizzle'
-import { activityLogs } from './schema/core'
+import { db } from '../drizzle'
+import { activityLogs } from '../schema/core'
 
 export type ActivityLogRow = typeof activityLogs.$inferSelect
 

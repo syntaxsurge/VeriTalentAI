@@ -7,7 +7,7 @@ import { Toaster } from 'sonner'
 
 import { ThemeProvider } from '@/components/theme-provider'
 import { UserProvider } from '@/lib/auth'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import type { Metadata, Viewport } from 'next'
 
 export const metadata: Metadata = {

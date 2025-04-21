@@ -21,7 +21,7 @@ import IssuerCharts from '@/components/dashboard/issuer/charts'
 import AdminCharts from '@/components/dashboard/admin/charts'
 
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import { users, teams } from '@/lib/db/schema/core'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'

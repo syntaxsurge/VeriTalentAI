@@ -6,7 +6,7 @@ import { eq, and } from 'drizzle-orm'
 import AddToPipelineForm from './add-to-pipeline-form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import { users } from '@/lib/db/schema/core'
 import { recruiterPipelines } from '@/lib/db/schema/recruiter'
 import {

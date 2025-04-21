@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import { db } from '@/lib/db/drizzle'
 import {
   issuers as issuersTable,

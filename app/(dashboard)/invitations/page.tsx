@@ -6,7 +6,7 @@ import { AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import InvitationsTable, { RowType } from '@/components/dashboard/invitations-table'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import { invitations, teams, users as usersTable } from '@/lib/db/schema'
 
 export const revalidate = 0

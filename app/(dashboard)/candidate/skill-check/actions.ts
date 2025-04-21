@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 
 import { issueCredential } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import {
   quizAttempts,
   skillQuizzes,

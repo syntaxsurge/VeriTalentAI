@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { getUser } from '@/lib/db/queries'
-import { getActivityLogsPage } from '@/lib/db/activity'
+import { getUser } from '@/lib/db/queries/queries'
+import { getActivityLogsPage } from '@/lib/db/queries/activity'
 import { ActivityType } from '@/lib/db/schema'
 
 import ActivityLogsTable, { RowType } from '@/components/dashboard/settings/activity-logs-table'

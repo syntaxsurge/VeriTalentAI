@@ -4,7 +4,7 @@ import { and, eq } from 'drizzle-orm'
 
 import { createCheqdDID } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
-import { getUser, getUserWithTeam } from '@/lib/db/queries'
+import { getUser, getUserWithTeam } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema'
 
 export async function createDidAction() {

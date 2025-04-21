@@ -18,7 +18,7 @@ import {
 import { db } from '@/lib/db/drizzle'
 import { teamMembers, users as usersT } from '@/lib/db/schema/core'
 import { eq, sql } from 'drizzle-orm'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 
 import { CreateDidButton } from './create-did-button'
 

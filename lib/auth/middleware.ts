@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { z } from 'zod'
 
-import { getTeamForUser, getUser } from '@/lib/db/queries'
+import { getTeamForUser, getUser } from '@/lib/db/queries/queries'
 import { TeamDataWithMembers, User } from '@/lib/db/schema'
 
 export type ActionState = {

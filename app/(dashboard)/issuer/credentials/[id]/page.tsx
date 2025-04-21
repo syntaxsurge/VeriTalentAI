@@ -11,7 +11,7 @@ import {
 import { BadgeCheck, Clock, XCircle, FileText } from 'lucide-react'
 
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 import {

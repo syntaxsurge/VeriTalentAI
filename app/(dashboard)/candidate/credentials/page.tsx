@@ -8,7 +8,7 @@ import CandidateCredentialsTable, {
   RowType,
 } from '@/components/dashboard/candidate/credentials-table'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 import { candidateCredentials as credsT, candidates as candT } from '@/lib/db/schema/viskify'
 import { issuers as issuersT } from '@/lib/db/schema/issuer'
 

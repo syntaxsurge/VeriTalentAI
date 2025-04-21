@@ -5,7 +5,7 @@ import { Check } from 'lucide-react'
 import { SubmitButton } from '@/app/(dashboard)/pricing/submit-button'
 import { Button } from '@/components/ui/button'
 import { PLAN_META } from '@/lib/constants/pricing'
-import { getUser, getTeamForUser } from '@/lib/db/queries'
+import { getUser, getTeamForUser } from '@/lib/db/queries/queries'
 import { checkoutAction } from '@/lib/payments/actions'
 import { getStripePrices, getStripeProducts } from '@/lib/payments/stripe'
 

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { getUser } from '@/lib/db/queries'
+import { getUser } from '@/lib/db/queries/queries'
 
 /**
  * /recruiter
