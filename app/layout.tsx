@@ -13,7 +13,7 @@ import type { Metadata, Viewport } from 'next'
 export const metadata: Metadata = {
   title: 'Viskify',
   description: 'AI-Assisted, Credential-Backed Hiring.',
-  icons: { icon: 'images/favicon.ico' },
+  icons: { icon: '/images/favicon.ico' }, // root‑relative path
 }
 
 export const viewport: Viewport = {
