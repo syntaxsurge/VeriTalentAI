@@ -18,8 +18,18 @@ import {
 
 export const revalidate = 0
 
-export default async function CandidateProfilePage({ params }: { params: { id: string } }) {
-  const candidateId = Number(params.id)
+type Params = { id: string }
+
+export default async function CandidateProfilePage({
+  params,
+}: {
+  params: Params | Promise<Params>
+}) {
+  /* ------------------------------------------------------------------ */
+  /*            Resolve dynamic API first — await `params`               */
+  /* ------------------------------------------------------------------ */
+  const { id } = (await params) as Params
+  const candidateId = Number(id)
 
   const user = await getUser()
   if (!user) redirect('/sign-in')
@@ -54,19 +64,22 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
     .from(quizAttempts)
     .where(and(eq(quizAttempts.candidateId, candidateId), eq(quizAttempts.pass, 1)))
 
-  /* Recruiter pipelines for add-to-pipeline form */
+  /* Recruiter pipelines for add‑to‑pipeline selector */
   const pipelines = await db
     .select({ id: recruiterPipelines.id, name: recruiterPipelines.name })
     .from(recruiterPipelines)
     .where(eq(recruiterPipelines.recruiterId, user.id))
 
+  /* ------------------------------------------------------------------ */
+  /*                                UI                                  */
+  /* ------------------------------------------------------------------ */
   return (
-    <section className='max-w-2xl space-y-6'>
-      <div className='space-y-1'>
-        <h2 className='text-2xl font-semibold'>
+    <section className="max-w-2xl space-y-6">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-semibold">
           {row.userRow?.name || row.userRow?.email || 'Unknown'}
         </h2>
-        <p className='text-muted-foreground whitespace-pre-line'>
+        <p className="whitespace-pre-line text-muted-foreground">
           {row.cand.bio || 'No bio provided.'}
         </p>
       </div>
@@ -80,19 +93,19 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
         <CardHeader>
           <CardTitle>Verified Credentials</CardTitle>
         </CardHeader>
-        <CardContent className='space-y-2 text-sm'>
+        <CardContent className="space-y-2 text-sm">
           {creds.length === 0 ? (
-            <p className='text-muted-foreground'>None.</p>
+            <p className="text-muted-foreground">None.</p>
           ) : (
             creds.map((c) => (
-              <div key={c.id} className='flex items-center justify-between'>
+              <div key={c.id} className="flex items-center justify-between">
                 <span>{c.title}</span>
                 {c.fileUrl && (
                   <a
                     href={c.fileUrl}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-primary underline'
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline"
                   >
                     View
                   </a>
@@ -108,9 +121,9 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
         <CardHeader>
           <CardTitle>Skill Passes</CardTitle>
         </CardHeader>
-        <CardContent className='space-y-2 text-sm'>
+        <CardContent className="space-y-2 text-sm">
           {passes.length === 0 ? (
-            <p className='text-muted-foreground'>None.</p>
+            <p className="text-muted-foreground">None.</p>
           ) : (
             passes.map((p) => (
               <p key={p.id}>
@@ -121,7 +134,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
         </CardContent>
       </Card>
 
-      <Link href='/recruiter/talent' className='text-sm underline'>
+      <Link href="/recruiter/talent" className="text-sm underline">
         ← Back to search
       </Link>
     </section>
