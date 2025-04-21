@@ -1,70 +1,102 @@
 import { redirect } from 'next/navigation'
-import { eq, desc } from 'drizzle-orm'
-
-import { AlertCircle } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
 import InvitationsTable, { RowType } from '@/components/dashboard/invitations-table'
-import { db } from '@/lib/db/drizzle'
+import { getInvitationsPage } from '@/lib/db/queries/invitations'
 import { getUser } from '@/lib/db/queries/queries'
-import { invitations, teams, users as usersTable } from '@/lib/db/schema'
 
 export const revalidate = 0
 
-export default async function InvitationsPage() {
+/* -------------------------------------------------------------------------- */
+/*                                   Helpers                                  */
+/* -------------------------------------------------------------------------- */
+
+type Query = Record<string, string | string[] | undefined>
+
+function first(p: Query, k: string): string | undefined {
+  const v = p[k]
+  return Array.isArray(v) ? v[0] : v
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                    Page                                    */
+/* -------------------------------------------------------------------------- */
+
+export default async function InvitationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Query> | Query
+}) {
+  const params = (await searchParams) as Query
+
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
-  /* ------------------------------------------------------------------ */
-  /* Load invitations addressed to the current user                     */
-  /* ------------------------------------------------------------------ */
-  const rows = await db
-    .select({
-      id: invitations.id,
-      teamName: teams.name,
-      role: invitations.role,
-      inviterName: usersTable.name,
-      inviterEmail: usersTable.email,
-      status: invitations.status,
-      invitedAt: invitations.invitedAt,
-    })
-    .from(invitations)
-    .leftJoin(teams, eq(invitations.teamId, teams.id))
-    .leftJoin(usersTable, eq(invitations.invitedBy, usersTable.id))
-    .where(eq(invitations.email, user.email))
-    .orderBy(desc(invitations.invitedAt))
+  /* --------------------------- Query params ------------------------------ */
+  const page = Math.max(1, Number(first(params, 'page') ?? '1'))
 
-  const tableRows: RowType[] = rows.map((r) => ({
-    id: r.id,
-    team: r.teamName || 'Unnamed Team',
-    role: r.role,
-    inviter: r.inviterName || r.inviterEmail || 'Unknown',
-    status: r.status,
-    invitedAt: r.invitedAt,
+  const sizeRaw = Number(first(params, 'size') ?? '10')
+  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
+
+  const sort = first(params, 'sort') ?? 'invitedAt'
+  const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (first(params, 'q') ?? '').trim()
+
+  /* -------------------------- Data fetching ------------------------------ */
+  const { invitations, hasNext } = await getInvitationsPage(
+    user.email,
+    page,
+    pageSize,
+    sort as 'team' | 'role' | 'inviter' | 'status' | 'invitedAt',
+    order as 'asc' | 'desc',
+    searchTerm,
+  )
+
+  const rows: RowType[] = invitations.map((inv) => ({
+    ...inv,
+    invitedAt: new Date(inv.invitedAt),
   }))
 
-  /* ------------------------------------------------------------------ */
-  /* Render                                                              */
-  /* ------------------------------------------------------------------ */
-  return (
-    <section className='flex-1'>
-      <h2 className='mb-4 text-xl font-semibold'>Team Invitations</h2>
+  /* ------------------------ Build initialParams -------------------------- */
+  const initialParams: Record<string, string> = {}
+  const add = (k: string) => {
+    const val = first(params, k)
+    if (val) initialParams[k] = val
+  }
+  add('size')
+  add('sort')
+  add('order')
+  if (searchTerm) initialParams['q'] = searchTerm
 
-      {tableRows.length === 0 ? (
-        <div className='text-muted-foreground flex flex-col items-center gap-2 text-center'>
-          <AlertCircle className='h-8 w-8' />
-          <p>No invitations.</p>
-        </div>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Invitations Overview</CardTitle>
-          </CardHeader>
-          <CardContent className='overflow-x-auto'>
-            <InvitationsTable rows={tableRows} />
-          </CardContent>
-        </Card>
-      )}
+  /* ------------------------------ View ----------------------------------- */
+  return (
+    <section className="flex-1">
+      <h2 className="mb-4 text-xl font-semibold">Team Invitations</h2>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Invitations Overview</CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <InvitationsTable
+            rows={rows}
+            sort={sort}
+            order={order as 'asc' | 'desc'}
+            basePath="/invitations"
+            initialParams={initialParams}
+            searchQuery={searchTerm}
+          />
+
+          <TablePagination
+            page={page}
+            hasNext={hasNext}
+            basePath="/invitations"
+            initialParams={initialParams}
+            pageSize={pageSize}
+          />
+        </CardContent>
+      </Card>
     </section>
   )
 }
