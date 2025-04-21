@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
 
@@ -63,6 +64,8 @@ export function TablePagination({
   pageSize,
   pageSizeOptions = [10, 20, 50],
 }: TablePaginationProps) {
+  const router = useRouter()
+
   if (page === 1 && !hasNext && pageSizeOptions.length === 0) return null
   const pages = React.useMemo(() => getPages(page, hasNext), [page, hasNext])
   const link = (p: number, extra: Record<string, any> = {}) =>
@@ -73,7 +76,7 @@ export function TablePagination({
     if (!input) return
     const num = Number(input)
     if (Number.isNaN(num) || num < 1) return
-    window.location.href = link(num)
+    router.push(link(num), { scroll: false })
   }
 
   /* Determine disabled states once to keep JSX readable */
@@ -91,10 +94,13 @@ export function TablePagination({
         <select
           value={pageSize}
           onChange={(e) =>
-            (window.location.href = buildLink(basePath, initialParams, {
-              size: Number(e.target.value),
-              page: 1,
-            }))
+            router.push(
+              buildLink(basePath, initialParams, {
+                size: Number(e.target.value),
+                page: 1,
+              }),
+              { scroll: false },
+            )
           }
           className='h-8 rounded-md border px-2 text-sm'
         >
@@ -112,7 +118,9 @@ export function TablePagination({
           </Button>
         ) : (
           <Button asChild variant='outline' size='sm'>
-            <Link href={link(page - 1)}>Previous</Link>
+            <Link href={link(page - 1)} scroll={false}>
+              Previous
+            </Link>
           </Button>
         )}
 
@@ -136,7 +144,9 @@ export function TablePagination({
               size='sm'
               className='h-8 w-8 p-0'
             >
-              <Link href={link(p)}>{p}</Link>
+              <Link href={link(p)} scroll={false}>
+                {p}
+              </Link>
             </Button>
           ),
         )}
@@ -148,7 +158,9 @@ export function TablePagination({
           </Button>
         ) : (
           <Button asChild variant='outline' size='sm'>
-            <Link href={link(page + 1)}>Next</Link>
+            <Link href={link(page + 1)} scroll={false}>
+              Next
+            </Link>
           </Button>
         )}
       </div>

@@ -279,7 +279,7 @@ export default function MembersTable({
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href)
+      router.push(href, { scroll: false })
     }, 400)
   }
 
@@ -293,7 +293,7 @@ export default function MembersTable({
       q: search,
     })
     return (
-      <Link href={href} className="flex items-center gap-1">
+      <Link href={href} scroll={false} className="flex items-center gap-1">
         {label} <ArrowUpDown className="h-4 w-4" />
       </Link>
     )
