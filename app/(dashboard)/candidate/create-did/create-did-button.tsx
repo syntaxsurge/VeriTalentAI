@@ -1,22 +1,53 @@
 'use client'
 
+import * as React from 'react'
 import { useActionState, startTransition } from 'react'
 import { Loader2, KeyRound } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
+import { Button } from '@/components/ui/button'
 import { createDidAction } from './actions'
 
-/**
- * Action button that triggers cheqd DID creation and provides
- * immediate visual feedback with modern styling.
- */
+/* -------------------------------------------------------------------------- */
+/*                               T Y P E S                                    */
+/* -------------------------------------------------------------------------- */
+
+type ActionState = {
+  did?: string
+  error?: string
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   VIEW                                     */
+/* -------------------------------------------------------------------------- */
+
 export function CreateDidButton() {
-  const [state, action, pending] = useActionState(createDidAction, {
+  /* invoke the server action and track pending state */
+  const [state, action, pending] = useActionState<ActionState, void>(createDidAction, {
     did: '',
     error: undefined,
   })
 
-  const handleClick = () => startTransition(() => action())
+  /* keep the toast id so we can update it later */
+  const toastId = React.useRef<string | number>()
+
+  /* click → show loading toast then trigger server action */
+  function handleClick() {
+    toastId.current = toast.loading('Creating DID…')
+    startTransition(() => action())
+  }
+
+  /* when state changes (success or error) → update the toast */
+  React.useEffect(() => {
+    if (!pending && toastId.current !== undefined) {
+      if (state.error) {
+        toast.error(state.error, { id: toastId.current })
+      } else if (state.did) {
+        toast.success(`DID created: ${state.did}`, { id: toastId.current })
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, pending])
 
   return (
     <div className='flex flex-col gap-2'>
@@ -25,7 +56,7 @@ export function CreateDidButton() {
         disabled={pending}
         className='group relative overflow-hidden px-6 py-3 font-semibold'
       >
-        {/* Gradient aura */}
+        {/* Gradient hover aura */}
         <span className='absolute inset-0 -z-10 rounded-md bg-gradient-to-r from-primary/80 via-primary to-primary/80 opacity-0 transition-opacity duration-300 group-hover:opacity-20' />
         {pending ? (
           <>
@@ -39,19 +70,6 @@ export function CreateDidButton() {
           </>
         )}
       </Button>
-
-      {/* Success / error messaging */}
-      {state.did && !state.error && (
-        <p className='rounded-md bg-emerald-50 p-2 text-xs text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'>
-          DID created:&nbsp;
-          <span className='break-all font-medium'>{state.did}</span>
-        </p>
-      )}
-      {state.error && (
-        <p className='rounded-md bg-rose-50 p-2 text-xs text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'>
-          {state.error}
-        </p>
-      )}
     </div>
   )
 }
