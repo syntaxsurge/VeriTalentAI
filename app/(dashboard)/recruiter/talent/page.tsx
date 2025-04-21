@@ -1,116 +1,108 @@
-import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
-import { eq } from 'drizzle-orm'
-
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { db } from '@/lib/db/drizzle'
-import { users } from '@/lib/db/schema/core'
-import { candidates, candidateCredentials, quizAttempts } from '@/lib/db/schema/viskify'
+import { getUser } from '@/lib/db/queries/queries'
+import { getTalentSearchPage } from '@/lib/db/queries/recruiter-talent'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
+import TalentTable, {
+  RowType,
+} from '@/components/dashboard/recruiter/talent-table'
 
 export const revalidate = 0
 
-/** Case-insensitive substring check */
-function includesCI(hay: string, needle: string) {
-  return hay.toLowerCase().includes(needle.toLowerCase())
+/* -------------------------------------------------------------------------- */
+/*                                   Helpers                                  */
+/* -------------------------------------------------------------------------- */
+
+type Query = Record<string, string | string[] | undefined>
+
+function getParam(params: Query, key: string): string | undefined {
+  const v = params[key]
+  return Array.isArray(v) ? v[0] : v
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                    Page                                    */
+/* -------------------------------------------------------------------------- */
 
 export default async function TalentSearchPage({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[]>
+  searchParams: Promise<Query> | Query
 }) {
-  /* ------------------------------------------------------------------ */
-  /* Query params                                                       */
-  /* ------------------------------------------------------------------ */
-  const keyword = (searchParams?.q as string) || ''
-  const verifiedOnly = searchParams?.verifiedOnly === '1'
-  const skillMin = parseInt((searchParams?.skillMin as string) || '0', 10)
+  const params = (await searchParams) as Query
 
-  /* ------------------------------------------------------------------ */
-  /* Raw candidate info                                                 */
-  /* ------------------------------------------------------------------ */
-  const baseRows = await db
-    .select({
-      candidateId: candidates.id,
-      bio: candidates.bio,
-      name: users.name,
-      email: users.email,
-    })
-    .from(candidates)
-    .leftJoin(users, eq(candidates.userId, users.id))
+  const user = await getUser()
+  if (!user) redirect('/sign-in')
+  if (user.role !== 'recruiter') redirect('/')
 
-  /* ------------------------------------------------------------------ */
-  /* Maps for verified counts & top scores                              */
-  /* ------------------------------------------------------------------ */
-  const verifiedRows = await db
-    .select({ candidateId: candidateCredentials.candidateId })
-    .from(candidateCredentials)
-    .where(eq(candidateCredentials.verified, true))
+  /* --------------------------- Query params ------------------------------ */
+  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
 
-  const verifiedMap = new Map<number, number>()
-  verifiedRows.forEach((r) =>
-    verifiedMap.set(r.candidateId, (verifiedMap.get(r.candidateId) || 0) + 1),
+  const sizeRaw = Number(getParam(params, 'size') ?? '10')
+  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
+
+  const sort = getParam(params, 'sort') ?? 'name'
+  const order = getParam(params, 'order') === 'desc' ? 'desc' : 'asc'
+
+  const searchTerm = (getParam(params, 'q') ?? '').trim()
+  const verifiedOnly = getParam(params, 'verifiedOnly') === '1'
+  const skillMin = Math.max(0, Number(getParam(params, 'skillMin') ?? '0'))
+
+  /* ---------------------------- Data fetch ------------------------------- */
+  const { candidates, hasNext } = await getTalentSearchPage(
+    page,
+    pageSize,
+    sort as 'name' | 'email' | 'id',
+    order as 'asc' | 'desc',
+    searchTerm,
+    verifiedOnly,
+    skillMin,
   )
 
-  const scoreRows = await db
-    .select({
-      candidateId: quizAttempts.candidateId,
-      score: quizAttempts.score,
-    })
-    .from(quizAttempts)
-    .where(eq(quizAttempts.pass, 1))
+  const rows: RowType[] = candidates.map((c) => ({
+    id: c.id,
+    name: c.name,
+    email: c.email,
+    bio: c.bio,
+    verified: c.verified,
+    topScore: c.topScore,
+  }))
 
-  const scoreMap = new Map<number, number>()
-  scoreRows.forEach((r) => {
-    const current = scoreMap.get(r.candidateId) ?? 0
-    if (r.score !== null && r.score > current) {
-      scoreMap.set(r.candidateId, r.score)
-    }
-  })
+  /* ------------------------ Build initialParams -------------------------- */
+  const initialParams: Record<string, string> = {}
+  const add = (k: string) => {
+    const val = getParam(params, k)
+    if (val) initialParams[k] = val
+  }
+  add('size')
+  add('sort')
+  add('order')
+  add('verifiedOnly')
+  add('skillMin')
+  if (searchTerm) initialParams['q'] = searchTerm
 
-  /* ------------------------------------------------------------------ */
-  /* Filtering                                                          */
-  /* ------------------------------------------------------------------ */
-  const results = baseRows.filter((row) => {
-    if (keyword && !includesCI(`${row.name ?? ''} ${row.email ?? ''} ${row.bio ?? ''}`, keyword))
-      return false
-
-    if (verifiedOnly && !(verifiedMap.get(row.candidateId) ?? 0)) return false
-
-    if (skillMin && (scoreMap.get(row.candidateId) ?? 0) < skillMin) return false
-
-    return true
-  })
-
-  /* ------------------------------------------------------------------ */
-  /* UI                                                                 */
-  /* ------------------------------------------------------------------ */
+  /* ------------------------------- View ---------------------------------- */
   return (
-    <section className='space-y-6'>
-      <h2 className='text-xl font-semibold'>Talent Search</h2>
+    <section className='flex-1 p-4 lg:p-8'>
+      <h1 className='mb-6 text-lg font-medium lg:text-2xl'>Talent Search</h1>
 
-      {/* Search / filter form (GET) */}
-      <form method='GET' className='grid items-end gap-4 md:grid-cols-4'>
-        <div className='col-span-2'>
-          <label htmlFor='q' className='mb-1 block text-sm font-medium'>
-            Keyword
-          </label>
-          <Input id='q' name='q' defaultValue={keyword} placeholder='Search name, email, bio…' />
-        </div>
-
+      {/* Filters */}
+      <form
+        method='GET'
+        className='mb-6 grid items-end gap-4 sm:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]'
+      >
         <div>
           <label htmlFor='skillMin' className='mb-1 block text-sm font-medium'>
             Min Skill Score
           </label>
-          <Input
+          <input
             id='skillMin'
             name='skillMin'
             type='number'
             min={0}
             max={100}
             defaultValue={skillMin || ''}
+            className='h-10 w-full rounded-md border px-2 text-sm'
           />
         </div>
 
@@ -128,40 +120,33 @@ export default async function TalentSearchPage({
           </label>
         </div>
 
-        <Button type='submit' className='w-max md:col-span-4'>
+        <button
+          type='submit'
+          className='h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 sm:col-span-2 lg:col-span-1'
+        >
           Apply Filters
-        </Button>
+        </button>
       </form>
 
-      {/* Results list */}
-      {results.length === 0 ? (
-        <p className='text-muted-foreground'>No matching candidates.</p>
-      ) : (
-        <div className='grid gap-4'>
-          {results.map((row) => {
-            const verified = verifiedMap.get(row.candidateId) ?? 0
-            const topScore = scoreMap.get(row.candidateId) ?? '—'
-            return (
-              <Card key={row.candidateId}>
-                <CardHeader>
-                  <CardTitle>{row.name || row.email}</CardTitle>
-                </CardHeader>
-                <CardContent className='text-muted-foreground space-y-1 text-sm'>
-                  <p className='line-clamp-2'>{row.bio || 'No bio provided.'}</p>
-                  <p>Verified Credentials: {verified}</p>
-                  <p>Top Skill Score: {topScore}</p>
-                  <Link
-                    href={`/recruiter/talent/${row.candidateId}`}
-                    className='text-primary underline'
-                  >
-                    View Profile
-                  </Link>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
+      {/* Results table */}
+      <div className='overflow-x-auto rounded-md border'>
+        <TalentTable
+          rows={rows}
+          sort={sort}
+          order={order as 'asc' | 'desc'}
+          basePath='/recruiter/talent'
+          initialParams={initialParams}
+          searchQuery={searchTerm}
+        />
+      </div>
+
+      <TablePagination
+        page={page}
+        hasNext={hasNext}
+        basePath='/recruiter/talent'
+        initialParams={initialParams}
+        pageSize={pageSize}
+      />
     </section>
   )
 }
