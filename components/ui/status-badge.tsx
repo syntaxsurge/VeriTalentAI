@@ -3,10 +3,10 @@
 import { cn } from '@/lib/utils'
 
 /**
- * High‑contrast badge for credential / issuer statuses that adapts to light & dark themes.
+ * High‑contrast badge for credential / issuer / invitation statuses that adapts to light & dark themes.
  *
  * Supported keys (case‑insensitive):
- *   verified · active · pending · unverified · inactive · rejected
+ *   verified · active · accepted · pending · unverified · inactive · declined · rejected
  * Any unknown value falls back to the "unverified” style but still shows the raw text.
  */
 const STYLE_MAP: Record<string, string> = {
@@ -14,12 +14,16 @@ const STYLE_MAP: Record<string, string> = {
     'bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/20 dark:text-emerald-200',
   active:
     'bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/20 dark:text-emerald-200',
+  accepted:
+    'bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/20 dark:text-emerald-200',
   pending:
     'bg-amber-500/20 text-amber-900 dark:bg-amber-400/20 dark:text-amber-200',
   unverified:
     'bg-zinc-500/15 text-zinc-800 dark:bg-zinc-500/20 dark:text-zinc-200',
   inactive:
     'bg-zinc-500/15 text-zinc-800 dark:bg-zinc-500/20 dark:text-zinc-200',
+  declined:
+    'bg-rose-600/15 text-rose-900 dark:bg-rose-500/20 dark:text-rose-200',
   rejected:
     'bg-rose-600/15 text-rose-900 dark:bg-rose-500/20 dark:text-rose-200',
 }

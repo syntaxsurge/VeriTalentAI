@@ -35,6 +35,7 @@ import {
   declineInvitationAction,
   deleteInvitationAction,
 } from '@/app/(dashboard)/invitations/actions'
+import { StatusBadge } from '@/components/ui/status-badge'
 
 /* -------------------------------------------------------------------------- */
 /*                              C O L O U R  I C O N S                        */
@@ -318,16 +319,7 @@ export default function InvitationsTable({
         key: 'status',
         header: sortableHeader('Status', 'status'),
         sortable: false,
-        render: (v) => {
-          const s = v as string
-          const cls =
-            s === 'accepted'
-              ? 'text-emerald-600'
-              : s === 'pending'
-                ? 'text-amber-600'
-                : 'text-muted-foreground'
-          return <span className={cls}>{s}</span>
-        },
+        render: (v) => <StatusBadge status={String(v)} />,
       },
       {
         key: 'invitedAt',
