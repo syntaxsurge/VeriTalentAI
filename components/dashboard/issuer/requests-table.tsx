@@ -1,12 +1,19 @@
 'use client'
 
+import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useTransition } from 'react'
-import { FileSignature, XCircle } from 'lucide-react'
+import {
+  ArrowUpDown,
+  FileSignature,
+  XCircle,
+  type LucideProps,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { Button } from '@/components/ui/button'
+
 import { rejectCredentialAction } from '@/app/(dashboard)/issuer/credentials/actions'
 import { CredentialStatus } from '@/lib/db/schema/viskify'
 
@@ -22,16 +29,44 @@ export interface RowType {
   status: CredentialStatus
 }
 
+interface Props {
+  rows: RowType[]
+  sort: string
+  order: 'asc' | 'desc'
+  basePath: string
+  initialParams: Record<string, string>
+  /** Current search term (from URL). */
+  searchQuery: string
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 Helpers                                    */
+/* -------------------------------------------------------------------------- */
+
+function buildLink(
+  basePath: string,
+  init: Record<string, string>,
+  overrides: Record<string, any>,
+) {
+  const sp = new URLSearchParams(init)
+  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
+  Array.from(sp.entries()).forEach(([k, v]) => {
+    if (v === '') sp.delete(k)
+  })
+  const qs = sp.toString()
+  return `${basePath}${qs ? `?${qs}` : ''}`
+}
+
 /* -------------------------------------------------------------------------- */
 /*                                 Icons                                      */
 /* -------------------------------------------------------------------------- */
 
-const RejectIcon = (props: any) => (
+const RejectIcon = (props: LucideProps) => (
   <XCircle {...props} className='mr-2 h-4 w-4 text-rose-600 dark:text-rose-400' />
 )
 
 /* -------------------------------------------------------------------------- */
-/*                              Row-level link                                */
+/*                           Row‑level link                                  */
 /* -------------------------------------------------------------------------- */
 
 function RowActions({ row }: { row: RowType }) {
@@ -47,52 +82,11 @@ function RowActions({ row }: { row: RowType }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                   Columns                                  */
-/* -------------------------------------------------------------------------- */
-
-const columns: Column<RowType>[] = [
-  { key: 'title', header: 'Title', sortable: true, render: (v) => v as string },
-  {
-    key: 'type',
-    header: 'Type',
-    sortable: true,
-    className: 'capitalize',
-    render: (v) => v as string,
-  },
-  { key: 'candidate', header: 'Candidate', sortable: true, render: (v) => v as string },
-  {
-    key: 'status',
-    header: 'Status',
-    sortable: true,
-    className: 'capitalize',
-    render: (v) => {
-      const s = v as CredentialStatus
-      const cls =
-        s === CredentialStatus.VERIFIED
-          ? 'text-emerald-600'
-          : s === CredentialStatus.PENDING
-            ? 'text-amber-600'
-            : s === CredentialStatus.REJECTED
-              ? 'text-rose-600'
-              : 'text-muted-foreground'
-      return <span className={cls}>{s}</span>
-    },
-  },
-  {
-    key: 'id',
-    header: '',
-    enableHiding: false,
-    sortable: false,
-    render: (_v, row) => <RowActions row={row} />,
-  },
-]
-
-/* -------------------------------------------------------------------------- */
-/*                               Bulk actions                                 */
+/*                         Bulk‑selection actions                             */
 /* -------------------------------------------------------------------------- */
 
 function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = React.useTransition()
 
   async function bulkReject(rows: RowType[]) {
     const toastId = toast.loading('Rejecting…')
@@ -124,12 +118,111 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                    View                                    */
+/*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
-export default function IssuerRequestsTable({ rows }: { rows: RowType[] }) {
+export default function IssuerRequestsTable({
+  rows,
+  sort,
+  order,
+  basePath,
+  initialParams,
+  searchQuery,
+}: Props) {
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
 
-  return <DataTable columns={columns} rows={rows} filterKey='title' bulkActions={bulkActions} />
+  /* --------------------------- Search input ----------------------------- */
+  const [search, setSearch] = React.useState(searchQuery)
+  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+
+  function handleSearchChange(value: string) {
+    setSearch(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
+      router.push(href, { scroll: false })
+    }, 400)
+  }
+
+  /* ------------------------- Sortable headers --------------------------- */
+  function sortableHeader(label: string, key: string) {
+    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
+    const href = buildLink(basePath, initialParams, {
+      sort: key,
+      order: nextOrder,
+      page: 1,
+      q: search,
+    })
+    return (
+      <Link href={href} scroll={false} className='flex items-center gap-1'>
+        {label} <ArrowUpDown className='h-4 w-4' />
+      </Link>
+    )
+  }
+
+  /* ------------------------ Column definitions -------------------------- */
+  const columns = React.useMemo<Column<RowType>[]>(() => {
+    return [
+      {
+        key: 'title',
+        header: sortableHeader('Title', 'title'),
+        sortable: false,
+        render: (v) => <span className='font-medium'>{v as string}</span>,
+      },
+      {
+        key: 'type',
+        header: sortableHeader('Type', 'type'),
+        sortable: false,
+        className: 'capitalize',
+        render: (v) => v as string,
+      },
+      {
+        key: 'candidate',
+        header: sortableHeader('Candidate', 'candidate'),
+        sortable: false,
+        render: (v) => v as string,
+      },
+      {
+        key: 'status',
+        header: sortableHeader('Status', 'status'),
+        sortable: false,
+        className: 'capitalize',
+        render: (v) => {
+          const s = v as CredentialStatus
+          const cls =
+            s === CredentialStatus.VERIFIED
+              ? 'text-emerald-600'
+              : s === CredentialStatus.PENDING
+                ? 'text-amber-600'
+                : s === CredentialStatus.REJECTED
+                  ? 'text-rose-600'
+                  : 'text-muted-foreground'
+          return <span className={cls}>{s}</span>
+        },
+      },
+      {
+        key: 'id',
+        header: '',
+        enableHiding: false,
+        sortable: false,
+        render: (_v, row) => <RowActions row={row} />,
+      },
+    ]
+  }, [sort, order, basePath, initialParams, search])
+
+  /* ----------------------------- Render ---------------------------------- */
+  return (
+    <DataTable
+      columns={columns}
+      rows={rows}
+      filterKey='title'
+      filterValue={search}
+      onFilterChange={handleSearchChange}
+      bulkActions={bulkActions}
+      pageSize={rows.length}
+      pageSizeOptions={[rows.length]}
+      hidePagination
+    />
+  )
 }
