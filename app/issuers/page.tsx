@@ -11,6 +11,7 @@ import {
   IssuerStatus,
 } from '@/lib/db/schema/issuer'
 import { db } from '@/lib/db/drizzle'
+import { ReadonlyURLSearchParams } from 'next/navigation'
 
 export const revalidate = 0
 
@@ -30,16 +31,15 @@ function prettify(text: string) {
 /*                                    PAGE                                    */
 /* -------------------------------------------------------------------------- */
 
-interface SearchParams {
-  q?: string
-  category?: string
-  industry?: string
-}
-
-export default async function IssuerDirectory({ searchParams }: { searchParams?: SearchParams }) {
-  const keyword = searchParams?.q?.trim() ?? ''
-  const category = searchParams?.category ?? 'ALL'
-  const industry = searchParams?.industry ?? 'ALL'
+export default async function IssuerDirectory({
+  searchParams,
+}: {
+  searchParams: ReadonlyURLSearchParams
+}) {
+  /* --------------------------- Parse search params --------------------------- */
+  const keyword = (searchParams.get('q') ?? '').trim()
+  const category = searchParams.get('category') ?? 'ALL'
+  const industry = searchParams.get('industry') ?? 'ALL'
 
   /* ---------------------------- Load active issuers --------------------------- */
   const rows = await db
