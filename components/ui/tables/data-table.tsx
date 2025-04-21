@@ -70,6 +70,16 @@ interface DataTableProps<T extends Record<string, any>> {
   rows: T[]
   /** Column key to use for the filter search input (optional). */
   filterKey?: keyof T
+  /**
+   * Controlled filter value (use when performing server‑side search).
+   * When omitted, filtering is handled entirely client‑side.
+   */
+  filterValue?: string
+  /**
+   * Callback for controlled filter changes (server‑side search).
+   * Called on every keystroke; debounce in the caller if needed.
+   */
+  onFilterChange?: (value: string) => void
   /** Bulk‑selection actions (optional). */
   bulkActions?: BulkAction<T>[]
   /** Initial page size – defaults to 10. */
@@ -151,6 +161,8 @@ export function DataTable<T extends Record<string, any>>({
   columns,
   rows,
   filterKey,
+  filterValue,
+  onFilterChange,
   bulkActions = [],
   pageSize = 10,
   pageSizeOptions = [10, 20, 50],
@@ -253,8 +265,15 @@ export function DataTable<T extends Record<string, any>>({
           {filterKey && (
             <Input
               placeholder={`Filter ${String(filterKey)}…`}
-              value={(filterColumn?.getFilterValue() as string | undefined) ?? ""}
-              onChange={(e) => filterColumn?.setFilterValue(e.target.value)}
+              value={
+                filterValue !== undefined
+                  ? filterValue
+                  : (filterColumn?.getFilterValue() as string | undefined) ?? ""
+              }
+              onChange={(e) => {
+                filterColumn?.setFilterValue(e.target.value)
+                onFilterChange?.(e.target.value)
+              }}
               className="max-w-sm sm:mr-auto"
             />
           )}

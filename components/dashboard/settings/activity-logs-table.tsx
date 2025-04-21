@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Settings,
   LogOut,
@@ -36,6 +37,8 @@ interface Props {
   order: 'asc' | 'desc'
   basePath: string
   initialParams: Record<string, string>
+  /** Current search term (from URL). */
+  searchQuery: string
 }
 
 /* -------------------------------------------------------------------------- */
@@ -66,6 +69,9 @@ function buildLink(
 ) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
+  Array.from(sp.entries()).forEach(([k, v]) => {
+    if (v === '') sp.delete(k) // tidy URL
+  })
   const qs = sp.toString()
   return `${basePath}${qs ? `?${qs}` : ''}`
 }
@@ -107,7 +113,22 @@ export default function ActivityLogsTable({
   order,
   basePath,
   initialParams,
+  searchQuery,
 }: Props) {
+  const router = useRouter()
+  const [search, setSearch] = React.useState<string>(searchQuery)
+  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+
+  /* Trigger navigation (server‑side search) */
+  function handleSearchChange(value: string) {
+    setSearch(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
+      router.push(href)
+    }, 400)
+  }
+
   /* Build sortable header link */
   const tsHeader = React.useMemo(() => {
     const nextOrder = sort === 'timestamp' && order === 'asc' ? 'desc' : 'asc'
@@ -115,13 +136,14 @@ export default function ActivityLogsTable({
       sort: 'timestamp',
       order: nextOrder,
       page: 1,
+      q: search,
     })
     return (
       <Link href={href} className='flex items-center gap-1'>
         When <ArrowUpDown className='h-4 w-4' />
       </Link>
     )
-  }, [basePath, initialParams, sort, order])
+  }, [basePath, initialParams, sort, order, search])
 
   const columns = React.useMemo<Column<RowType>[]>(() => {
     return [
@@ -170,6 +192,9 @@ export default function ActivityLogsTable({
     <DataTable
       columns={columns}
       rows={rows}
+      filterKey='type'
+      filterValue={search}
+      onFilterChange={handleSearchChange}
       pageSize={rows.length}
       pageSizeOptions={[rows.length]}
       hidePagination
