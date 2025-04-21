@@ -7,7 +7,7 @@ import { users, teams, teamMembers } from '../schema'
 /**
  * Seed four demo users then:
  *   • create a personal placeholder team for each (no memberships),
- *   • add every user to the shared “Test Team”, with admin as owner.
+ *   • add every user to the shared "Test Team”, with admin as owner.
  *
  * All accounts use the plaintext password: `myPassword`.
  */
@@ -29,12 +29,22 @@ export async function seedUserTeam() {
 
   /* ---------- ensure users + placeholder teams (no membership) ---------- */
   for (const { email, role } of SEED) {
+    const name = email.split('@')[0] // derive simple display name (e.g. "admin")
     let [u] = await db.select().from(users).where(eq(users.email, email)).limit(1)
+
     if (!u) {
-      ;[u] = await db.insert(users).values({ email, passwordHash, role }).returning()
-      console.log(`✅ Created user ${email}`)
+      ;[u] = await db
+        .insert(users)
+        .values({ name, email, passwordHash, role })
+        .returning()
+      console.log(`✅ Created user ${email} (${name})`)
     } else {
-      console.log(`ℹ️ User ${email} exists`)
+      if (!u.name) {
+        await db.update(users).set({ name }).where(eq(users.id, u.id))
+        console.log(`🔄 Added missing name for ${email} → ${name}`)
+      } else {
+        console.log(`ℹ️ User ${email} exists`)
+      }
     }
     ids.set(email, u.id)
 
@@ -55,7 +65,10 @@ export async function seedUserTeam() {
 
   let [shared] = await db.select().from(teams).where(eq(teams.name, sharedName)).limit(1)
   if (!shared) {
-    ;[shared] = await db.insert(teams).values({ name: sharedName, creatorUserId: adminId }).returning()
+    ;[shared] = await db
+      .insert(teams)
+      .values({ name: sharedName, creatorUserId: adminId })
+      .returning()
     console.log(`✅ Created shared team "${sharedName}"`)
   } else {
     console.log(`ℹ️ Shared team "${sharedName}" exists`)
