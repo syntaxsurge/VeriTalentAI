@@ -19,15 +19,15 @@ import {
 interface LineChartProps<D extends Record<string, any> = any> {
   /** Source array */
   data: D[]
-  /** X‑axis key */
+  /** X-axis key */
   xKey: keyof D
-  /** Y‑axis key */
+  /** Y-axis key */
   yKey: keyof D
-  /** Optional fixed Y‑domain */
+  /** Optional fixed Y-domain */
   yDomain?: [number, number]
   /** Colour / label config */
   config: ChartConfig
-  /** Optional X‑tick formatter (default: first 3 chars) */
+  /** Optional X-tick formatter (default: first 3 chars) */
   xTickFormatter?: (value: any) => string
 }
 

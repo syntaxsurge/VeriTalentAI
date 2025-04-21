@@ -17,7 +17,7 @@ interface Props {
 }
 
 /**
- * Displays pipeline selector and leverages ActionButton for add‑to‑pipeline flow.
+ * Displays pipeline selector and leverages ActionButton for add-to-pipeline flow.
  */
 export default function AddToPipelineForm({ candidateId, pipelines }: Props) {
   const router = useRouter()

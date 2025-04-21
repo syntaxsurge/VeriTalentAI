@@ -25,7 +25,7 @@ interface Quiz {
 
 /**
  * Renders a “Take Quiz” button that opens a modal for answering the quiz.
- * After submission, the AI‑graded score and message are shown with a retry option.
+ * After submission, the AI-graded score and message are shown with a retry option.
  */
 export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
   const [open, setOpen] = React.useState(false)

@@ -19,7 +19,7 @@ import {
 /* -------------------------------------------------------------------------- */
 
 function buildError(message: string, ctx?: Record<string, unknown>) {
-  if (ctx) console.error('[VC‑Issue] Context:', ctx)
+  if (ctx) console.error('[VC-Issue] Context:', ctx)
   return { error: message }
 }
 
@@ -132,7 +132,7 @@ export const approveCredentialAction = validatedActionWithUser(
       })
       .where(eq(candidateCredentials.id, cred.id))
 
-    console.info('[VC‑Issue] Credential approved & VC stored', {
+    console.info('[VC-Issue] Credential approved & VC stored', {
       credentialId,
       issuerId: issuer.id,
     })

@@ -20,7 +20,7 @@ export default async function TeamSettingsPage() {
 
   let teamData = await getTeamForUser(user.id)
 
-  /* Fallback: personal team created at sign‑up */
+  /* Fallback: personal team created at sign-up */
   if (!teamData) {
     const [personalTeam] = await db.select().from(teams).where(eq(teams.creatorUserId, user.id)).limit(1)
     if (personalTeam) {

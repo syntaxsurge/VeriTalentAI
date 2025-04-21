@@ -11,7 +11,7 @@ import { candidates, candidateCredentials, quizAttempts } from '@/lib/db/schema/
 
 export const revalidate = 0
 
-/** Case‑insensitive substring check */
+/** Case-insensitive substring check */
 function includesCI(hay: string, needle: string) {
   return hay.toLowerCase().includes(needle.toLowerCase())
 }

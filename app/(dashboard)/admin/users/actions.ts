@@ -40,7 +40,7 @@ export const updateUserAction = validatedActionWithUser(
   async ({ userId, name, email, role }, _formData, authUser) => {
     if (authUser.role !== 'admin') return { error: 'Unauthorized.' }
 
-    // prevent admins from demoting themselves mid‑session
+    // prevent admins from demoting themselves mid-session
     if (authUser.id === userId && role !== 'admin') {
       return { error: 'You cannot change your own role.' }
     }
@@ -89,7 +89,7 @@ export const deleteUserAction = validatedActionWithUser(
           .where(eq(recruiterPipelines.id, pipelineIds[0]))
       }
 
-      /* Candidate‑side clean‑up */
+      /* Candidate-side clean-up */
       const candRows = await tx
         .select({ id: candidates.id })
         .from(candidates)
@@ -104,7 +104,7 @@ export const deleteUserAction = validatedActionWithUser(
         await tx.delete(candidates).where(eq(candidates.id, candId))
       }
 
-      /* Issuer‑side clean‑up */
+      /* Issuer-side clean-up */
       const issuerRows = await tx
         .select({ id: issuers.id })
         .from(issuers)

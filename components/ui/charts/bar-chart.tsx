@@ -19,13 +19,13 @@ import {
 interface BarChartProps<D extends Record<string, any> = any> {
   /** Source data array */
   data: D[]
-  /** Categorical X‑axis key */
+  /** Categorical X-axis key */
   xKey: keyof D
-  /** Numeric Y‑axis key */
+  /** Numeric Y-axis key */
   yKey: keyof D
   /** Colour / label configuration map */
   config: ChartConfig
-  /** Optional X‑tick formatter (default: full label) */
+  /** Optional X-tick formatter (default: full label) */
   xTickFormatter?: (value: any) => string
 }
 

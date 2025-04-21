@@ -24,7 +24,7 @@ export default async function SkillCheckPage() {
       .limit(1)
 
   if (!did) {
-    /* Hard‑block with modal */
+    /* Hard-block with modal */
     return <DidRequiredModal />
   }
 

@@ -127,7 +127,7 @@ function RowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
   /* ------------ helpers ------------ */
   function openEditDialog() {
     /* Explicitly close the dropdown first, then open the dialog
-       on the next event‑loop tick to avoid the menu getting stuck
+       on the next event-loop tick to avoid the menu getting stuck
        in a permanently "open” controlled state. */
     setMenuOpen(false)
     setTimeout(() => setEditOpen(true), 0)

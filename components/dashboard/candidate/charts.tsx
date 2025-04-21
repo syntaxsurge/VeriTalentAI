@@ -21,7 +21,7 @@ interface CandidateChartsProps {
 }
 
 export default function CandidateCharts({ scoreData, statusData }: CandidateChartsProps) {
-  /* Pie‑chart prep */
+  /* Pie-chart prep */
   const pieData = statusData.map((d) => ({
     status: d.name.toLowerCase(),
     count: d.value,
@@ -35,7 +35,7 @@ export default function CandidateCharts({ scoreData, statusData }: CandidateChar
     rejected: { label: 'Rejected', color: 'var(--color-destructive)' },
   } satisfies ChartConfig
 
-  /* Line‑chart config */
+  /* Line-chart config */
   const lineConfig = {
     score: { label: 'Score', color: 'var(--chart-1)' },
   } satisfies ChartConfig

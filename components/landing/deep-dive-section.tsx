@@ -12,7 +12,7 @@ const ROLES = [
     punch: 'Own your narrative — verified.',
     bullets: [
       'Single profile with signed proofs',
-      'AI‑graded SkillPass credentials',
+      'AI-graded SkillPass credentials',
       'Shareable wallet & PDF resume',
     ],
   },
@@ -23,7 +23,7 @@ const ROLES = [
     bullets: [
       'Filter talent by proofs & scores',
       'Visual pipeline & analytics',
-      '1‑click interview invites',
+      '1-click interview invites',
     ],
   },
   {
@@ -31,8 +31,8 @@ const ROLES = [
     title: 'Issuers',
     punch: 'Verify once — trusted everywhere.',
     bullets: [
-      'Self‑serve onboarding & domain checks',
-      'Batch‑sign credentials in minutes',
+      'Self-serve onboarding & domain checks',
+      'Batch-sign credentials in minutes',
       'Live revocation & audit logs',
     ],
   },

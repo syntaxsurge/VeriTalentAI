@@ -102,7 +102,7 @@ export default async function IssuerOnboardPage() {
     .where(eq(issuers.ownerUserId, user.id))
     .limit(1)
 
-  /* ----------------------- First‑time creation ----------------------- */
+  /* ----------------------- First-time creation ----------------------- */
   if (!issuer) {
     return (
       <section className='mx-auto max-w-lg space-y-8'>

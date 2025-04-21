@@ -238,7 +238,7 @@ const columns: Column<RowType>[] = [
 ]
 
 /* -------------------------------------------------------------------------- */
-/*                           Bulk‑Selection Actions                           */
+/*                           Bulk-Selection Actions                           */
 /* -------------------------------------------------------------------------- */
 
 export default function AdminIssuersTable({ rows }: { rows: RowType[] }) {

@@ -106,7 +106,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     adminPendingIssuers: 0,
   })
 
-  /* Resolve user client‑side */
+  /* Resolve user client-side */
   useEffect(() => {
     let mounted = true
     userPromise.then((u) => mounted && setUser(u))

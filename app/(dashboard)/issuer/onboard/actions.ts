@@ -65,7 +65,7 @@ export const createIssuerAction = validatedActionWithUser(
 )
 
 /* -------------------------------------------------------------------------- */
-/*                     L I N K   D I D   (optional post‑verify)               */
+/*                     L I N K   D I D   (optional post-verify)               */
 /* -------------------------------------------------------------------------- */
 
 export const updateIssuerDidAction = validatedActionWithUser(

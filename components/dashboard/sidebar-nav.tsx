@@ -32,7 +32,7 @@ interface SidebarNavProps {
 
 /**
  * Vertical navigation list designed for the dashboard sidebar.
- * Active items receive a primary‑colour left border and background tint.
+ * Active items receive a primary-colour left border and background tint.
  */
 export function SidebarNav({ title, items, className }: SidebarNavProps) {
   const pathname = usePathname()

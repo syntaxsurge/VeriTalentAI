@@ -44,7 +44,7 @@ async function upsertEnv(key: string, value: string) {
 /* -------------------------------------------------------------------------- */
 
 const schema = z.object({
-  /** Optional DID – when absent we auto‑generate */
+  /** Optional DID – when absent we auto-generate */
   did: z
     .string()
     .trim()

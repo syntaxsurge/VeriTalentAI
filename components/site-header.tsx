@@ -208,7 +208,7 @@ export default function SiteHeader() {
 
                 <DropdownMenuSeparator />
 
-                {/* Sign‑out */}
+                {/* Sign-out */}
                 <form action={handleSignOut} className='w-full'>
                   <button type='submit' className='w-full'>
                     <DropdownMenuItem className='flex items-center gap-2 rounded-md px-3 py-2 data-[highlighted]:bg-muted data-[highlighted]:text-foreground'>

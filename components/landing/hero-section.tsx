@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 /**
- * Edge‑to‑edge hero banner with vibrant gradients and a clear “Free” call‑out.
+ * Edge-to-edge hero banner with vibrant gradients and a clear “Free” call-out.
  */
 export default function HeroSection() {
   return (
@@ -31,7 +31,7 @@ export default function HeroSection() {
         </p>
 
         <p className='text-muted-foreground mx-auto mt-6 max-w-3xl text-lg/relaxed sm:text-xl'>
-          The trust layer for modern hiring — merge verifiable credentials with AI‑graded skill
+          The trust layer for modern hiring — merge verifiable credentials with AI-graded skill
           passes and get hired faster.
         </p>
 

@@ -256,7 +256,7 @@ export const deleteAccount = validatedActionWithUser(deleteAccountSchema, async 
   const userWithTeam = await getUserWithTeam(user.id)
   await logActivity(userWithTeam?.teamId, user.id, ActivityType.DELETE_ACCOUNT)
 
-  // Soft‑delete
+  // Soft-delete
   await db
     .update(users)
     .set({

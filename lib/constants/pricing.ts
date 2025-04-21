@@ -1,7 +1,7 @@
 export interface PlanMeta {
   /** Unique key used internally */
   key: 'free' | 'base' | 'plus'
-  /** Human‑friendly label */
+  /** Human-friendly label */
   name: string
   /** Marketing feature bullets */
   features: string[]
@@ -11,7 +11,7 @@ export interface PlanMeta {
 
 /**
  * Static copy for each pricing tier. Stripe handles live pricing; we only
- * describe qualitative differences here so both the landing & in‑app pages
+ * describe qualitative differences here so both the landing & in-app pages
  * stay in sync.
  */
 export const PLAN_META: PlanMeta[] = [

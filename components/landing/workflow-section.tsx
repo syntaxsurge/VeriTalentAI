@@ -3,7 +3,7 @@
 const steps = [
   {
     title: 'Create Account',
-    detail: 'Sign up and spin‑up your team workspace.',
+    detail: 'Sign up and spin-up your team workspace.',
   },
   {
     title: 'Add Credentials',
@@ -15,7 +15,7 @@ const steps = [
   },
   {
     title: 'Prove Skills',
-    detail: 'Pass AI‑graded quizzes to mint SkillPass verifiable credentials.',
+    detail: 'Pass AI-graded quizzes to mint SkillPass verifiable credentials.',
   },
   {
     title: 'Get Discovered',

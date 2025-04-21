@@ -38,7 +38,7 @@ export default function SecurityPage() {
         </CardHeader>
         <CardContent>
           <p className='text-muted-foreground mb-4 text-sm'>
-            Account deletion is non‑reversible. Please proceed with caution.
+            Account deletion is non-reversible. Please proceed with caution.
           </p>
           <DeleteAccountForm />
         </CardContent>

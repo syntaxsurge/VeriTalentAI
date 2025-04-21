@@ -1,5 +1,5 @@
 /**
- * Convert a past date to a short, human‑friendly relative time string.
+ * Convert a past date to a short, human-friendly relative time string.
  *
  * @example
  *   relativeTime(new Date(Date.now() - 90_000)) // "1 minute ago"

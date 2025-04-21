@@ -4,7 +4,7 @@ import OpenAI from 'openai'
 
 /**
  * If OPENAI_API_KEY is missing, return a random score.
- * Otherwise, ask GPT‑4o to grade the answer 0‑100.
+ * Otherwise, ask GPT-4o to grade the answer 0-100.
  */
 const openAiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY ?? '',
@@ -23,11 +23,11 @@ export async function openAIAssess(
     messages: [
       {
         role: 'system',
-        content: 'You are a strict exam grader. Respond ONLY with an integer 0‑100.',
+        content: 'You are a strict exam grader. Respond ONLY with an integer 0-100.',
       },
       {
         role: 'user',
-        content: `Quiz topic: ${quizTitle}\nCandidate answer: ${answer}\nGrade (0‑100):`,
+        content: `Quiz topic: ${quizTitle}\nCandidate answer: ${answer}\nGrade (0-100):`,
       },
     ],
   })

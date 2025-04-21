@@ -15,7 +15,7 @@ interface Props {
 }
 
 /**
- * Credential‑addition form with enhanced toast feedback.
+ * Credential-addition form with enhanced toast feedback.
  * Interprets the special NEXT_REDIRECT digest emitted by Next.js redirects as a success,
  * preventing the misleading “Next Redirect” error toast.
  */
@@ -36,7 +36,7 @@ export default function AddCredentialForm({ issuers, addCredentialAction }: Prop
         toast.success('Credential added.', { id: toastId })
       } catch (err: any) {
         /**
-         * A server‑side `redirect()` throws a NEXT_REDIRECT digest error;
+         * A server-side `redirect()` throws a NEXT_REDIRECT digest error;
          * this signifies success, so convert it into a success toast.
          */
         if (err?.digest === 'NEXT_REDIRECT' || err?.message === 'NEXT_REDIRECT') {

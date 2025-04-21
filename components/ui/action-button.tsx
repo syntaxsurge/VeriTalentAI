@@ -16,7 +16,7 @@ type ActionResult =
     }
 
 /**
- * A drop‑in replacement for &lt;Button&gt; that
+ * A drop-in replacement for &lt;Button&gt; that
  * • runs an async callback (<code>onAction</code>) inside a React transition<br/>
  * • shows a muted spinner while pending<br/>
  * • triggers a coloured Sonner toast for <code>success</code> / <code>error</code> responses.

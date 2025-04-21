@@ -37,7 +37,7 @@ export default function EditUserForm({
   })
   const router = useRouter()
 
-  /* ------------- toast de‑dupe ------------- */
+  /* ------------- toast de-dupe ------------- */
   const toastId = React.useRef(`edit-user-${id}`)
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

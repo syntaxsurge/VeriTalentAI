@@ -72,7 +72,7 @@ export default async function DashboardPage() {
       statusData = Object.entries(statusCounter).map(([name, value]) => ({ name, value }))
       verifiedCount = statusCounter[CredentialStatus.VERIFIED] ?? 0
 
-      /* Skill‑quiz scores (last 10) */
+      /* Skill-quiz scores (last 10) */
       const attempts = await db
         .select({ score: quizAttempts.score, createdAt: quizAttempts.createdAt })
         .from(quizAttempts)

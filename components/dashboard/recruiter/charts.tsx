@@ -19,12 +19,12 @@ export default function RecruiterCharts({
   stageData,
   uniqueCandidates,
 }: RecruiterChartsProps) {
-  /* --------------------- bar‑chart config --------------------- */
+  /* --------------------- bar-chart config --------------------- */
   const barConfig = {
     count: { label: 'Candidates', color: 'var(--color-primary)' },
   } satisfies ChartConfig
 
-  /* --------------------- pie‑chart prep ----------------------- */
+  /* --------------------- pie-chart prep ----------------------- */
   const pieData = [
     { category: 'unique', value: uniqueCandidates },
     { category: 'total', value: stageData.reduce((sum, d) => sum + d.count, 0) },

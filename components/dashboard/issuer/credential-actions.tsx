@@ -104,7 +104,7 @@ export function CredentialActions({ credentialId, status }: Props) {
     )
   }
 
-  /* Rejected — allow re‑approve */
+  /* Rejected — allow re-approve */
   if (status === CredentialStatus.REJECTED) {
     return (
       <form onSubmit={(e) => run(e, approve)}>

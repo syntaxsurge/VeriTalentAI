@@ -5,7 +5,7 @@ import { users } from './core'
 import { candidates } from './viskify'
 
 /**
- * Recruiter‑controlled pipelines (e.g. “Backend Engineer May 2025”).
+ * Recruiter-controlled pipelines (e.g. “Backend Engineer May 2025”).
  */
 export const recruiterPipelines = pgTable('recruiter_pipelines', {
   id: serial('id').primaryKey(),

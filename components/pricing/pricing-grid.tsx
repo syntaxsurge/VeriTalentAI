@@ -19,8 +19,8 @@ interface PricingGridProps {
 
 /**
  * PricingGrid renders the canonical pricing cards.
- * If `currentPlanName` isn’t provided, we detect the signed‑in user’s team plan
- * so both the landing and in‑app pages exhibit identical behaviour.
+ * If `currentPlanName` isn’t provided, we detect the signed-in user’s team plan
+ * so both the landing and in-app pages exhibit identical behaviour.
  */
 export async function PricingGrid({ currentPlanName }: PricingGridProps) {
   /* Detect active plan when omitted */

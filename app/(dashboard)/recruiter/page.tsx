@@ -5,8 +5,8 @@ import { getUser } from '@/lib/db/queries'
 /**
  * /recruiter
  *
- * • Logged‑out users are guided to the recruiter sign‑up screen.
- * • Logged‑in recruiters land on their workspace.
+ * • Logged-out users are guided to the recruiter sign-up screen.
+ * • Logged-in recruiters land on their workspace.
  * • Other roles are bounced home.
  */
 export default async function RecruiterIndexPage() {

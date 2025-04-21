@@ -54,7 +54,7 @@ export default async function CandidateProfilePage({ params }: { params: { id: s
     .from(quizAttempts)
     .where(and(eq(quizAttempts.candidateId, candidateId), eq(quizAttempts.pass, 1)))
 
-  /* Recruiter pipelines for add‑to‑pipeline form */
+  /* Recruiter pipelines for add-to-pipeline form */
   const pipelines = await db
     .select({ id: recruiterPipelines.id, name: recruiterPipelines.name })
     .from(recruiterPipelines)

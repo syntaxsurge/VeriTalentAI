@@ -59,7 +59,7 @@ export default async function IssuerDirectory({ searchParams }: { searchParams?:
   const categories = ['ALL', ...Object.values(IssuerCategory)]
   const industries = ['ALL', ...Object.values(IssuerIndustry)]
 
-  /* --------------------------------‑‑ UI ‑‑---------------------------------- */
+  /* ---------------------------------- UI ------------------------------------ */
   return (
     <main className='mx-auto max-w-7xl space-y-10 px-4 py-12'>
       <header className='space-y-2'>

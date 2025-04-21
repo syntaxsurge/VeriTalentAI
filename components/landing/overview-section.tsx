@@ -8,7 +8,7 @@ const items = [
   {
     icon: Database,
     title: 'Trusted Credentials',
-    text: 'Issue and verify credentials on‑chain with cheqd integration.',
+    text: 'Issue and verify credentials on-chain with cheqd integration.',
   },
   {
     icon: Award,
@@ -23,7 +23,7 @@ const items = [
   {
     icon: CreditCard,
     title: 'Flexible Billing',
-    text: 'Stripe subscriptions and pay‑per‑verification options.',
+    text: 'Stripe subscriptions and pay-per-verification options.',
   },
 ]
 
@@ -36,7 +36,7 @@ export default function OverviewSection() {
             Why Viskify?
           </h2>
           <p className='text-muted-foreground mx-auto mt-4 max-w-2xl'>
-            Eliminate tedious background checks with blockchain‑backed credentials and AI
+            Eliminate tedious background checks with blockchain-backed credentials and AI
             assessments.
           </p>
         </header>

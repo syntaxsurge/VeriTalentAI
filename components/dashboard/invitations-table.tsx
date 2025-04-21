@@ -38,7 +38,7 @@ import {
 /*                              C O L O U R  I C O N S                        */
 /* -------------------------------------------------------------------------- */
 
-/** Success‑green icon for “Accept” actions. */
+/** Success-green icon for “Accept” actions. */
 const AcceptIcon = (props: LucideProps) => (
   <CheckCircle2
     {...props}
@@ -46,7 +46,7 @@ const AcceptIcon = (props: LucideProps) => (
   />
 )
 
-/** Warning‑amber icon for “Decline” actions. */
+/** Warning-amber icon for “Decline” actions. */
 const DeclineIcon = (props: LucideProps) => (
   <XCircle {...props} className='mr-2 h-4 w-4 text-amber-600 dark:text-amber-400' />
 )
@@ -65,7 +65,7 @@ export interface RowType {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              Row‑level actions                             */
+/*                              Row-level actions                             */
 /* -------------------------------------------------------------------------- */
 
 function RowActions({ row }: { row: RowType }) {
