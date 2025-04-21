@@ -54,7 +54,8 @@ export default async function RequestsPage({
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
   const sort = first(params, 'sort') ?? 'status'
-  const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
+  // Default to ascending so that "pending” (alphabetically first) appears on top
+  const order = first(params, 'order') === 'desc' ? 'desc' : 'asc'
   const searchTerm = (first(params, 'q') ?? '').trim()
 
   /* ------------------------------ Data ----------------------------------- */
