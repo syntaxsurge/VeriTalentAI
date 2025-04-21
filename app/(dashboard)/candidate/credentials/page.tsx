@@ -37,22 +37,6 @@ export default async function CredentialsPage({
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
-  /* --------------------- Resolve candidate record ------------------------ */
-  const [candidate] = await db.select().from(candT).where(eq(candT.userId, user.id)).limit(1)
-  if (!candidate) {
-    return (
-      <div className='space-y-4'>
-        <div className='flex items-center justify-between'>
-          <h2 className='text-xl font-semibold'>My Credentials</h2>
-          <Link href='/candidate/credentials/add'>
-            <Button size='sm'>Add Credential</Button>
-          </Link>
-        </div>
-        <p className='text-muted-foreground'>No credentials added yet.</p>
-      </div>
-    )
-  }
-
   /* --------------------------- Query params ------------------------------ */
   const page = Math.max(1, Number(first(params, 'page') ?? '1'))
 
@@ -63,24 +47,32 @@ export default async function CredentialsPage({
   const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(params, 'q') ?? '').trim()
 
-  /* --------------------------- Data fetch -------------------------------- */
-  const { credentials, hasNext } = await getCandidateCredentialsPage(
-    candidate.id,
-    page,
-    pageSize,
-    sort as 'title' | 'type' | 'issuer' | 'status' | 'id',
-    order as 'asc' | 'desc',
-    searchTerm,
-  )
+  /* --------------------------- Candidate & data -------------------------- */
+  const [candidate] = await db.select().from(candT).where(eq(candT.userId, user.id)).limit(1)
 
-  const rows: RowType[] = credentials.map((c) => ({
-    id: c.id,
-    title: c.title,
-    type: c.type,
-    issuer: c.issuer,
-    status: c.status,
-    fileUrl: null, // fileUrl is not needed for overview actions; omit here
-  }))
+  let rows: RowType[] = []
+  let hasNext = false
+
+  if (candidate) {
+    const { credentials, hasNext: next } = await getCandidateCredentialsPage(
+      candidate.id,
+      page,
+      pageSize,
+      sort as 'title' | 'type' | 'issuer' | 'status' | 'id',
+      order as 'asc' | 'desc',
+      searchTerm,
+    )
+
+    rows = credentials.map((c) => ({
+      id: c.id,
+      title: c.title,
+      type: c.type,
+      issuer: c.issuer,
+      status: c.status,
+      fileUrl: null,
+    }))
+    hasNext = next
+  }
 
   /* ------------------------ Build initialParams -------------------------- */
   const initialParams: Record<string, string> = {}
