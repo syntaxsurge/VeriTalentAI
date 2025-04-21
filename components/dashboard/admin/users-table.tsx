@@ -1,10 +1,20 @@
 'use client'
 
-import React, { useTransition, useState } from 'react'
+import * as React from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MoreHorizontal, Trash2, Loader2, Pencil } from 'lucide-react'
+import {
+  ArrowUpDown,
+  ChevronDown,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Loader2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -13,7 +23,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -21,24 +30,52 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 
 import { deleteUserAction } from '@/app/(dashboard)/admin/users/actions'
 import EditUserForm from '@/app/(dashboard)/admin/users/edit-user-form'
+
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
 
 export interface RowType {
   id: number
   name: string | null
   email: string
   role: string
-  createdAt: Date
+  createdAt: string
+}
+
+interface UsersTableProps {
+  rows: RowType[]
+  sort: string
+  order: 'asc' | 'desc'
+  basePath: string
+  initialParams: Record<string, string>
+  /** Current search term (from URL). */
+  searchQuery: string
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                    Utils                                   */
+/*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function formatDateTime(d: Date) {
+function buildLink(
+  basePath: string,
+  init: Record<string, string>,
+  overrides: Record<string, any>,
+) {
+  const sp = new URLSearchParams(init)
+  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
+  Array.from(sp.entries()).forEach(([k, v]) => {
+    if (v === '') sp.delete(k) // tidy URL
+  })
+  const qs = sp.toString()
+  return `${basePath}${qs ? `?${qs}` : ''}`
+}
+
+function formatDateTime(iso: string) {
+  const d = new Date(iso)
   return d.toLocaleString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -55,11 +92,10 @@ function formatDateTime(d: Date) {
 
 function RowActions({ row }: { row: RowType }) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = React.useTransition()
 
-  /* control dropdown & dialog */
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = React.useState(false)
+  const [editOpen, setEditOpen] = React.useState(false)
 
   function destroy() {
     startTransition(async () => {
@@ -77,7 +113,6 @@ function RowActions({ row }: { row: RowType }) {
 
   function openEditDialog() {
     setMenuOpen(false)
-    /* defer to let dropdown unmount cleanly */
     setTimeout(() => setEditOpen(true), 0)
   }
 
@@ -85,38 +120,37 @@ function RowActions({ row }: { row: RowType }) {
     <>
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
+          <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
             {isPending ? (
-              <Loader2 className='h-4 w-4 animate-spin' />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <MoreHorizontal className='h-4 w-4' />
+              <MoreHorizontal className="h-4 w-4" />
             )}
-            <span className='sr-only'>Open menu</span>
+            <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
+        <DropdownMenuContent align="end" className="rounded-md p-1 shadow-lg">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={openEditDialog} className='cursor-pointer'>
-            <Pencil className='mr-2 h-4 w-4' /> Edit
+          <DropdownMenuItem onSelect={openEditDialog} className="cursor-pointer">
+            <Pencil className="mr-2 h-4 w-4" /> Edit
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={destroy}
             disabled={isPending}
-            className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
+            className="cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400"
           >
-            <Trash2 className='mr-2 h-4 w-4' /> Delete
+            <Trash2 className="mr-2 h-4 w-4" /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Dialog mounting separate from dropdown */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Modify the user’s details, then save your changes.</DialogDescription>
+            <DialogDescription>Modify the user’s details, then save.</DialogDescription>
           </DialogHeader>
 
           <EditUserForm
@@ -133,50 +167,11 @@ function RowActions({ row }: { row: RowType }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                Columns                                     */
-/* -------------------------------------------------------------------------- */
-
-const columns: Column<RowType>[] = [
-  {
-    key: 'name',
-    header: 'Name',
-    sortable: true,
-    render: (v) => <>{(v as string) || '—'}</>,
-  },
-  {
-    key: 'email',
-    header: 'Email',
-    sortable: true,
-    render: (v) => <>{v as string}</>,
-  },
-  {
-    key: 'role',
-    header: 'Role',
-    sortable: true,
-    className: 'capitalize',
-    render: (v) => <>{v as string}</>,
-  },
-  {
-    key: 'createdAt',
-    header: 'Joined',
-    sortable: true,
-    render: (v) => <>{formatDateTime(v as Date)}</>,
-  },
-  {
-    key: 'id',
-    header: '',
-    enableHiding: false,
-    sortable: false,
-    render: (_v, row) => <RowActions row={row} />,
-  },
-]
-
-/* -------------------------------------------------------------------------- */
-/*                             Bulk Actions                                   */
+/*                             Bulk actions                                   */
 /* -------------------------------------------------------------------------- */
 
 function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = React.useTransition()
 
   return [
     {
@@ -189,25 +184,110 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
             selected.map(async (u) => {
               const fd = new FormData()
               fd.append('userId', u.id.toString())
-              await deleteUserAction({}, fd)
+              return deleteUserAction({}, fd)
             }),
           )
           toast.success('Selected users deleted.')
           router.refresh()
         }),
+      isDisabled: () => isPending,
     },
   ]
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                   View                                     */
+/*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
-export default function AdminUsersTable({ rows }: { rows: RowType[] }) {
+export default function AdminUsersTable({
+  rows,
+  sort,
+  order,
+  basePath,
+  initialParams,
+  searchQuery,
+}: UsersTableProps) {
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
 
+  /* ----------------------------- Search ----------------------------------- */
+  const [search, setSearch] = React.useState<string>(searchQuery)
+  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+
+  function handleSearchChange(value: string) {
+    setSearch(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
+      router.push(href, { scroll: false })
+    }, 400)
+  }
+
+  /* ----------------------------- Headers ---------------------------------- */
+  function sortableHeader(label: string, key: string) {
+    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
+    const href = buildLink(basePath, initialParams, {
+      sort: key,
+      order: nextOrder,
+      page: 1,
+      q: search,
+    })
+    return (
+      <Link href={href} scroll={false} className="flex items-center gap-1">
+        {label} <ArrowUpDown className="h-4 w-4" />
+      </Link>
+    )
+  }
+
+  const columns = React.useMemo<Column<RowType>[]>(() => {
+    return [
+      {
+        key: 'name',
+        header: sortableHeader('Name', 'name'),
+        sortable: false,
+        render: (v) => <>{(v as string) || '—'}</>,
+      },
+      {
+        key: 'email',
+        header: sortableHeader('Email', 'email'),
+        sortable: false,
+        render: (v) => <>{v as string}</>,
+      },
+      {
+        key: 'role',
+        header: sortableHeader('Role', 'role'),
+        sortable: false,
+        className: 'capitalize',
+        render: (v) => <>{v as string}</>,
+      },
+      {
+        key: 'createdAt',
+        header: sortableHeader('Joined', 'createdAt'),
+        sortable: false,
+        render: (v) => <>{formatDateTime(v as string)}</>,
+      },
+      {
+        key: 'id',
+        header: '',
+        enableHiding: false,
+        sortable: false,
+        render: (_v, row) => <RowActions row={row} />,
+      },
+    ]
+  }, [sort, order, basePath, initialParams, search])
+
+  /* All rows fit on one client page – paging handled server‑side */
   return (
-    <DataTable columns={columns} rows={rows} filterKey='email' bulkActions={bulkActions} />
+    <DataTable
+      columns={columns}
+      rows={rows}
+      filterKey="name"
+      filterValue={search}
+      onFilterChange={handleSearchChange}
+      bulkActions={bulkActions}
+      pageSize={rows.length}
+      pageSizeOptions={[rows.length]}
+      hidePagination
+    />
   )
 }
