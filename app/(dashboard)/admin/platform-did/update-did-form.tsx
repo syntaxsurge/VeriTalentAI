@@ -27,30 +27,42 @@ interface Props {
 /* -------------------------------------------------------------------------- */
 
 export default function UpdateDidForm({ defaultDid }: Props) {
-  const [state, action, pending] = useActionState<State, FormData>(
+  const initial: State = { error: '', success: '', did: '' }
+
+  /* Separate hooks so each button maintains its own pending state */
+  const [saveState, saveAction, saving] = useActionState<State, FormData>(
     upsertPlatformDidAction,
-    { error: '', success: '', did: '' },
+    initial,
+  )
+  const [genState, genAction, generating] = useActionState<State, FormData>(
+    upsertPlatformDidAction,
+    initial,
   )
 
-  /* Show a fresh toast on every state change (even when the message is identical) */
+  /* ------------------------ toast effects ------------------------ */
   React.useEffect(() => {
-    if (state.error) toast.error(state.error)
-    if (state.success) toast.success(state.success)
-  }, [state])
+    if (saveState.error) toast.error(saveState.error)
+    if (saveState.success) toast.success(saveState.success)
+  }, [saveState])
 
-  /* ------------------------ handlers -------------------------- */
+  React.useEffect(() => {
+    if (genState.error) toast.error(genState.error)
+    if (genState.success) toast.success(genState.success)
+  }, [genState])
 
-  /** Manual submit with user‑provided DID */
+  /* ------------------------ handlers ----------------------------- */
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
-    startTransition(() => action(fd))
+    startTransition(() => saveAction(fd))
   }
 
-  /** Auto‑generate a new DID via cheqd */
   function handleGenerate() {
-    startTransition(() => action(new FormData()))
+    startTransition(() => genAction(new FormData()))
   }
+
+  /* Prefer newest DID from either action */
+  const currentDid = genState.did || saveState.did
 
   /* ------------------------- JSX ------------------------------ */
   return (
@@ -68,8 +80,8 @@ export default function UpdateDidForm({ defaultDid }: Props) {
           />
         </div>
 
-        <Button type='submit' disabled={pending} className='w-full sm:w-auto'>
-          {pending ? (
+        <Button type='submit' disabled={saving} className='w-full sm:w-auto'>
+          {saving ? (
             <>
               <Loader2 className='mr-2 h-4 w-4 animate-spin' />
               Saving…
@@ -92,10 +104,10 @@ export default function UpdateDidForm({ defaultDid }: Props) {
       <Button
         variant='outline'
         onClick={handleGenerate}
-        disabled={pending}
+        disabled={generating}
         className='w-full sm:w-auto'
       >
-        {pending ? (
+        {generating ? (
           <>
             <Loader2 className='mr-2 h-4 w-4 animate-spin' />
             Generating…
@@ -109,9 +121,9 @@ export default function UpdateDidForm({ defaultDid }: Props) {
       </Button>
 
       {/* Current DID display (post‑update) */}
-      {state.did && !state.error && (
+      {currentDid && !(saveState.error || genState.error) && (
         <p className='break-all rounded-md bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'>
-          Current DID:&nbsp;<strong>{state.did}</strong>
+          Current DID:&nbsp;<strong>{currentDid}</strong>
         </p>
       )}
     </div>
