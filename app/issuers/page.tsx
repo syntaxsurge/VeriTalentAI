@@ -41,25 +41,28 @@ function getQueryValue(
 /*                                    PAGE                                    */
 /* -------------------------------------------------------------------------- */
 
-type SearchParams = Record<string, string | string[] | undefined>
+type Query = Record<string, string | string[] | undefined>
 
 export default async function IssuerDirectory({
+  /** Next 15 passes searchParams as a Promise — await it first. */
   searchParams,
 }: {
-  searchParams: SearchParams
+  searchParams: Promise<Query> | Query
 }) {
   /* --------------------------- Parse search params --------------------------- */
-  const keyword = getQueryValue(searchParams, 'q').trim()
-  const category = getQueryValue(searchParams, 'category') || 'ALL'
-  const industry = getQueryValue(searchParams, 'industry') || 'ALL'
+  const params = (await searchParams) as Query
 
-  /* ---------------------------- Load active issuers --------------------------- */
+  const keyword = getQueryValue(params, 'q').trim()
+  const category = getQueryValue(params, 'category') || 'ALL'
+  const industry = getQueryValue(params, 'industry') || 'ALL'
+
+  /* ---------------------------- Load active issuers -------------------------- */
   const rows = await db
     .select()
     .from(issuersTable)
     .where(eq(issuersTable.status, IssuerStatus.ACTIVE))
 
-  /* -------------------------------- Filtering -------------------------------- */
+  /* -------------------------------- Filtering ------------------------------- */
   const filtered = rows.filter((r) => {
     if (keyword && !includesCI(`${r.name} ${r.domain}`, keyword)) return false
     if (category !== 'ALL' && r.category !== category) return false
