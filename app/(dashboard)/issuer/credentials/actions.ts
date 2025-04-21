@@ -65,7 +65,9 @@ export const approveCredentialAction = validatedActionWithUser(
       .where(eq(candidates.id, cred.candidateId))
       .limit(1)
 
-    if (!cand) return buildError('Candidate not found.')
+    /* ---- NEW: ensure candUser is not null for TS safety --- */
+    if (!cand || !cand.candUser)
+      return buildError('Candidate user not found.')
 
     const [teamRow] = await db
       .select({ did: teams.did })
