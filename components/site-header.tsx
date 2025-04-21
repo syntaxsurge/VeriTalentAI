@@ -10,7 +10,6 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
-  UserCircle2,
 } from 'lucide-react'
 
 import { signOut } from '@/app/(auth)/actions'
@@ -23,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { useUser } from '@/lib/auth'
@@ -63,12 +63,26 @@ export default function SiteHeader() {
     router.push('/')
   }
 
+  /* -------------------------------------------------------------------------- */
+  /*                               R E N D E R                                   */
+  /* -------------------------------------------------------------------------- */
+
   return (
     <header className='border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b shadow-sm backdrop-blur'>
       <div className='mx-auto grid h-16 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-6 px-4 md:px-6'>
         {/* Brand */}
-        <Link href='/' className='text-primary flex items-center gap-2 whitespace-nowrap text-lg font-extrabold tracking-tight'>
-          <Image src='/images/viskify-logo.png' alt='Viskify logo' width={24} height={24} priority className='h-6 w-auto' />
+        <Link
+          href='/'
+          className='text-primary flex items-center gap-2 whitespace-nowrap text-lg font-extrabold tracking-tight'
+        >
+          <Image
+            src='/images/viskify-logo.png'
+            alt='Viskify logo'
+            width={24}
+            height={24}
+            priority
+            className='h-6 w-auto'
+          />
           Viskify
         </Link>
 
@@ -76,7 +90,10 @@ export default function SiteHeader() {
         <nav className='hidden justify-center gap-8 md:flex'>
           <HoverCard openDelay={100} closeDelay={100}>
             <HoverCardTrigger asChild>
-              <Link href='/' className='text-foreground/80 hover:text-foreground flex items-center gap-1 text-sm font-medium transition-colors'>
+              <Link
+                href='/'
+                className='text-foreground/80 hover:text-foreground flex items-center gap-1 text-sm font-medium transition-colors'
+              >
                 Home
                 <ChevronDown className='mt-0.5 h-3 w-3' />
               </Link>
@@ -85,7 +102,10 @@ export default function SiteHeader() {
               <ul className='space-y-1'>
                 {LANDING_SECTIONS.map((s) => (
                   <li key={s.id}>
-                    <Link href={`/#${s.id}`} className='hover:bg-muted block rounded px-2 py-1 text-sm'>
+                    <Link
+                      href={`/#${s.id}`}
+                      className='hover:bg-muted block rounded px-2 py-1 text-sm'
+                    >
                       {s.label}
                     </Link>
                   </li>
@@ -94,15 +114,24 @@ export default function SiteHeader() {
             </HoverCardContent>
           </HoverCard>
 
-          <Link href='/pricing' className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'>
+          <Link
+            href='/pricing'
+            className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
+          >
             Pricing
           </Link>
 
-          <Link href='/issuers' className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'>
+          <Link
+            href='/issuers'
+            className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
+          >
             Issuers
           </Link>
 
-          <Link href='/dashboard' className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'>
+          <Link
+            href='/dashboard'
+            className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
+          >
             Dashboard
           </Link>
         </nav>
@@ -114,33 +143,50 @@ export default function SiteHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className='cursor-pointer'>
+                  <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
                   <AvatarFallback>
                     {(user.name || user.email || 'U')
                       .split(' ')
                       .map((n: string) => n[0])
-                      .join('')}
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align='end' className='w-60 rounded-lg p-1 shadow-lg'>
-                <DropdownMenuItem asChild className='rounded-md p-3 hover:bg-muted'>
-                  <Link href='/settings/general' className='flex w-full flex-col items-start'>
-                    <span className='font-medium leading-none'>{user.name || user.email}</span>
-                    <span className='text-xs text-muted-foreground capitalize'>{user.role}</span>
-                  </Link>
-                </DropdownMenuItem>
+
+              <DropdownMenuContent
+                align='end'
+                className='w-64 rounded-lg p-1 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out'
+              >
+                {/* User card */}
+                <DropdownMenuLabel className='select-none cursor-default px-3 py-3'>
+                  <p className='truncate text-sm font-medium'>
+                    {user.name || user.email || 'Unnamed User'}
+                  </p>
+                  {user.email && (
+                    <p className='truncate text-xs text-muted-foreground'>{user.email}</p>
+                  )}
+                  <span className='mt-2 inline-block rounded bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
+                    {user.role}
+                  </span>
+                </DropdownMenuLabel>
+
                 <DropdownMenuSeparator />
+
                 <DropdownMenuItem asChild>
                   <Link href='/dashboard'>
                     <LayoutDashboard className='mr-2 h-4 w-4' /> Dashboard
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href='/settings/team'>
+                  <Link href='/settings/general'>
                     <Settings className='mr-2 h-4 w-4' /> Settings
                   </Link>
                 </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
+
                 <form action={handleSignOut} className='w-full'>
                   <button type='submit' className='flex w-full'>
                     <DropdownMenuItem className='flex-1 cursor-pointer'>
@@ -153,7 +199,9 @@ export default function SiteHeader() {
           ) : (
             <>
               <Link href='/sign-in' className='shrink-0'>
-                <Button variant='ghost' size='sm'>Sign in</Button>
+                <Button variant='ghost' size='sm'>
+                  Sign in
+                </Button>
               </Link>
               <Link href='/sign-up' className='shrink-0'>
                 <Button size='sm'>Get started</Button>
