@@ -7,7 +7,7 @@ import { pgTable, serial, varchar, text, timestamp, integer } from 'drizzle-orm/
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
-  name: varchar('name', { length: 100 }),
+  name: varchar('name', { length: 100 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   // One of: 'admin', 'recruiter', 'issuer', 'candidate'

@@ -97,6 +97,22 @@ export function Login({ mode = 'signin', fixedRole }: LoginProps) {
               </div>
             )}
 
+            {mode === 'signup' && (
+              <div>
+                <Label htmlFor='name'>Full name</Label>
+                <Input
+                  id='name'
+                  name='name'
+                  type='text'
+                  autoComplete='name'
+                  required
+                  maxLength={100}
+                  placeholder='Jane Doe'
+                  className='mt-1'
+                />
+              </div>
+            )}
+
             <div>
               <Label htmlFor='email'>Email</Label>
               <Input

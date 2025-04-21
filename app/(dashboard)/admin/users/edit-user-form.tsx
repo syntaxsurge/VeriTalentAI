@@ -62,8 +62,8 @@ export default function EditUserForm({
   return (
     <form onSubmit={handleSubmit} className='space-y-4'>
       <div>
-        <Label htmlFor='name'>Name (optional)</Label>
-        <Input id='name' name='name' defaultValue={defaultName ?? ''} />
+        <Label htmlFor='name'>Name</Label>
+        <Input id='name' name='name' defaultValue={defaultName ?? ''} required />
       </div>
 
       <div>

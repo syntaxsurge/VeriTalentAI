@@ -33,8 +33,7 @@ import { issuers } from '@/lib/db/schema/issuer'
 export const updateUserAction = validatedActionWithUser(
   z.object({
     userId: z.coerce.number(),
-    /** name can be omitted or an empty string */
-    name: z.string().max(100).optional(),
+    name: z.string().min(1).max(100),
     email: z.string().email(),
     role: z.enum(['candidate', 'recruiter', 'issuer', 'admin']),
   }),
@@ -47,12 +46,9 @@ export const updateUserAction = validatedActionWithUser(
     }
 
     const updateData: Record<string, unknown> = {
+      name: name.trim(),
       email: email.toLowerCase(),
       role,
-    }
-
-    if (name !== undefined) {
-      updateData.name = name.trim() === '' ? null : name
     }
 
     await db.update(users).set(updateData).where(eq(users.id, userId))

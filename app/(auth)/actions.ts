@@ -95,6 +95,7 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
 /* -------------------------------------------------------------------------- */
 
 const signUpSchema = z.object({
+  name: z.string().min(1).max(100),
   email: z.string().email(),
   password: z.string().min(8),
   inviteId: z.string().optional(),
@@ -102,7 +103,7 @@ const signUpSchema = z.object({
 })
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
-  const { email, password, inviteId } = data
+  const { name, email, password, inviteId } = data
 
   const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1)
   if (existingUser.length > 0) {
@@ -116,7 +117,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   /* ------------------------------------------------------------------ */
   /* Create user record                                                 */
   /* ------------------------------------------------------------------ */
-  const newUser: NewUser = { email, passwordHash, role: desiredRole }
+  const newUser: NewUser = { name: name.trim(), email, passwordHash, role: desiredRole }
   const [createdUser] = await db.insert(users).values(newUser).returning()
   if (!createdUser) {
     return { error: 'Failed to create user. Please try again.', email, password }
