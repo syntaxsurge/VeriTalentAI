@@ -88,7 +88,7 @@ export default function ActivityLogsTable({ rows }: { rows: RowType[] }) {
         header: '',
         enableHiding: false,
         sortable: false,
-        className: 'w-[40px]', // fixed narrow width
+        className: 'w-[40px]',
         render: (_v, row) => {
           const Icon = iconMap[row.type] || Settings
           return (
@@ -123,5 +123,14 @@ export default function ActivityLogsTable({ rows }: { rows: RowType[] }) {
     ]
   }, [])
 
-  return <DataTable columns={columns} rows={rows} pageSize={10} />
+  /* Show all rows in one client page – real paging is done server‑side */
+  return (
+    <DataTable
+      columns={columns}
+      rows={rows}
+      pageSize={rows.length}
+      pageSizeOptions={[rows.length]}
+      hidePagination
+    />
+  )
 }

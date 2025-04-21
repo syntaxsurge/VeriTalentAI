@@ -76,6 +76,8 @@ interface DataTableProps<T extends Record<string, any>> {
   pageSize?: number
   /** Page‑size options shown in selector – defaults to [10, 20, 50]. */
   pageSizeOptions?: number[]
+  /** Hide the intrinsic pagination/footer row (useful when the parent supplies its own). */
+  hidePagination?: boolean
 }
 
 /* -------------------------------------------------------------------------- */
@@ -152,6 +154,7 @@ export function DataTable<T extends Record<string, any>>({
   bulkActions = [],
   pageSize = 10,
   pageSizeOptions = [10, 20, 50],
+  hidePagination = false,
 }: DataTableProps<T>) {
   const includeSelection = bulkActions.length > 0
 
@@ -393,73 +396,75 @@ export function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* ---------------------------- Pagination ----------------------------- */}
-      <div className="flex flex-col items-center justify-between gap-2 py-4 sm:flex-row">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {selectedCount} of {table.getFilteredRowModel().rows.length} row(s) selected.
-          <span className="hidden sm:inline">•</span>
-          <span className="hidden sm:inline">
-            Page {pageIndex + 1} of {pageCount}
-          </span>
-        </div>
-
-        <div className="flex flex-col items-center gap-3 sm:flex-row">
-          {/* Page‑size selector */}
-          <select
-            value={size}
-            onChange={(e) => {
-              const newSize = Number(e.target.value)
-              table.setPageSize(newSize)
-              table.setPageIndex(0) // Always jump back to the first page on size change
-            }}
-            className="h-8 rounded-md border px-2 text-sm"
-          >
-            {pageSizeOptions.map((sz) => (
-              <option key={sz} value={sz}>
-                {sz} / page
-              </option>
-            ))}
-          </select>
-
-          {/* Prev */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-
-          {/* Page numbers */}
-          <div className="flex items-center gap-1">
-            {pageNumbers.map((n, idx) =>
-              n === -1 ? (
-                <MoreHorizontal key={`ellipsis-${idx}`} className="h-4 w-4 opacity-50" />
-              ) : (
-                <Button
-                  key={n}
-                  variant={n === pageIndex ? "default" : "outline"}
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => table.setPageIndex(n)}
-                >
-                  {n + 1}
-                </Button>
-              ),
-            )}
+      {!hidePagination && (
+        <div className="flex flex-col items-center justify-between gap-2 py-4 sm:flex-row">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {selectedCount} of {table.getFilteredRowModel().rows.length} row(s) selected.
+            <span className="hidden sm:inline">•</span>
+            <span className="hidden sm:inline">
+              Page {pageIndex + 1} of {pageCount}
+            </span>
           </div>
 
-          {/* Next */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
+          <div className="flex flex-col items-center gap-3 sm:flex-row">
+            {/* Page‑size selector */}
+            <select
+              value={size}
+              onChange={(e) => {
+                const newSize = Number(e.target.value)
+                table.setPageSize(newSize)
+                table.setPageIndex(0) // Always jump back to the first page on size change
+              }}
+              className="h-8 rounded-md border px-2 text-sm"
+            >
+              {pageSizeOptions.map((sz) => (
+                <option key={sz} value={sz}>
+                  {sz} / page
+                </option>
+              ))}
+            </select>
+
+            {/* Prev */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {pageNumbers.map((n, idx) =>
+                n === -1 ? (
+                  <MoreHorizontal key={`ellipsis-${idx}`} className="h-4 w-4 opacity-50" />
+                ) : (
+                  <Button
+                    key={n}
+                    variant={n === pageIndex ? "default" : "outline"}
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => table.setPageIndex(n)}
+                  >
+                    {n + 1}
+                  </Button>
+                ),
+              )}
+            </div>
+
+            {/* Next */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

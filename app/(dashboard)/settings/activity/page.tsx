@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getActivityLogs, getUser } from '@/lib/db/queries'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { getUser } from '@/lib/db/queries'
+import { getActivityLogsPage } from '@/lib/db/activity'
 import { ActivityType } from '@/lib/db/schema'
 
 import ActivityLogsTable, {
@@ -10,11 +12,18 @@ import ActivityLogsTable, {
 
 export const revalidate = 0
 
-export default async function ActivityPage() {
+export default async function ActivityPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>
+}) {
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
-  const logs = await getActivityLogs()
+  const page = Math.max(1, Number(searchParams?.page ?? 1))
+  const pageSize = 10
+
+  const { logs, hasNext } = await getActivityLogsPage(user.id, page, pageSize)
 
   const rows: RowType[] = logs.map((log) => ({
     id: log.id,
@@ -23,6 +32,12 @@ export default async function ActivityPage() {
     timestamp:
       log.timestamp instanceof Date ? log.timestamp.toISOString() : String(log.timestamp),
   }))
+
+  /* Extract primitive query params except "page”. */
+  const initialParams: Record<string, string> = {}
+  Object.entries(searchParams ?? {}).forEach(([k, v]) => {
+    if (k !== 'page' && typeof v === 'string') initialParams[k] = v
+  })
 
   return (
     <section className='flex-1 p-4 lg:p-8'>
@@ -34,6 +49,14 @@ export default async function ActivityPage() {
         </CardHeader>
         <CardContent className='overflow-x-auto'>
           <ActivityLogsTable rows={rows} />
+
+          {/* Server‑side pagination controls */}
+          <TablePagination
+            page={page}
+            hasNext={hasNext}
+            basePath='/settings/activity'
+            initialParams={initialParams}
+          />
         </CardContent>
       </Card>
     </section>
