@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
 import {
   Settings,
   LogOut,
@@ -10,6 +11,7 @@ import {
   UserMinus,
   Mail,
   CheckCircle,
+  ArrowUpDown,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -18,7 +20,26 @@ import { relativeTime } from '@/lib/utils/time'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 
 /* -------------------------------------------------------------------------- */
-/*                                   Icons                                    */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
+
+export interface RowType {
+  id: number
+  type: ActivityType
+  ipAddress?: string | null
+  timestamp: string
+}
+
+interface Props {
+  rows: RowType[]
+  sort: string
+  order: 'asc' | 'desc'
+  basePath: string
+  initialParams: Record<string, string>
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                Icons Map                                   */
 /* -------------------------------------------------------------------------- */
 
 const iconMap: Record<ActivityType, LucideIcon> = {
@@ -35,8 +56,19 @@ const iconMap: Record<ActivityType, LucideIcon> = {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              Helper Functions                              */
+/*                                    Util                                    */
 /* -------------------------------------------------------------------------- */
+
+function buildLink(
+  basePath: string,
+  init: Record<string, string>,
+  overrides: Record<string, any>,
+) {
+  const sp = new URLSearchParams(init)
+  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
+  const qs = sp.toString()
+  return `${basePath}${qs ? `?${qs}` : ''}`
+}
 
 function formatAction(action: ActivityType): string {
   switch (action) {
@@ -61,26 +93,36 @@ function formatAction(action: ActivityType): string {
     case ActivityType.ACCEPT_INVITATION:
       return 'You accepted an invitation'
     default:
-      return 'Unknown action occurred'
+      return 'Unknown action'
   }
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                 Row Type                                   */
+/*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
-export interface RowType {
-  id: number
-  type: ActivityType
-  ipAddress?: string | null
-  timestamp: string
-}
+export default function ActivityLogsTable({
+  rows,
+  sort,
+  order,
+  basePath,
+  initialParams,
+}: Props) {
+  /* Build sortable header link */
+  const tsHeader = React.useMemo(() => {
+    const nextOrder = sort === 'timestamp' && order === 'asc' ? 'desc' : 'asc'
+    const href = buildLink(basePath, initialParams, {
+      sort: 'timestamp',
+      order: nextOrder,
+      page: 1,
+    })
+    return (
+      <Link href={href} className='flex items-center gap-1'>
+        When <ArrowUpDown className='h-4 w-4' />
+      </Link>
+    )
+  }, [basePath, initialParams, sort, order])
 
-/* -------------------------------------------------------------------------- */
-/*                               Activity Table                               */
-/* -------------------------------------------------------------------------- */
-
-export default function ActivityLogsTable({ rows }: { rows: RowType[] }) {
   const columns = React.useMemo<Column<RowType>[]>(() => {
     return [
       {
@@ -111,8 +153,8 @@ export default function ActivityLogsTable({ rows }: { rows: RowType[] }) {
       },
       {
         key: 'timestamp',
-        header: 'When',
-        sortable: true,
+        header: tsHeader,
+        sortable: false,
         className: 'min-w-[120px]',
         render: (v) => (
           <span className='text-xs text-muted-foreground'>
@@ -121,9 +163,9 @@ export default function ActivityLogsTable({ rows }: { rows: RowType[] }) {
         ),
       },
     ]
-  }, [])
+  }, [tsHeader])
 
-  /* Show all rows in one client page – real paging is done server‑side */
+  /* All rows fit on one client page; real paging handled server‑side */
   return (
     <DataTable
       columns={columns}

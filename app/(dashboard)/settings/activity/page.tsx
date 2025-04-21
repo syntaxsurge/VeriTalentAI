@@ -20,10 +20,22 @@ export default async function ActivityPage({
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
+  /* --------------------------- Query Params --------------------------- */
   const page = Math.max(1, Number(searchParams?.page ?? 1))
-  const pageSize = 10
+  const sizeRaw = Number(searchParams?.size ?? 10)
+  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
-  const { logs, hasNext } = await getActivityLogsPage(user.id, page, pageSize)
+  const sort = (searchParams?.sort as string) || 'timestamp'
+  const order = (searchParams?.order as string) === 'asc' ? 'asc' : 'desc'
+
+  /* ------------------------- Data Fetching --------------------------- */
+  const { logs, hasNext } = await getActivityLogsPage(
+    user.id,
+    page,
+    pageSize,
+    sort as 'timestamp' | 'action',
+    order as 'asc' | 'desc',
+  )
 
   const rows: RowType[] = logs.map((log) => ({
     id: log.id,
@@ -33,7 +45,7 @@ export default async function ActivityPage({
       log.timestamp instanceof Date ? log.timestamp.toISOString() : String(log.timestamp),
   }))
 
-  /* Extract primitive query params except "page”. */
+  /* Build base params excluding "page” for link helpers */
   const initialParams: Record<string, string> = {}
   Object.entries(searchParams ?? {}).forEach(([k, v]) => {
     if (k !== 'page' && typeof v === 'string') initialParams[k] = v
@@ -48,14 +60,20 @@ export default async function ActivityPage({
           <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
         <CardContent className='overflow-x-auto'>
-          <ActivityLogsTable rows={rows} />
+          <ActivityLogsTable
+            rows={rows}
+            sort={sort}
+            order={order as 'asc' | 'desc'}
+            basePath='/settings/activity'
+            initialParams={initialParams}
+          />
 
-          {/* Server‑side pagination controls */}
           <TablePagination
             page={page}
             hasNext={hasNext}
             basePath='/settings/activity'
             initialParams={initialParams}
+            pageSize={pageSize}
           />
         </CardContent>
       </Card>
