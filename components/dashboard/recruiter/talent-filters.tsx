@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { Input } from '@/components/ui/input'
+import { Slider } from '@/components/ui/slider'
 
 interface TalentFiltersProps {
   basePath: string
@@ -54,18 +54,17 @@ export default function TalentFilters({
     <div className="mb-6 flex flex-wrap items-end gap-4">
       {/* Minimum skill score */}
       <div className="flex flex-col">
-        <label htmlFor="skillMin" className="mb-1 text-sm font-medium">
-          Min&nbsp;Skill&nbsp;Score
+        <label htmlFor="skillMin" className="mb-2 text-sm font-medium">
+          Min&nbsp;Skill&nbsp;Score&nbsp;({skillMin})
         </label>
-        <Input
+        <Slider
           id="skillMin"
-          type="number"
           min={0}
           max={100}
-          placeholder="0 ‑ 100"
-          value={skillMin === 0 ? '' : skillMin}
-          onChange={(e) => setSkillMin(Number(e.target.value) || 0)}
-          className="h-10 w-36"
+          step={1}
+          value={[skillMin]}
+          onValueChange={(v) => setSkillMin(v[0] ?? 0)}
+          className="w-48"
         />
       </div>
 
@@ -79,7 +78,7 @@ export default function TalentFilters({
           onChange={(e) => setVerifiedOnly(e.target.checked)}
         />
         <label htmlFor="verifiedOnly" className="cursor-pointer text-sm">
-          Verified only
+          Verified&nbsp;only
         </label>
       </div>
     </div>
