@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { startTransition } from 'react'
-import { Pencil, Loader2, RefreshCcw } from 'lucide-react'
+import { Pencil, Loader2, RefreshCcw, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Input } from '@/components/ui/input'
@@ -29,7 +29,7 @@ interface Props {
 }
 
 /**
- * Modernized form for editing or generating the platform DID.
+ * Form for displaying, copying, editing or generating the platform DID.
  */
 export default function UpdateDidForm({ defaultDid }: Props) {
   /* -------------------------------------------------------------------------- */
@@ -88,28 +88,50 @@ export default function UpdateDidForm({ defaultDid }: Props) {
     startTransition(() => genAction(new FormData()))
   }
 
+  async function copyDid() {
+    try {
+      await navigator.clipboard.writeText(currentDid)
+      toast.success('Platform DID copied to clipboard.')
+    } catch {
+      toast.error('Failed to copy DID.')
+    }
+  }
+
   /* -------------------------------------------------------------------------- */
   /*                                   UI                                       */
   /* -------------------------------------------------------------------------- */
   return (
     <div className="space-y-6">
-      {/* DID field */}
-      <Input
-        value={didInput}
-        onChange={(e) => setDidInput(e.target.value)}
-        readOnly={!editing}
-        disabled={!editing}
-        placeholder="did:cheqd:testnet:xxxx"
-        className="font-mono"
-      />
+      {/* DID field + copy button */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Input
+          value={didInput}
+          onChange={(e) => setDidInput(e.target.value)}
+          readOnly={!editing}
+          disabled={!editing}
+          placeholder="did:cheqd:testnet:xxxx"
+          className="flex-1 font-mono"
+        />
+
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={copyDid}
+          disabled={!currentDid}
+          className="shrink-0"
+          type="button"
+        >
+          <Copy className="h-4 w-4" />
+          <span className="sr-only">Copy DID</span>
+        </Button>
+      </div>
 
       {/* Edit / Save controls */}
       {editing ? (
         <div className="flex flex-wrap items-center gap-2">
-          {/* Save with confirmation */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button disabled={saving} className="sm:w-auto w-full">
+              <Button disabled={saving} className="w-full sm:w-auto">
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -140,7 +162,6 @@ export default function UpdateDidForm({ defaultDid }: Props) {
             </AlertDialogContent>
           </AlertDialog>
 
-          {/* Cancel edit */}
           <Button
             type="button"
             variant="outline"
@@ -149,16 +170,15 @@ export default function UpdateDidForm({ defaultDid }: Props) {
               setEditing(false)
             }}
             disabled={saving}
-            className="sm:w-auto w-full"
+            className="w-full sm:w-auto"
           >
             Cancel
           </Button>
         </div>
       ) : (
-        /* Edit button with confirmation */
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" className="sm:w-auto w-full">
+            <Button variant="outline" className="w-full sm:w-auto">
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </Button>
@@ -172,9 +192,7 @@ export default function UpdateDidForm({ defaultDid }: Props) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Close</AlertDialogCancel>
-              <AlertDialogAction onClick={() => setEditing(true)}>
-                Continue
-              </AlertDialogAction>
+              <AlertDialogAction onClick={() => setEditing(true)}>Continue</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -209,7 +227,7 @@ export default function UpdateDidForm({ defaultDid }: Props) {
           <AlertDialogHeader>
             <AlertDialogTitle>Generate a fresh DID?</AlertDialogTitle>
             <AlertDialogDescription>
-              A brand‑new DID will be created via cheqd and will permanently replace the existing
+              A brand-new DID will be created via cheqd and will permanently replace the existing
               one.
             </AlertDialogDescription>
           </AlertDialogHeader>
