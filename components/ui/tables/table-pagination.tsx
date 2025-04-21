@@ -81,10 +81,12 @@ export function TablePagination({
   const nextDisabled = !hasNext
 
   return (
-    <div className='flex flex-col items-center justify-between gap-3 py-4 sm:flex-row'>
+    <div className='flex w-full flex-col gap-3 py-4 sm:flex-row sm:items-center'>
+      {/* Left — current page label */}
       <span className='text-sm text-muted-foreground'>Page {page}</span>
 
-      <div className='flex items-center gap-2'>
+      {/* Right — controls */}
+      <div className='flex items-center gap-2 sm:ml-auto'>
         {/* Page‑size selector */}
         <select
           value={pageSize}
@@ -150,8 +152,6 @@ export function TablePagination({
           </Button>
         )}
       </div>
-
-      <span className='hidden text-sm text-muted-foreground sm:inline' />
     </div>
   )
 }
