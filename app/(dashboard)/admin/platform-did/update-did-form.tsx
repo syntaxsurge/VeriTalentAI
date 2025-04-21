@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { useActionState, startTransition } from 'react'
 import { Loader2, RefreshCcw } from 'lucide-react'
 import { toast } from 'sonner'
@@ -10,11 +11,20 @@ import { Button } from '@/components/ui/button'
 
 import { upsertPlatformDidAction } from './actions'
 
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
+
 type State = { error?: string; success?: string; did?: string }
 
 interface Props {
+  /** Existing DID pulled from env (may be null). */
   defaultDid: string | null
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                   VIEW                                     */
+/* -------------------------------------------------------------------------- */
 
 export default function UpdateDidForm({ defaultDid }: Props) {
   const [state, action, pending] = useActionState<State, FormData>(
@@ -22,22 +32,32 @@ export default function UpdateDidForm({ defaultDid }: Props) {
     { error: '', success: '', did: '' },
   )
 
-  /* Toast feedback */
-  if (state.error) toast.error(state.error)
-  if (state.success) toast.success(state.success)
+  /* Deduplicated toast feedback */
+  const toastId = React.useRef('platform-did-update')
+  React.useEffect(() => {
+    if (state.error) {
+      toast.error(state.error, { id: toastId.current })
+    }
+    if (state.success) {
+      toast.success(state.success, { id: toastId.current })
+    }
+  }, [state.error, state.success])
 
-  /* Manual submit */
+  /* ------------------------ handlers -------------------------- */
+
+  /** Manual submit with user‑provided DID */
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     startTransition(() => action(fd))
   }
 
-  /* Auto‑generate */
+  /** Auto‑generate a new DID via cheqd */
   function handleGenerate() {
     startTransition(() => action(new FormData()))
   }
 
+  /* ------------------------- JSX ------------------------------ */
   return (
     <div className='space-y-6'>
       {/* Manual form */}
