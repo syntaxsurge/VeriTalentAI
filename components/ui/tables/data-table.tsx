@@ -17,6 +17,7 @@ import {
 import {
   ArrowUpDown,
   ChevronDown,
+  MoreHorizontal,
   type LucideIcon,
 } from "lucide-react"
 
@@ -130,6 +131,16 @@ function buildColumnDefs<T extends Record<string, any>>(
   })
 }
 
+/* Page‑numbers helper – returns an array of page indexes; -1 represents an ellipsis. */
+function getPageNumbers(current: number, total: number): number[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i)
+
+  if (current < 4) return [0, 1, 2, 3, 4, -1, total - 1]
+  if (current > total - 5) return [0, -1, total - 5, total - 4, total - 3, total - 2, total - 1]
+
+  return [0, -1, current - 1, current, current + 1, -1, total - 1]
+}
+
 /* -------------------------------------------------------------------------- */
 /*                                   T A B L E                                */
 /* -------------------------------------------------------------------------- */
@@ -214,12 +225,17 @@ export function DataTable<T extends Record<string, any>>({
     () => selectedRows.map((r) => r.original),
     [selectedRows],
   )
-  const pageIndex = table.getState().pagination.pageIndex
+  const { pageIndex, pageSize: size } = table.getState().pagination
   const pageCount = table.getPageCount()
 
   const filterColumn = React.useMemo(() => {
     return filterKey ? table.getColumn(filterKey as string) : undefined
   }, [table, filterKey])
+
+  const pageNumbers = React.useMemo(
+    () => getPageNumbers(pageIndex, pageCount),
+    [pageIndex, pageCount],
+  )
 
   /* ------------------------------------------------------------------------ */
   /*                                  UI                                     */
@@ -386,11 +402,15 @@ export function DataTable<T extends Record<string, any>>({
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col items-center gap-3 sm:flex-row">
           {/* Page‑size selector */}
           <select
-            value={table.getState().pagination.pageSize}
-            onChange={(e) => table.setPageSize(Number(e.target.value))}
+            value={size}
+            onChange={(e) => {
+              const newSize = Number(e.target.value)
+              table.setPageSize(newSize)
+              table.setPageIndex(0) // Always jump back to the first page on size change
+            }}
             className="h-8 rounded-md border px-2 text-sm"
           >
             {pageSizeOptions.map((sz) => (
@@ -400,7 +420,7 @@ export function DataTable<T extends Record<string, any>>({
             ))}
           </select>
 
-          {/* Prev / Next */}
+          {/* Prev */}
           <Button
             variant="outline"
             size="sm"
@@ -409,6 +429,27 @@ export function DataTable<T extends Record<string, any>>({
           >
             Previous
           </Button>
+
+          {/* Page numbers */}
+          <div className="flex items-center gap-1">
+            {pageNumbers.map((n, idx) =>
+              n === -1 ? (
+                <MoreHorizontal key={`ellipsis-${idx}`} className="h-4 w-4 opacity-50" />
+              ) : (
+                <Button
+                  key={n}
+                  variant={n === pageIndex ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => table.setPageIndex(n)}
+                >
+                  {n + 1}
+                </Button>
+              ),
+            )}
+          </div>
+
+          {/* Next */}
           <Button
             variant="outline"
             size="sm"
