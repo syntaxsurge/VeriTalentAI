@@ -128,6 +128,7 @@ export default async function CandidateProfilePage({
   statusCountsRaw.forEach((r) => {
     statusCounts[r.status] = Number(r.count)
   })
+  const totalVerified = statusCounts.verified
 
   /* --------------- Skill quiz passes --------------- */
   const passes = await db
@@ -151,6 +152,11 @@ export default async function CandidateProfilePage({
     )
 
   const inPipeline = pipelineEntries.length > 0
+  const pipelineSummary = inPipeline
+    ? pipelineEntries.length === 1
+      ? `In ${pipelineEntries[0].pipelineName}`
+      : `In ${pipelineEntries.length} Pipelines`
+    : 'No Pipelines'
 
   /* ------------------------ Build initialParams -------------------------- */
   const initialParams: Record<string, string> = {}
@@ -174,17 +180,38 @@ export default async function CandidateProfilePage({
           <AvatarFallback>{initials(row.userRow?.name, row.userRow?.email)}</AvatarFallback>
         </Avatar>
 
-        <div className='space-y-1'>
+        <div className='flex flex-col gap-2'>
           <h2 className='text-3xl font-semibold'>{row.userRow?.name || 'Unnamed Candidate'}</h2>
-          <Link href={`mailto:${row.userRow?.email}`} className='text-primary text-sm underline'>
-            {row.userRow?.email}
-          </Link>
 
-          {inPipeline ? (
-            <Badge className='bg-primary/10 text-primary'>In&nbsp;Pipeline</Badge>
-          ) : (
-            <Badge variant='outline'>Not&nbsp;in&nbsp;Your&nbsp;Pipelines</Badge>
-          )}
+          <div className='flex flex-wrap items-center gap-3 text-sm'>
+            <Link href={`mailto:${row.userRow?.email}`} className='text-primary hover:underline'>
+              {row.userRow?.email}
+            </Link>
+
+            <span className='h-1 w-1 rounded-full bg-muted-foreground' />
+
+            <Badge variant='outline' className='capitalize'>
+              {pipelineSummary}
+            </Badge>
+
+            {totalVerified > 0 && (
+              <>
+                <span className='h-1 w-1 rounded-full bg-muted-foreground' />
+                <span className='text-muted-foreground'>
+                  {totalVerified} verified credential{totalVerified === 1 ? '' : 's'}
+                </span>
+              </>
+            )}
+
+            {passes.length > 0 && (
+              <>
+                <span className='h-1 w-1 rounded-full bg-muted-foreground' />
+                <span className='text-muted-foreground'>
+                  {passes.length} skill quiz pass{passes.length === 1 ? '' : 'es'}
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -255,7 +282,7 @@ export default async function CandidateProfilePage({
           </CardHeader>
           <CardContent className='space-y-2 text-sm'>
             {pipelineEntries.map((e, idx) => (
-              <p key={idx} className='flex items-center gap-2'>
+              <p key={idx} className='flex flex-wrap items-center gap-2'>
                 {e.pipelineName}
                 <StatusBadge status={e.stage} />
               </p>
