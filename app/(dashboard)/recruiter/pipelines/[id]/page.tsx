@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 import { format } from 'date-fns'
 
-import RecruiterCharts from '@/components/dashboard/recruiter/charts'
 import PipelineBoard from '@/components/dashboard/recruiter/pipeline-board'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
@@ -14,26 +13,23 @@ import { candidates } from '@/lib/db/schema/viskify'
 export const revalidate = 0
 
 /**
- * Pipeline board view for a specific recruiter pipeline.
- * Dynamic route params are now asynchronous in Next 15,
- * so we await `params` before accessing its properties.
+ * Recruiter pipeline board (Kanban‑style) — charts removed per UX feedback.
  */
 export default async function PipelineBoardPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  // ---------------------- dynamic param -----------------------
+  /* ------------------------- dynamic param -------------------------- */
   const { id } = await params
   const pipelineId = Number(id)
 
-  /* -------------------------------------------------------------------- */
-  /*                          Auth & ownership check                      */
-  /* -------------------------------------------------------------------- */
+  /* --------------------------- auth guard --------------------------- */
   const user = await getUser()
   if (!user) redirect('/sign-in')
   if (user.role !== 'recruiter') redirect('/')
 
+  /* --------------------- load pipeline & verify --------------------- */
   const [pipeline] = await db
     .select()
     .from(recruiterPipelines)
@@ -42,9 +38,7 @@ export default async function PipelineBoardPage({
 
   if (!pipeline || pipeline.recruiterId !== user.id) redirect('/recruiter/pipelines')
 
-  /* -------------------------------------------------------------------- */
-  /*                            Fetch candidates                          */
-  /* -------------------------------------------------------------------- */
+  /* ------------------------ candidate rows -------------------------- */
   const rows = await db
     .select({
       pc: pipelineCandidates,
@@ -57,14 +51,14 @@ export default async function PipelineBoardPage({
     .where(eq(pipelineCandidates.pipelineId, pipelineId))
 
   type Candidate = {
-    id: number // pipeline‑candidate PK
-    candidateId: number // original candidate PK
+    id: number
+    candidateId: number
     name: string
     email: string
     stage: Stage
   }
 
-  /* ------------------------ Normalise into columns --------------------- */
+  /* ------------- normalise into stage‑keyed collections ------------- */
   const initialData: Record<Stage, Candidate[]> = STAGES.reduce(
     (acc, s) => ({ ...acc, [s]: [] }),
     {} as Record<Stage, Candidate[]>,
@@ -81,20 +75,12 @@ export default async function PipelineBoardPage({
     })
   })
 
-  /* ------------------------- Aggregate statistics ---------------------- */
-  const stageData = STAGES.map((s) => ({
-    stage: s,
-    count: initialData[s].length,
-  }))
   const totalCandidates = rows.length
-  const uniqueCandidates = totalCandidates // duplicates cannot exist within one pipeline
 
-  /* -------------------------------------------------------------------- */
-  /*                               UI                                     */
-  /* -------------------------------------------------------------------- */
+  /* ------------------------------ UI ------------------------------- */
   return (
     <section className="space-y-8">
-      {/* ----------------------- Pipeline header ----------------------- */}
+      {/* Header */}
       <header className="space-y-1">
         <h2 className="flex items-center gap-2 text-2xl font-semibold">
           {pipeline.name}
@@ -115,12 +101,7 @@ export default async function PipelineBoardPage({
         </p>
       </header>
 
-      {/* --------------------------- Charts ------------------------------ */}
-      {totalCandidates > 0 && (
-        <RecruiterCharts stageData={stageData} uniqueCandidates={uniqueCandidates} />
-      )}
-
-      {/* ------------------------- Kanban board ------------------------- */}
+      {/* Kanban board */}
       <PipelineBoard pipelineId={pipelineId} initialData={initialData} />
     </section>
   )
