@@ -1,14 +1,20 @@
 'use client'
 
+import {
+  CheckCircle2,
+  Clock,
+  XCircle,
+  HelpCircle,
+  type LucideIcon,
+} from 'lucide-react'
+
 import { STAGES } from '@/lib/constants/recruiter'
 import { cn } from '@/lib/utils'
 
-/**
- * Global status badge — supports credential, invitation, issuer and
- * recruiter‑pipeline stages so every status indicator is centralised.
- *
- * Add/adjust colours here only; all callers simply import `<StatusBadge />`.
- */
+/* -------------------------------------------------------------------------- */
+/*                               Color mapping                                */
+/* -------------------------------------------------------------------------- */
+
 const STYLE_MAP: Record<string, string> = {
   /* Credential / generic states */
   verified:
@@ -20,9 +26,9 @@ const STYLE_MAP: Record<string, string> = {
   pending:
     'bg-amber-500/20 text-amber-900 dark:bg-amber-400/20 dark:text-amber-200',
   unverified:
-    'bg-zinc-500/15 text-zinc-800 dark:bg-zinc-500/20 dark:text-zinc-200',
+    'bg-muted text-muted-foreground',
   inactive:
-    'bg-zinc-500/15 text-zinc-800 dark:bg-zinc-500/20 dark:text-zinc-200',
+    'bg-muted text-muted-foreground',
   declined:
     'bg-rose-600/15 text-rose-900 dark:bg-rose-500/20 dark:text-rose-200',
   rejected:
@@ -30,10 +36,24 @@ const STYLE_MAP: Record<string, string> = {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                       Dynamic recruiter‑pipeline stages                    */
+/*                               Icon mapping                                 */
 /* -------------------------------------------------------------------------- */
 
-/** Neutral primary‑tinted chip for every pipeline stage. */
+const ICON_MAP: Record<string, LucideIcon> = {
+  verified: CheckCircle2,
+  active: CheckCircle2,
+  accepted: CheckCircle2,
+  pending: Clock,
+  unverified: HelpCircle,
+  inactive: HelpCircle,
+  declined: XCircle,
+  rejected: XCircle,
+}
+
+/* -------------------------------------------------------------------------- */
+/*                     Dynamic recruiter‑pipeline stages                      */
+/* -------------------------------------------------------------------------- */
+
 const PIPELINE_STYLE =
   'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-200'
 
@@ -48,20 +68,43 @@ STAGES.forEach((stage) => {
 export interface StatusBadgeProps {
   status: string
   className?: string
+  /** Show status‑specific icon. Defaults to false. */
+  showIcon?: boolean
+  /** 'left' | 'right'; icon placement relative to text. Defaults to 'left'. */
+  iconPosition?: 'left' | 'right'
+  /** Optional number to display after the label, e.g. "Verified: 3”. */
+  count?: number
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({
+  status,
+  className,
+  showIcon = false,
+  iconPosition = 'left',
+  count,
+}: StatusBadgeProps) {
   const key = status.toLowerCase()
   const style = STYLE_MAP[key] ?? STYLE_MAP.unverified
+  const Icon = ICON_MAP[key]
+
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium capitalize whitespace-nowrap',
+        'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap gap-1',
         style,
         className,
       )}
     >
-      {status}
+      {showIcon && iconPosition === 'left' && Icon && (
+        <Icon className="size-3 shrink-0" />
+      )}
+
+      <span className="capitalize">{status}</span>
+      {count !== undefined && <span>: {count}</span>}
+
+      {showIcon && iconPosition === 'right' && Icon && (
+        <Icon className="size-3 shrink-0" />
+      )}
     </span>
   )
 }

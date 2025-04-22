@@ -2,12 +2,6 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { eq, and, sql } from 'drizzle-orm'
 import { format } from 'date-fns'
-import {
-  CheckCircle2,
-  Clock,
-  XCircle,
-  HelpCircle,
-} from 'lucide-react'
 
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
@@ -68,22 +62,6 @@ function initials(name?: string | null, email?: string): string {
     ).toUpperCase()
   }
   return email?.slice(0, 2).toUpperCase() ?? ''
-}
-
-function statusChip(
-  label: string,
-  count: number,
-  color: string,
-  Icon: any,
-) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${color}`}
-    >
-      <Icon className="h-3 w-3" />
-      {label}: {count}
-    </span>
-  )
 }
 
 /* -------------------------------------------------------------------------- */
@@ -253,31 +231,26 @@ export default async function CandidateProfilePage({
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
             Credentials
-            {/* Status chips */}
-            {statusChip(
-              'Verified',
-              statusCounts.verified,
-              'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-              CheckCircle2,
-            )}
-            {statusChip(
-              'Pending',
-              statusCounts.pending,
-              'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-              Clock,
-            )}
-            {statusChip(
-              'Rejected',
-              statusCounts.rejected,
-              'bg-rose-500/10 text-rose-700 dark:text-rose-400',
-              XCircle,
-            )}
-            {statusChip(
-              'Unverified',
-              statusCounts.unverified,
-              'bg-muted text-muted-foreground',
-              HelpCircle,
-            )}
+            <StatusBadge
+              status="verified"
+              showIcon
+              count={statusCounts.verified}
+            />
+            <StatusBadge
+              status="pending"
+              showIcon
+              count={statusCounts.pending}
+            />
+            <StatusBadge
+              status="rejected"
+              showIcon
+              count={statusCounts.rejected}
+            />
+            <StatusBadge
+              status="unverified"
+              showIcon
+              count={statusCounts.unverified}
+            />
           </CardTitle>
         </CardHeader>
         <CardContent>
