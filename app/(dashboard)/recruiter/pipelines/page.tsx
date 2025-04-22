@@ -31,7 +31,7 @@ export default async function PipelinesPage({
 }) {
   const params = (await searchParams) as Query
 
-  /* ----------------------------- Auth guard ------------------------------ */
+  /* ----------------------------- Auth guard ------------------------------ */
   const user = await getUser()
   if (!user) redirect('/sign-in')
   if (user.role !== 'recruiter') redirect('/')
@@ -83,16 +83,14 @@ export default async function PipelinesPage({
       </div>
 
       {/* Results */}
-      <div className='overflow-x-auto rounded-md border'>
-        <PipelinesTable
-          rows={rows}
-          sort={sort}
-          order={order as 'asc' | 'desc'}
-          basePath='/recruiter/pipelines'
-          initialParams={initialParams}
-          searchQuery={searchTerm}
-        />
-      </div>
+      <PipelinesTable
+        rows={rows}
+        sort={sort}
+        order={order as 'asc' | 'desc'}
+        basePath='/recruiter/pipelines'
+        initialParams={initialParams}
+        searchQuery={searchTerm}
+      />
 
       <TablePagination
         page={page}

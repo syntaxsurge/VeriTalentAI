@@ -78,8 +78,8 @@ export default async function TalentSearchPage({
   add('size')
   add('sort')
   add('order')
-  add('q') // retain search term for filters + table search
-  // skillMin and skillMax handled separately below
+  add('q')
+  /* skillMin/skillMax handled separately */
 
   /* ------------------------------- View ---------------------------------- */
   return (
@@ -96,21 +96,19 @@ export default async function TalentSearchPage({
       />
 
       {/* Results table */}
-      <div className='overflow-x-auto rounded-md border'>
-        <TalentTable
-          rows={rows}
-          sort={sort}
-          order={order as 'asc' | 'desc'}
-          basePath='/recruiter/talent'
-          initialParams={{
-            ...initialParams,
-            skillMin: String(skillMin),
-            skillMax: String(skillMax),
-            verifiedOnly: verifiedOnly ? '1' : '',
-          }}
-          searchQuery={searchTerm}
-        />
-      </div>
+      <TalentTable
+        rows={rows}
+        sort={sort}
+        order={order as 'asc' | 'desc'}
+        basePath='/recruiter/talent'
+        initialParams={{
+          ...initialParams,
+          skillMin: String(skillMin),
+          skillMax: String(skillMax),
+          verifiedOnly: verifiedOnly ? '1' : '',
+        }}
+        searchQuery={searchTerm}
+      />
 
       <TablePagination
         page={page}

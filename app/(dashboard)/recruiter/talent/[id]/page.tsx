@@ -210,16 +210,14 @@ export default async function CandidateProfilePage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className='overflow-x-auto rounded-md border'>
-            <CredentialsTable
-              rows={credRows}
-              sort={sort}
-              order={order as 'asc' | 'desc'}
-              basePath={`/recruiter/talent/${candidateId}`}
-              initialParams={initialParams}
-              searchQuery={searchTerm}
-            />
-          </div>
+          <CredentialsTable
+            rows={credRows}
+            sort={sort}
+            order={order as 'asc' | 'desc'}
+            basePath={`/recruiter/talent/${candidateId}`}
+            initialParams={initialParams}
+            searchQuery={searchTerm}
+          />
           <TablePagination
             page={page}
             hasNext={hasNext}
