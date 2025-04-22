@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { ActionButton } from '@/components/ui/action-button'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectTrigger,
@@ -35,9 +34,7 @@ interface Props {
 
 export default function AddToPipelineForm({ candidateId, pipelines }: Props) {
   const router = useRouter()
-  const [pipelineId, setPipelineId] = useState<string>(
-    pipelines.length > 0 ? String(pipelines[0].id) : '',
-  )
+  const [pipelineId, setPipelineId] = useState<string>('')
 
   async function handleAdd() {
     const fd = new FormData()
@@ -51,18 +48,14 @@ export default function AddToPipelineForm({ candidateId, pipelines }: Props) {
   return (
     <form onSubmit={(e) => e.preventDefault()} className='flex items-end gap-3'>
       {/* Pipeline selector */}
-      <div className='flex flex-1 flex-col gap-2'>
-        <Label htmlFor='pipelineId' className='text-sm font-medium'>
-          Add to Pipeline
-        </Label>
-
+      <div className='flex flex-1'>
         <Select
           value={pipelineId}
           onValueChange={(val) => setPipelineId(val)}
           disabled={pipelines.length === 0}
         >
-          <SelectTrigger id='pipelineId'>
-            <SelectValue placeholder='Select pipeline' />
+          <SelectTrigger id='pipelineId' className='w-full'>
+            <SelectValue placeholder='Add to Pipeline' />
           </SelectTrigger>
 
           <SelectContent>

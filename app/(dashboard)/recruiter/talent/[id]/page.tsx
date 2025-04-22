@@ -229,25 +229,27 @@ export default async function CandidateProfilePage({
   return (
     <section className='space-y-10'>
       {/* ----------- Hero / header ----------- */}
-      <div className='relative overflow-hidden rounded-lg bg-gradient-to-r from-primary/80 to-primary/40 p-8 text-primary-foreground shadow-lg'>
-        <div className='flex flex-col items-center gap-6 sm:flex-row'>
-          <Avatar className='size-28 text-3xl ring-4 ring-white/30'>
+      <div className='relative overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary/70 p-10 text-primary-foreground shadow-lg'>
+        <div className='flex flex-col items-center gap-8 sm:flex-row'>
+          <Avatar className='size-32 text-4xl ring-4 ring-white/40'>
             <AvatarFallback>{initials(row.userRow?.name, row.userRow?.email)}</AvatarFallback>
           </Avatar>
 
-          <div className='space-y-2 text-center sm:text-left'>
-            <h1 className='text-3xl font-semibold sm:text-4xl'>
-              {row.userRow?.name || 'Unnamed Candidate'}
-            </h1>
-
-            <div className='flex flex-wrap items-center justify-center gap-3 sm:justify-start'>
+          <div className='space-y-4 text-center sm:text-left'>
+            <div>
+              <h1 className='text-4xl font-bold tracking-tight'>
+                {row.userRow?.name || 'Unnamed Candidate'}
+              </h1>
               <Link
                 href={`mailto:${row.userRow?.email}`}
-                className='underline-offset-4 hover:underline'
+                className='text-primary-foreground/90 underline-offset-4 hover:underline'
               >
                 {row.userRow?.email}
               </Link>
+            </div>
 
+            {/* Badges */}
+            <div className='flex flex-wrap items-center justify-center gap-2 sm:justify-start'>
               <Badge variant='secondary' className='capitalize'>
                 {pipelineSummary}
               </Badge>
@@ -264,23 +266,16 @@ export default async function CandidateProfilePage({
                 </Badge>
               )}
             </div>
+
+            {/* Bio */}
+            <p className='mx-auto max-w-3xl whitespace-pre-line text-sm leading-relaxed opacity-90 sm:mx-0'>
+              {row.cand.bio || 'No bio provided.'}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* ---------- About ---------- */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Bio</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className='whitespace-pre-line text-sm leading-relaxed'>
-            {row.cand.bio || 'No bio provided.'}
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* ---------- Pipeline entries (now first) ---------- */}
+      {/* ---------- Pipeline entries ---------- */}
       <Card id='pipeline-entries'>
         <CardHeader className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
           <CardTitle>Pipeline&nbsp;Entries</CardTitle>
