@@ -3,7 +3,13 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowUpDown, Trash2, ChevronDown } from 'lucide-react'
+import {
+  ArrowUpDown,
+  Trash2,
+  MoreHorizontal,
+  Loader2,
+  FolderKanban,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -13,6 +19,8 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu'
 
@@ -87,6 +95,63 @@ function makeBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowTy
 }
 
 /* -------------------------------------------------------------------------- */
+/*                             Row‑level actions                              */
+/* -------------------------------------------------------------------------- */
+
+function RowActions({ row }: { row: RowType }) {
+  const router = useRouter()
+  const [isPending, startTransition] = React.useTransition()
+  const [menuOpen, setMenuOpen] = React.useState(false)
+
+  function destroy() {
+    startTransition(async () => {
+      const fd = new FormData()
+      fd.append('pipelineId', row.id.toString())
+      const res = await deletePipelineAction({}, fd)
+      if (res?.error) {
+        toast.error(res.error)
+      } else {
+        toast.success(res?.success ?? 'Pipeline deleted.')
+        router.refresh()
+      }
+    })
+  }
+
+  return (
+    <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <MoreHorizontal className="h-4 w-4" />
+          )}
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" className="rounded-md p-1 shadow-lg">
+        <DropdownMenuItem asChild>
+          <Link href={`/recruiter/pipelines/${row.id}`} className="cursor-pointer">
+            <FolderKanban className="mr-2 h-4 w-4" />
+            Open&nbsp;Board
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={destroy}
+          disabled={isPending}
+          className="cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400"
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -155,15 +220,11 @@ export default function PipelinesTable({
           formatDistanceToNow(new Date(v as string), { addSuffix: true }),
       },
       {
-        key: 'id',
+        key: 'actions',
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => (
-          <Link href={`/recruiter/pipelines/${row.id}`} className="text-primary underline">
-            Open&nbsp;Board
-          </Link>
-        ),
+        render: (_v, row) => <RowActions row={row} />,
       },
     ]
   }, [sort, order, basePath, initialParams, search])
