@@ -32,9 +32,9 @@ interface Props {
 /**
  * Responsive drag‑and‑drop Kanban board for recruiter pipelines.
  */
-export default function PipelineBoard({ pipelineId, initialData }: Props) {
+export default function PipelineBoard({ pipelineId: _pipelineId, initialData }: Props) {
   const [columns, setColumns] = useState<Record<Stage, Candidate[]>>(initialData)
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
 
   /* --------------------------- Persist move --------------------------- */
   function persistMove(id: number, newStage: Stage) {
