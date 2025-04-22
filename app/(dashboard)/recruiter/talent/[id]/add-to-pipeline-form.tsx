@@ -4,8 +4,20 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { ActionButton } from '@/components/ui/action-button'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
 
 import { addCandidateToPipelineAction } from '../../pipelines/actions'
+
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
 
 interface Pipeline {
   id: number
@@ -17,17 +29,20 @@ interface Props {
   pipelines: Pipeline[]
 }
 
-/**
- * Displays pipeline selector and leverages ActionButton for add-to-pipeline flow.
- */
+/* -------------------------------------------------------------------------- */
+/*                                   View                                     */
+/* -------------------------------------------------------------------------- */
+
 export default function AddToPipelineForm({ candidateId, pipelines }: Props) {
   const router = useRouter()
-  const [pipelineId, setPipelineId] = useState<number>(pipelines[0]?.id ?? 0)
+  const [pipelineId, setPipelineId] = useState<string>(
+    pipelines.length > 0 ? String(pipelines[0].id) : '',
+  )
 
   async function handleAdd() {
     const fd = new FormData()
     fd.append('candidateId', String(candidateId))
-    fd.append('pipelineId', String(pipelineId))
+    fd.append('pipelineId', pipelineId)
     const res = await addCandidateToPipelineAction({}, fd)
     if (res?.success) router.refresh()
     return res
@@ -35,27 +50,37 @@ export default function AddToPipelineForm({ candidateId, pipelines }: Props) {
 
   return (
     <form onSubmit={(e) => e.preventDefault()} className='flex items-end gap-3'>
-      <div className='flex flex-1 flex-col'>
-        <label htmlFor='pipelineId' className='mb-1 text-sm font-medium'>
+      {/* Pipeline selector */}
+      <div className='flex flex-1 flex-col gap-2'>
+        <Label htmlFor='pipelineId' className='text-sm font-medium'>
           Add to Pipeline
-        </label>
-        <select
-          id='pipelineId'
-          name='pipelineId'
-          required
+        </Label>
+
+        <Select
           value={pipelineId}
-          onChange={(e) => setPipelineId(Number(e.target.value))}
-          className='border-border h-10 rounded-md border px-2 text-sm'
+          onValueChange={(val) => setPipelineId(val)}
+          disabled={pipelines.length === 0}
         >
-          {pipelines.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id='pipelineId'>
+            <SelectValue placeholder='Select pipeline' />
+          </SelectTrigger>
+
+          <SelectContent>
+            {pipelines.map((p) => (
+              <SelectItem key={p.id} value={String(p.id)}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <ActionButton onAction={handleAdd} pendingLabel='Adding…'>
+      {/* Submit button */}
+      <ActionButton
+        onAction={handleAdd}
+        pendingLabel='Adding…'
+        disabled={!pipelineId || pipelines.length === 0}
+      >
         Add
       </ActionButton>
     </form>
