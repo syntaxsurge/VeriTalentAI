@@ -1,21 +1,15 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowUpDown,
-  FileSignature,
-  XCircle,
-  type LucideProps,
-} from 'lucide-react'
+import * as React from 'react'
+
+import { ArrowUpDown, FileSignature, XCircle, type LucideProps } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
-import { Button } from '@/components/ui/button'
-import { StatusBadge } from '@/components/ui/status-badge'
-
 import { rejectCredentialAction } from '@/app/(dashboard)/issuer/credentials/actions'
+import { StatusBadge } from '@/components/ui/status-badge'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import { CredentialStatus } from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
@@ -44,11 +38,7 @@ interface Props {
 /*                                 Helpers                                    */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -74,7 +64,7 @@ function RowActions({ row }: { row: RowType }) {
   return (
     <Link
       href={`/issuer/credentials/${row.id}`}
-      className='inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-primary hover:bg-muted hover:text-foreground'
+      className='text-primary hover:bg-muted hover:text-foreground inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium'
     >
       <FileSignature className='h-4 w-4' />
       <span className='hidden sm:inline'>Review&nbsp;&amp;&nbsp;Sign</span>

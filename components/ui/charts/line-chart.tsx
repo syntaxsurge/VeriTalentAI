@@ -1,13 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import {
-  CartesianGrid,
-  Line as ReLine,
-  LineChart as ReLineChart,
-  XAxis,
-  YAxis,
-} from 'recharts'
+
+import { CartesianGrid, Line as ReLine, LineChart as ReLineChart, XAxis, YAxis } from 'recharts'
 
 import {
   ChartContainer,

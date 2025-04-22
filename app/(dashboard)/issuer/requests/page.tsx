@@ -1,13 +1,14 @@
 import { redirect } from 'next/navigation'
+
 import { eq } from 'drizzle-orm'
 
 import IssuerRequestsTable, { type RowType } from '@/components/dashboard/issuer/requests-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
+import { getIssuerRequestsPage } from '@/lib/db/queries/issuer-requests'
 import { getUser } from '@/lib/db/queries/queries'
 import { issuers } from '@/lib/db/schema/issuer'
-import { getIssuerRequestsPage } from '@/lib/db/queries/issuer-requests'
 
 export const revalidate = 0
 
@@ -39,11 +40,7 @@ export default async function RequestsPage({
   if (!user) redirect('/sign-in')
 
   /* --------------------- Validate issuer ownership ----------------------- */
-  const [issuer] = await db
-    .select()
-    .from(issuers)
-    .where(eq(issuers.ownerUserId, user.id))
-    .limit(1)
+  const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
 
   if (!issuer) redirect('/issuer/onboard')
 

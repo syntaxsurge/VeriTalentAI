@@ -1,12 +1,10 @@
 import { redirect } from 'next/navigation'
 
+import AdminIssuersTable, { RowType } from '@/components/dashboard/admin/issuers-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import AdminIssuersTable, {
-  RowType,
-} from '@/components/dashboard/admin/issuers-table'
-import { getUser } from '@/lib/db/queries/queries'
 import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
+import { getUser } from '@/lib/db/queries/queries'
 
 export const revalidate = 0
 
@@ -74,19 +72,19 @@ export default async function AdminIssuersPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className="space-y-6">
-      <h2 className="text-2xl font-semibold">Issuer Management</h2>
+    <section className='space-y-6'>
+      <h2 className='text-2xl font-semibold'>Issuer Management</h2>
 
       <Card>
         <CardHeader>
           <CardTitle>All Issuers</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent className='overflow-x-auto'>
           <AdminIssuersTable
             rows={rows}
             sort={sort}
             order={order as 'asc' | 'desc'}
-            basePath="/admin/issuers"
+            basePath='/admin/issuers'
             initialParams={initialParams}
             searchQuery={searchTerm}
           />
@@ -94,7 +92,7 @@ export default async function AdminIssuersPage({
           <TablePagination
             page={page}
             hasNext={hasNext}
-            basePath="/admin/issuers"
+            basePath='/admin/issuers'
             initialParams={initialParams}
             pageSize={pageSize}
           />

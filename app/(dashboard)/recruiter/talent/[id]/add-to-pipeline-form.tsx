@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 import { ActionButton } from '@/components/ui/action-button'
+
 import { addCandidateToPipelineAction } from '../../pipelines/actions'
 
 interface Pipeline {
@@ -33,10 +34,7 @@ export default function AddToPipelineForm({ candidateId, pipelines }: Props) {
   }
 
   return (
-    <form
-      onSubmit={(e) => e.preventDefault()}
-      className='flex items-end gap-3'
-    >
+    <form onSubmit={(e) => e.preventDefault()} className='flex items-end gap-3'>
       <div className='flex flex-1 flex-col'>
         <label htmlFor='pipelineId' className='mb-1 text-sm font-medium'>
           Add to Pipeline

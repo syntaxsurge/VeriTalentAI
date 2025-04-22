@@ -122,8 +122,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   }
 
   const passwordHash = await hashPassword(password)
-  const desiredRole =
-    (data.role as 'candidate' | 'recruiter' | 'issuer' | undefined) ?? 'candidate'
+  const desiredRole = (data.role as 'candidate' | 'recruiter' | 'issuer' | undefined) ?? 'candidate'
 
   /* ------------------------------------------------------------------ */
   /* Create user record                                                 */
@@ -339,12 +338,7 @@ export const removeTeamMember = validatedActionWithUser(
         const existingPersonal = await tx
           .select()
           .from(teamMembers)
-          .where(
-            and(
-              eq(teamMembers.teamId, personalTeam.id),
-              eq(teamMembers.userId, kickedUserId),
-            ),
-          )
+          .where(and(eq(teamMembers.teamId, personalTeam.id), eq(teamMembers.userId, kickedUserId)))
           .limit(1)
 
         if (existingPersonal.length === 0) {
@@ -395,8 +389,7 @@ export const inviteTeamMember = validatedActionWithUser(
       )
       .limit(1)
 
-    if (existingInvitation.length > 0)
-      return { error: 'An invitation has already been sent.' }
+    if (existingInvitation.length > 0) return { error: 'An invitation has already been sent.' }
 
     await db.insert(invitations).values({
       teamId: userWithTeam.teamId,

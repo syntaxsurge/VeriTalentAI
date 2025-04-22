@@ -1,8 +1,8 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
 
 import { Button } from '@/components/ui/button'
 
@@ -29,11 +29,7 @@ interface TablePaginationProps {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -86,7 +82,7 @@ export function TablePagination({
   return (
     <div className='flex w-full flex-col gap-3 py-4 sm:flex-row sm:items-center'>
       {/* Left — current page label */}
-      <span className='text-sm text-muted-foreground'>Page {page}</span>
+      <span className='text-muted-foreground text-sm'>Page {page}</span>
 
       {/* Right — controls */}
       <div className='flex items-center gap-2 sm:ml-auto'>

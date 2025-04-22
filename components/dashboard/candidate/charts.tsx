@@ -1,9 +1,9 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { PieChart } from '@/components/ui/charts/pie-chart'
-import { LineChart } from '@/components/ui/charts/line-chart'
 import { type ChartConfig } from '@/components/ui/charts/chart'
+import { LineChart } from '@/components/ui/charts/line-chart'
+import { PieChart } from '@/components/ui/charts/pie-chart'
 
 export interface ScoreDatum {
   date: string

@@ -1,8 +1,9 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
+
 import { ArrowUpDown } from 'lucide-react'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
@@ -33,11 +34,7 @@ interface TalentTableProps {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -122,10 +119,7 @@ export default function TalentTable({
         enableHiding: false,
         sortable: false,
         render: (_v, row) => (
-          <Link
-            href={`/recruiter/talent/${row.id}`}
-            className='text-primary underline'
-          >
+          <Link href={`/recruiter/talent/${row.id}`} className='text-primary underline'>
             View Profile
           </Link>
         ),

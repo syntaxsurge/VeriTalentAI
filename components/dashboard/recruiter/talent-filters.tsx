@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 import { Slider } from '@/components/ui/slider'
 
@@ -18,11 +18,7 @@ interface TalentFiltersProps {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => {
     if (v === '' || v === false || v === undefined || v === null) {
@@ -60,18 +56,17 @@ export default function TalentFilters({
       page: 1, // reset pagination
     })
     router.push(href, { scroll: false })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, verifiedOnly])
 
   return (
-    <div className="mb-6 flex flex-wrap items-end gap-4">
+    <div className='mb-6 flex flex-wrap items-end gap-4'>
       {/* Skill‑score range */}
-      <div className="flex flex-col">
-        <label htmlFor="skillRange" className="mb-2 text-sm font-medium">
+      <div className='flex flex-col'>
+        <label htmlFor='skillRange' className='mb-2 text-sm font-medium'>
           Skill&nbsp;Score&nbsp;({range[0]}–{range[1]})
         </label>
         <Slider
-          id="skillRange"
+          id='skillRange'
           min={0}
           max={100}
           step={1}
@@ -82,20 +77,20 @@ export default function TalentFilters({
               Math.max(Math.min(100, v[1] ?? 100), 0),
             ])
           }
-          className="w-56"
+          className='w-56'
         />
       </div>
 
       {/* Verified‑only toggle */}
-      <div className="flex items-center gap-2 self-center pt-4">
+      <div className='flex items-center gap-2 self-center pt-4'>
         <input
-          id="verifiedOnly"
-          type="checkbox"
-          className="size-4 cursor-pointer accent-primary"
+          id='verifiedOnly'
+          type='checkbox'
+          className='accent-primary size-4 cursor-pointer'
           checked={verifiedOnly}
           onChange={(e) => setVerifiedOnly(e.target.checked)}
         />
-        <label htmlFor="verifiedOnly" className="cursor-pointer text-sm">
+        <label htmlFor='verifiedOnly' className='cursor-pointer text-sm'>
           Verified&nbsp;only
         </label>
       </div>

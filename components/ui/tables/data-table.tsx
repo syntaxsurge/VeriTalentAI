@@ -1,6 +1,7 @@
-"use client"
+'use client'
 
-import * as React from "react"
+import * as React from 'react'
+
 import {
   ColumnDef,
   flexRender,
@@ -13,17 +14,11 @@ import {
   ColumnFiltersState,
   RowSelectionState,
   SortingState,
-} from "@tanstack/react-table"
-import {
-  ArrowUpDown,
-  ChevronDown,
-  MoreHorizontal,
-  type LucideIcon,
-} from "lucide-react"
+} from '@tanstack/react-table'
+import { ArrowUpDown, ChevronDown, MoreHorizontal, type LucideIcon } from 'lucide-react'
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -32,8 +27,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -41,7 +36,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/tables/table"
+} from '@/components/ui/tables/table'
+import { cn } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                                P U B L I C                                 */
@@ -60,7 +56,7 @@ export interface BulkAction<T extends Record<string, any>> {
   label: string
   icon: LucideIcon
   onClick: (selectedRows: T[]) => void | Promise<void>
-  variant?: "default" | "destructive" | "outline"
+  variant?: 'default' | 'destructive' | 'outline'
   isAvailable?: (selectedRows: T[]) => boolean
   isDisabled?: (selectedRows: T[]) => boolean
 }
@@ -94,48 +90,33 @@ interface DataTableProps<T extends Record<string, any>> {
 /*                               H E L P E R S                                */
 /* -------------------------------------------------------------------------- */
 
-function SortableHeader({
-  column,
-  title,
-}: {
-  column: any
-  title: React.ReactNode
-}) {
+function SortableHeader({ column, title }: { column: any; title: React.ReactNode }) {
   return (
     <Button
-      variant="ghost"
-      size="sm"
-      className="-ml-3 h-8 data-[state=open]:bg-accent"
-      onClick={() =>
-        column.toggleSorting(column.getIsSorted() === "asc", false)
-      }
+      variant='ghost'
+      size='sm'
+      className='data-[state=open]:bg-accent -ml-3 h-8'
+      onClick={() => column.toggleSorting(column.getIsSorted() === 'asc', false)}
     >
       <span>{title}</span>
-      <ArrowUpDown className="ml-1 h-4 w-4" />
+      <ArrowUpDown className='ml-1 h-4 w-4' />
     </Button>
   )
 }
 
 const checkboxOutline =
-  "border-foreground/50 data-[state=unchecked]:bg-background data-[state=unchecked]:border-foreground/50"
+  'border-foreground/50 data-[state=unchecked]:bg-background data-[state=unchecked]:border-foreground/50'
 
-function buildColumnDefs<T extends Record<string, any>>(
-  cols: Column<T>[],
-): ColumnDef<T>[] {
+function buildColumnDefs<T extends Record<string, any>>(cols: Column<T>[]): ColumnDef<T>[] {
   return cols.map((col) => {
-    const headerLabel =
-      typeof col.header === "string" ? col.header : String(col.key)
+    const headerLabel = typeof col.header === 'string' ? col.header : String(col.key)
 
     return {
       accessorKey: col.key as string,
       header: col.sortable
-        ? ({ column }) => (
-            <SortableHeader column={column} title={col.header} />
-          )
+        ? ({ column }) => <SortableHeader column={column} title={col.header} />
         : col.header,
-      cell: col.render
-        ? ({ row }) => col.render!(row.original[col.key], row.original)
-        : undefined,
+      cell: col.render ? ({ row }) => col.render!(row.original[col.key], row.original) : undefined,
       enableSorting: !!col.sortable,
       enableHiding: col.enableHiding !== false,
       meta: { className: col.className, label: headerLabel } as any,
@@ -170,10 +151,8 @@ export function DataTable<T extends Record<string, any>>({
 }: DataTableProps<T>) {
   const includeSelection = bulkActions.length > 0
 
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] =
-    React.useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [pagination, setPagination] = React.useState({
@@ -205,16 +184,16 @@ export function DataTable<T extends Record<string, any>>({
     if (!includeSelection) return base
 
     const selectCol: ColumnDef<T> = {
-      id: "select",
+      id: 'select',
       header: ({ table }) => (
         <Checkbox
           className={checkboxOutline}
           checked={
             table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
+            (table.getIsSomePageRowsSelected() && 'indeterminate')
           }
           onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
-          aria-label="Select all rows"
+          aria-label='Select all rows'
         />
       ),
       cell: ({ row }) => (
@@ -222,7 +201,7 @@ export function DataTable<T extends Record<string, any>>({
           className={checkboxOutline}
           checked={row.getIsSelected()}
           onCheckedChange={(v) => row.toggleSelected(!!v)}
-          aria-label="Select row"
+          aria-label='Select row'
         />
       ),
       enableSorting: false,
@@ -253,10 +232,7 @@ export function DataTable<T extends Record<string, any>>({
   /* --------------------------- Derived helpers ----------------------------- */
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const selectedCount = selectedRows.length
-  const selectedOriginals = React.useMemo(
-    () => selectedRows.map((r) => r.original),
-    [selectedRows],
-  )
+  const selectedOriginals = React.useMemo(() => selectedRows.map((r) => r.original), [selectedRows])
   const { pageIndex, pageSize: size } = table.getState().pagination
   const pageCount = table.getPageCount()
 
@@ -273,11 +249,11 @@ export function DataTable<T extends Record<string, any>>({
   /*                                  UI                                     */
   /* ------------------------------------------------------------------------ */
   return (
-    <div className="w-full overflow-x-auto">
+    <div className='w-full overflow-x-auto'>
       {(filterKey ||
         table.getAllColumns().some((c) => c.getCanHide()) ||
         bulkActions.length > 0) && (
-        <div className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center">
+        <div className='flex flex-col gap-2 py-4 sm:flex-row sm:items-center'>
           {/* Filter input */}
           {filterKey && (
             <Input
@@ -285,13 +261,13 @@ export function DataTable<T extends Record<string, any>>({
               value={
                 filterValue !== undefined
                   ? filterValue
-                  : (filterColumn?.getFilterValue() as string | undefined) ?? ""
+                  : ((filterColumn?.getFilterValue() as string | undefined) ?? '')
               }
               onChange={(e) => {
                 filterColumn?.setFilterValue(e.target.value)
                 onFilterChange?.(e.target.value)
               }}
-              className="max-w-sm sm:mr-auto"
+              className='max-w-sm sm:mr-auto'
             />
           )}
 
@@ -299,16 +275,15 @@ export function DataTable<T extends Record<string, any>>({
           {bulkActions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="sm:ml-2">
-                  Bulk&nbsp;Selection{" "}
-                  {selectedCount > 0 && `(${selectedCount})`}{" "}
-                  <ChevronDown className="ml-1 h-4 w-4" />
+                <Button variant='outline' className='sm:ml-2'>
+                  Bulk&nbsp;Selection {selectedCount > 0 && `(${selectedCount})`}{' '}
+                  <ChevronDown className='ml-1 h-4 w-4' />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
+              <DropdownMenuContent align='start'>
                 {selectedCount === 0 && (
                   <>
-                    <DropdownMenuLabel className="text-muted-foreground">
+                    <DropdownMenuLabel className='text-muted-foreground'>
                       No rows selected
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
@@ -316,10 +291,7 @@ export function DataTable<T extends Record<string, any>>({
                 )}
 
                 {bulkActions
-                  .filter(
-                    (a) =>
-                      !a.isAvailable || a.isAvailable(selectedOriginals),
-                  )
+                  .filter((a) => !a.isAvailable || a.isAvailable(selectedOriginals))
                   .map((a) => (
                     <DropdownMenuItem
                       key={a.label}
@@ -329,17 +301,15 @@ export function DataTable<T extends Record<string, any>>({
                         (a.isDisabled ? a.isDisabled(selectedOriginals) : false)
                       }
                       className={cn(
-                        "cursor-pointer",
-                        a.variant === "destructive" &&
-                          "text-rose-600 dark:text-rose-400 font-medium",
+                        'cursor-pointer',
+                        a.variant === 'destructive' &&
+                          'font-medium text-rose-600 dark:text-rose-400',
                         (selectedCount === 0 ||
-                          (a.isDisabled
-                            ? a.isDisabled(selectedOriginals)
-                            : false)) &&
-                          "opacity-50 cursor-not-allowed",
+                          (a.isDisabled ? a.isDisabled(selectedOriginals) : false)) &&
+                          'cursor-not-allowed opacity-50',
                       )}
                     >
-                      <a.icon className="mr-2 h-4 w-4" />
+                      <a.icon className='mr-2 h-4 w-4' />
                       {a.label}
                     </DropdownMenuItem>
                   ))}
@@ -351,11 +321,11 @@ export function DataTable<T extends Record<string, any>>({
           {table.getAllColumns().some((c) => c.getCanHide()) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="sm:ml-2">
-                  Columns <ChevronDown className="ml-2 h-4 w-4" />
+                <Button variant='outline' className='sm:ml-2'>
+                  Columns <ChevronDown className='ml-2 h-4 w-4' />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align='end'>
                 {table
                   .getAllColumns()
                   .filter((c) => c.getCanHide())
@@ -364,7 +334,7 @@ export function DataTable<T extends Record<string, any>>({
                     return (
                       <DropdownMenuCheckboxItem
                         key={c.id}
-                        className="capitalize"
+                        className='capitalize'
                         checked={c.getIsVisible()}
                         onCheckedChange={(v) => c.toggleVisibility(!!v)}
                       >
@@ -379,21 +349,18 @@ export function DataTable<T extends Record<string, any>>({
       )}
 
       {/* ----------------------------- Table body ----------------------------- */}
-      <div className="rounded-md border">
-        <Table className="w-full table-auto">
+      <div className='rounded-md border'>
+        <Table className='w-full table-auto'>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((header) => {
                   const cls = (header.column.columnDef.meta as any)?.className
                   return (
-                    <TableHead key={header.id} className={cn(cls, "break-words")}>
+                    <TableHead key={header.id} className={cn(cls, 'break-words')}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
+                        : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   )
                 })}
@@ -403,26 +370,17 @@ export function DataTable<T extends Record<string, any>>({
           <TableBody>
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="break-words align-top"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
+                    <TableCell key={cell.id} className='align-top break-words'>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columnDefs.length} className="h-24 text-center">
+                <TableCell colSpan={columnDefs.length} className='h-24 text-center'>
                   No results.
                 </TableCell>
               </TableRow>
@@ -433,16 +391,16 @@ export function DataTable<T extends Record<string, any>>({
 
       {/* ---------------------------- Pagination ----------------------------- */}
       {!hidePagination && (
-        <div className="flex flex-col items-center justify-between gap-2 py-4 sm:flex-row">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className='flex flex-col items-center justify-between gap-2 py-4 sm:flex-row'>
+          <div className='text-muted-foreground flex items-center gap-2 text-sm'>
             {selectedCount} of {table.getFilteredRowModel().rows.length} row(s) selected.
-            <span className="hidden sm:inline">•</span>
-            <span className="hidden sm:inline">
+            <span className='hidden sm:inline'>•</span>
+            <span className='hidden sm:inline'>
               Page {pageIndex + 1} of {pageCount}
             </span>
           </div>
 
-          <div className="flex flex-col items-center gap-3 sm:flex-row">
+          <div className='flex flex-col items-center gap-3 sm:flex-row'>
             {/* Page‑size selector */}
             <select
               value={size}
@@ -451,7 +409,7 @@ export function DataTable<T extends Record<string, any>>({
                 table.setPageSize(newSize)
                 table.setPageIndex(0) // Always jump back to the first page on size change
               }}
-              className="h-8 rounded-md border px-2 text-sm"
+              className='h-8 rounded-md border px-2 text-sm'
             >
               {pageSizeOptions.map((sz) => (
                 <option key={sz} value={sz}>
@@ -462,8 +420,8 @@ export function DataTable<T extends Record<string, any>>({
 
             {/* Prev */}
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
@@ -471,16 +429,16 @@ export function DataTable<T extends Record<string, any>>({
             </Button>
 
             {/* Page numbers */}
-            <div className="flex items-center gap-1">
+            <div className='flex items-center gap-1'>
               {pageNumbers.map((n, idx) =>
                 n === -1 ? (
-                  <MoreHorizontal key={`ellipsis-${idx}`} className="h-4 w-4 opacity-50" />
+                  <MoreHorizontal key={`ellipsis-${idx}`} className='h-4 w-4 opacity-50' />
                 ) : (
                   <Button
                     key={n}
-                    variant={n === pageIndex ? "default" : "outline"}
-                    size="sm"
-                    className="h-8 w-8 p-0"
+                    variant={n === pageIndex ? 'default' : 'outline'}
+                    size='sm'
+                    className='h-8 w-8 p-0'
                     onClick={() => table.setPageIndex(n)}
                   >
                     {n + 1}
@@ -491,8 +449,8 @@ export function DataTable<T extends Record<string, any>>({
 
             {/* Next */}
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >

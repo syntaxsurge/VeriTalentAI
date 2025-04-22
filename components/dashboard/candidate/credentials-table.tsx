@@ -1,8 +1,9 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
+
 import {
   MoreHorizontal,
   Trash2,
@@ -13,6 +14,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { deleteCredentialAction } from '@/app/(dashboard)/candidate/credentials/actions'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -21,10 +24,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
-import { deleteCredentialAction } from '@/app/(dashboard)/candidate/credentials/actions'
 import { StatusBadge } from '@/components/ui/status-badge'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -53,11 +54,7 @@ interface Props {
 /*                                Helpers                                     */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -68,7 +65,7 @@ function buildLink(
 }
 
 const ViewIcon = (props: LucideProps) => (
-  <FileText {...props} className="mr-2 h-4 w-4 text-sky-600 dark:text-sky-400" />
+  <FileText {...props} className='mr-2 h-4 w-4 text-sky-600 dark:text-sky-400' />
 )
 
 /* -------------------------------------------------------------------------- */
@@ -96,26 +93,26 @@ function RowActions({ row }: { row: RowType }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
           {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className='h-4 w-4 animate-spin' />
           ) : (
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreHorizontal className='h-4 w-4' />
           )}
-          <span className="sr-only">Open menu</span>
+          <span className='sr-only'>Open menu</span>
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="rounded-md p-1 shadow-lg">
+      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
         {row.fileUrl && (
           <DropdownMenuItem asChild>
             <a
               href={row.fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex cursor-pointer items-center"
+              target='_blank'
+              rel='noopener noreferrer'
+              className='flex cursor-pointer items-center'
             >
               <ViewIcon />
               View file
@@ -128,9 +125,9 @@ function RowActions({ row }: { row: RowType }) {
         <DropdownMenuItem
           onClick={destroy}
           disabled={isPending}
-          className="cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400"
+          className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
         >
-          <Trash2 className="mr-2 h-4 w-4" />
+          <Trash2 className='mr-2 h-4 w-4' />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -206,8 +203,8 @@ export default function CandidateCredentialsTable({
       q: search,
     })
     return (
-      <Link href={href} scroll={false} className="flex items-center gap-1">
-        {label} <ArrowUpDown className="h-4 w-4" />
+      <Link href={href} scroll={false} className='flex items-center gap-1'>
+        {label} <ArrowUpDown className='h-4 w-4' />
       </Link>
     )
   }
@@ -218,7 +215,7 @@ export default function CandidateCredentialsTable({
         key: 'title',
         header: sortHeader('Title', 'title'),
         sortable: false,
-        render: (v) => <span className="font-medium">{v as string}</span>,
+        render: (v) => <span className='font-medium'>{v as string}</span>,
       },
       {
         key: 'type',
@@ -254,7 +251,7 @@ export default function CandidateCredentialsTable({
     <DataTable
       columns={columns}
       rows={rows}
-      filterKey="title"
+      filterKey='title'
       filterValue={search}
       onFilterChange={handleSearchChange}
       bulkActions={bulkActions}

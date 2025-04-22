@@ -60,7 +60,10 @@ export async function getAdminUsersPage(
 
   if (whereClause) q = q.where(whereClause)
 
-  const rows = await q.orderBy(orderBy).limit(pageSize + 1).offset(offset)
+  const rows = await q
+    .orderBy(orderBy)
+    .limit(pageSize + 1)
+    .offset(offset)
 
   const hasNext = rows.length > pageSize
   if (hasNext) rows.pop()

@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
+import { KeyRound } from 'lucide-react'
+
 import {
   AlertDialog,
   AlertDialogContent,
@@ -8,8 +12,6 @@ import {
   AlertDialogDescription,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { KeyRound } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 
 /**
  * Blocking modal that cannot be dismissed; prompts the user to create a team DID.

@@ -1,11 +1,8 @@
 import { asc, desc, eq, ilike, or } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import {
-  candidateCredentials as credsT,
-  CredentialStatus,
-} from '../schema/viskify'
 import { issuers as issuersT } from '../schema/issuer'
+import { candidateCredentials as credsT, CredentialStatus } from '../schema/viskify'
 
 export type CandidateCredentialRow = {
   id: number
@@ -50,8 +47,8 @@ export async function getCandidateCredentialsPage(
               : desc(credsT.status)
             : /* id fallback */
               order === 'asc'
-                ? asc(credsT.id)
-                : desc(credsT.id)
+              ? asc(credsT.id)
+              : desc(credsT.id)
 
   /* ------------------------------ WHERE --------------------------------- */
   const baseWhere = eq(credsT.candidateId, candidateId)

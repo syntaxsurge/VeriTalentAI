@@ -1,11 +1,9 @@
 import { redirect } from 'next/navigation'
 
+import PipelinesTable, { RowType } from '@/components/dashboard/recruiter/pipelines-table'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import PipelinesTable, {
-  RowType,
-} from '@/components/dashboard/recruiter/pipelines-table'
-import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
 import { getUser } from '@/lib/db/queries/queries'
+import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
 
 import NewPipelineDialog from './new-pipeline-dialog'
 
@@ -78,19 +76,19 @@ export default async function PipelinesPage({
 
   /* ------------------------------- View ---------------------------------- */
   return (
-    <section className="flex-1 p-4 lg:p-8">
-      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <h1 className="text-lg font-medium lg:text-2xl">Pipelines</h1>
+    <section className='flex-1 p-4 lg:p-8'>
+      <div className='mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center'>
+        <h1 className='text-lg font-medium lg:text-2xl'>Pipelines</h1>
         <NewPipelineDialog />
       </div>
 
       {/* Results */}
-      <div className="overflow-x-auto rounded-md border">
+      <div className='overflow-x-auto rounded-md border'>
         <PipelinesTable
           rows={rows}
           sort={sort}
           order={order as 'asc' | 'desc'}
-          basePath="/recruiter/pipelines"
+          basePath='/recruiter/pipelines'
           initialParams={initialParams}
           searchQuery={searchTerm}
         />
@@ -99,7 +97,7 @@ export default async function PipelinesPage({
       <TablePagination
         page={page}
         hasNext={hasNext}
-        basePath="/recruiter/pipelines"
+        basePath='/recruiter/pipelines'
         initialParams={initialParams}
         pageSize={pageSize}
       />

@@ -1,14 +1,11 @@
 import { redirect } from 'next/navigation'
 
+import ActivityLogsTable, { RowType } from '@/components/dashboard/settings/activity-logs-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { getUser } from '@/lib/db/queries/queries'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
+import { getUser } from '@/lib/db/queries/queries'
 import { ActivityType } from '@/lib/db/schema'
-
-import ActivityLogsTable, {
-  RowType,
-} from '@/components/dashboard/settings/activity-logs-table'
 
 export const revalidate = 0
 
@@ -64,10 +61,7 @@ export default async function ActivityPage({
     id: log.id,
     type: log.action as ActivityType,
     ipAddress: log.ipAddress,
-    timestamp:
-      log.timestamp instanceof Date
-        ? log.timestamp.toISOString()
-        : String(log.timestamp),
+    timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : String(log.timestamp),
   }))
 
   /* ------------------------ Build initialParams -------------------------- */

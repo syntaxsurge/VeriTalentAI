@@ -1,8 +1,9 @@
 'use client'
 
-import * as React from 'react'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
 import { useActionState, startTransition } from 'react'
+
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -56,7 +57,6 @@ export default function EditUserForm({
       onDone()
       router.refresh()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.error, state.success])
 
   return (

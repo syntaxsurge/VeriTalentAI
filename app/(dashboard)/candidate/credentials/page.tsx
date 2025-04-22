@@ -1,17 +1,18 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+
 import { eq } from 'drizzle-orm'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { TablePagination } from '@/components/ui/tables/table-pagination'
 import CandidateCredentialsTable, {
   RowType,
 } from '@/components/dashboard/candidate/credentials-table'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
+import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credentials'
 import { getUser } from '@/lib/db/queries/queries'
 import { candidates as candT } from '@/lib/db/schema/viskify'
-import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credentials'
 
 export const revalidate = 0
 

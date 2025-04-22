@@ -1,11 +1,7 @@
 import { asc, desc, eq, ilike, or, and } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import {
-  invitations as invT,
-  teams as teamsT,
-  users as usersT,
-} from '../schema/core'
+import { invitations as invT, teams as teamsT, users as usersT } from '../schema/core'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

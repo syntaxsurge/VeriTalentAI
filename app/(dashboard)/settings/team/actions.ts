@@ -42,10 +42,7 @@ export const updateTeamMemberRoleAction = validatedActionWithUser(
 
     if (ownerRows.length === 0) return { error: 'Unauthorized.' }
 
-    await db
-      .update(teamMembers)
-      .set({ role })
-      .where(eq(teamMembers.id, memberId))
+    await db.update(teamMembers).set({ role }).where(eq(teamMembers.id, memberId))
 
     return { success: 'Member updated.' }
   },

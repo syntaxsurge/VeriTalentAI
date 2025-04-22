@@ -1,31 +1,20 @@
 'use server'
 
-import { eq, and } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
-
-/* ---------- Core ---------- */
-import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { activityLogs } from '@/lib/db/schema'
-
-/* ---------- Recruiter ---------- */
-import {
-  recruiterPipelines,
-  pipelineCandidates,
-} from '@/lib/db/schema/recruiter'
-
-/* ---------- Candidate ---------- */
+import { users, teams, teamMembers } from '@/lib/db/schema/core'
+import { issuers } from '@/lib/db/schema/issuer'
+import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 import {
   candidates,
   candidateCredentials,
   quizAttempts,
   CredentialStatus,
 } from '@/lib/db/schema/viskify'
-
-/* ---------- Issuer ---------- */
-import { issuers } from '@/lib/db/schema/issuer'
 
 /* ------------------------------------------------------------------ */
 /*                         U P D A T E   U S E R                      */
@@ -66,8 +55,7 @@ export const deleteUserAction = validatedActionWithUser(
   }),
   async ({ userId }, _formData, authUser) => {
     if (authUser.role !== 'admin') return { error: 'Unauthorized.' }
-    if (authUser.id === userId)
-      return { error: 'You cannot delete your own account.' }
+    if (authUser.id === userId) return { error: 'You cannot delete your own account.' }
 
     await db.transaction(async (tx) => {
       /* Activity logs */
@@ -81,12 +69,8 @@ export const deleteUserAction = validatedActionWithUser(
 
       if (pipelines.length) {
         const pipelineIds = pipelines.map((p) => p.id)
-        await tx
-          .delete(pipelineCandidates)
-          .where(eq(pipelineCandidates.pipelineId, pipelineIds[0]))
-        await tx
-          .delete(recruiterPipelines)
-          .where(eq(recruiterPipelines.id, pipelineIds[0]))
+        await tx.delete(pipelineCandidates).where(eq(pipelineCandidates.pipelineId, pipelineIds[0]))
+        await tx.delete(recruiterPipelines).where(eq(recruiterPipelines.id, pipelineIds[0]))
       }
 
       /* Candidate-side clean-up */
@@ -98,9 +82,7 @@ export const deleteUserAction = validatedActionWithUser(
       if (candRows.length) {
         const candId = candRows[0].id
         await tx.delete(quizAttempts).where(eq(quizAttempts.candidateId, candId))
-        await tx
-          .delete(candidateCredentials)
-          .where(eq(candidateCredentials.candidateId, candId))
+        await tx.delete(candidateCredentials).where(eq(candidateCredentials.candidateId, candId))
         await tx.delete(candidates).where(eq(candidates.id, candId))
       }
 

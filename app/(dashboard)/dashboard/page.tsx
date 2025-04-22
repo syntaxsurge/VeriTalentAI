@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { and, eq, desc } from 'drizzle-orm'
 
+import { and, eq, desc } from 'drizzle-orm'
 import {
   BadgeCheck,
   Award,
@@ -13,13 +13,12 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 
-import { Card, CardContent } from '@/components/ui/card'
-import { RoleBadge } from '@/components/dashboard/role-badge'
-import CandidateCharts from '@/components/dashboard/candidate/charts'
-import RecruiterCharts from '@/components/dashboard/recruiter/charts'
-import IssuerCharts from '@/components/dashboard/issuer/charts'
 import AdminCharts from '@/components/dashboard/admin/charts'
-
+import CandidateCharts from '@/components/dashboard/candidate/charts'
+import IssuerCharts from '@/components/dashboard/issuer/charts'
+import RecruiterCharts from '@/components/dashboard/recruiter/charts'
+import { RoleBadge } from '@/components/dashboard/role-badge'
+import { Card, CardContent } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { users, teams } from '@/lib/db/schema/core'
@@ -242,7 +241,7 @@ export default async function DashboardPage() {
         <CardContent className='p-6'>
           <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <div className='space-y-1'>
-              <h1 className='text-3xl font-extrabold leading-tight tracking-tight'>
+              <h1 className='text-3xl leading-tight font-extrabold tracking-tight'>
                 Welcome back, <span className='break-all'>{user.name || user.email}</span>
               </h1>
               <p className='text-muted-foreground text-sm'>
@@ -299,7 +298,7 @@ function MetricCard({ title, value, Icon }: MetricProps) {
     <Card className='relative overflow-hidden shadow-sm transition-shadow hover:shadow-lg'>
       {/* Decorative background icon */}
       <Icon
-        className='pointer-events-none absolute bottom-2 right-2 h-20 w-20 text-primary/10'
+        className='text-primary/10 pointer-events-none absolute right-2 bottom-2 h-20 w-20'
         aria-hidden='true'
       />
 

@@ -1,7 +1,11 @@
 'use client'
 
 import { useState, useTransition, type ReactNode } from 'react'
+
 import { toast } from 'sonner'
+
+import { updateCandidateStageAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
+import { ActionButton } from '@/components/ui/action-button'
 import {
   Dialog,
   DialogTrigger,
@@ -10,8 +14,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
-import { ActionButton } from '@/components/ui/action-button'
-import { updateCandidateStageAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
 
 interface Props {
   pipelineCandidateId: number
@@ -22,11 +24,7 @@ interface Props {
 /**
  * Reusable modal wrapper around updateCandidateStageAction.
  */
-export default function EditCandidateModal({
-  pipelineCandidateId,
-  currentStage,
-  children,
-}: Props) {
+export default function EditCandidateModal({ pipelineCandidateId, currentStage, children }: Props) {
   const [open, setOpen] = useState(false)
   const [stage, setStage] = useState<Stage>(currentStage)
   const [isPending, startTransition] = useTransition()
@@ -56,16 +54,16 @@ export default function EditCandidateModal({
           <DialogTitle>Edit Candidate</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="flex flex-col">
-            <label htmlFor="stage" className="mb-1 text-sm font-medium">
+        <div className='space-y-4'>
+          <div className='flex flex-col'>
+            <label htmlFor='stage' className='mb-1 text-sm font-medium'>
               Stage
             </label>
             <select
-              id="stage"
+              id='stage'
               value={stage}
               onChange={(e) => setStage(e.target.value as Stage)}
-              className="border-border h-10 rounded-md border px-2 text-sm"
+              className='border-border h-10 rounded-md border px-2 text-sm'
             >
               {STAGES.map((s) => (
                 <option key={s} value={s}>
@@ -75,11 +73,7 @@ export default function EditCandidateModal({
             </select>
           </div>
 
-          <ActionButton
-            onAction={handleSave}
-            pendingLabel="Saving…"
-            disabled={isPending}
-          >
+          <ActionButton onAction={handleSave} pendingLabel='Saving…' disabled={isPending}>
             Save Changes
           </ActionButton>
         </div>

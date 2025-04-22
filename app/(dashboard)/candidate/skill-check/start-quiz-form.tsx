@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { useTransition } from 'react'
+
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -90,7 +91,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
                 name='answer'
                 rows={6}
                 required
-                className='border-border w-full rounded-md border p-2 text-sm focus-visible:ring-2 focus-visible:ring-primary'
+                className='border-border focus-visible:ring-primary w-full rounded-md border p-2 text-sm focus-visible:ring-2'
                 placeholder='Type your answer here…'
               />
             </div>
@@ -106,7 +107,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
           </form>
         ) : (
           <div className='flex flex-col items-center gap-4 py-6'>
-            <p className='text-4xl font-extrabold text-primary'>{score}</p>
+            <p className='text-primary text-4xl font-extrabold'>{score}</p>
             <p className='text-center'>{message}</p>
             <Button variant='outline' onClick={() => setScore(null)}>
               Try Again

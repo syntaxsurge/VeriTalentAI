@@ -17,7 +17,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { useUser } from '@/lib/auth'
@@ -73,7 +72,7 @@ export default function SiteHeader() {
         {/* Brand */}
         <Link
           href='/'
-          className='text-primary flex items-center gap-2 whitespace-nowrap text-lg font-extrabold tracking-tight'
+          className='text-primary flex items-center gap-2 text-lg font-extrabold tracking-tight whitespace-nowrap'
         >
           <Image
             src='/images/viskify-logo.png'
@@ -160,23 +159,23 @@ export default function SiteHeader() {
 
               <DropdownMenuContent
                 align='end'
-                className='max-w-[90vw] w-56 sm:w-64 rounded-lg p-1 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out'
+                className='data-[state=open]:animate-in data-[state=closed]:animate-out w-56 max-w-[90vw] rounded-lg p-1 shadow-lg sm:w-64'
               >
                 {/* User card → Team Settings */}
                 <DropdownMenuItem
                   asChild
-                  className='flex select-none cursor-pointer flex-col items-start gap-1 rounded-md px-3 py-2 text-left data-[highlighted]:bg-muted data-[highlighted]:text-foreground'
+                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex cursor-pointer flex-col items-start gap-1 rounded-md px-3 py-2 text-left select-none'
                 >
                   <Link href='/settings/team' className='w-full'>
                     <p className='truncate text-sm font-medium'>
                       {user.name || user.email || 'Unnamed User'}
                     </p>
                     {user.email && (
-                      <p className='break-all truncate text-xs text-muted-foreground'>
+                      <p className='text-muted-foreground truncate text-xs break-all'>
                         {user.email}
                       </p>
                     )}
-                    <span className='inline-block rounded bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
+                    <span className='bg-muted text-muted-foreground inline-block rounded px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase'>
                       {user.role}
                     </span>
                   </Link>
@@ -187,7 +186,7 @@ export default function SiteHeader() {
                 {/* Dashboard */}
                 <DropdownMenuItem
                   asChild
-                  className='flex items-center gap-2 rounded-md px-3 py-2 data-[highlighted]:bg-muted data-[highlighted]:text-foreground'
+                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
                 >
                   <Link href='/dashboard' className='flex items-center gap-2'>
                     <LayoutDashboard className='h-4 w-4' />
@@ -198,7 +197,7 @@ export default function SiteHeader() {
                 {/* Settings */}
                 <DropdownMenuItem
                   asChild
-                  className='flex items-center gap-2 rounded-md px-3 py-2 data-[highlighted]:bg-muted data-[highlighted]:text-foreground'
+                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
                 >
                   <Link href='/settings/general' className='flex items-center gap-2'>
                     <Settings className='h-4 w-4' />
@@ -211,7 +210,7 @@ export default function SiteHeader() {
                 {/* Sign-out */}
                 <form action={handleSignOut} className='w-full'>
                   <button type='submit' className='w-full'>
-                    <DropdownMenuItem className='flex items-center gap-2 rounded-md px-3 py-2 data-[highlighted]:bg-muted data-[highlighted]:text-foreground'>
+                    <DropdownMenuItem className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'>
                       <LogOut className='h-4 w-4' />
                       <span className='text-sm'>Sign out</span>
                     </DropdownMenuItem>

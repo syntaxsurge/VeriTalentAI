@@ -2,18 +2,17 @@
 
 import * as React from 'react'
 import { useTransition } from 'react'
+
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-type ActionResult =
-  | void
-  | {
-      success?: string
-      error?: string
-    }
+type ActionResult = void | {
+  success?: string
+  error?: string
+}
 
 /**
  * A drop-in replacement for &lt;Button&gt; that

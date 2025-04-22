@@ -1,12 +1,10 @@
 import { redirect } from 'next/navigation'
 
+import AdminCredentialsTable, { type RowType } from '@/components/dashboard/admin/credentials-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import AdminCredentialsTable, {
-  type RowType,
-} from '@/components/dashboard/admin/credentials-table'
-import { getUser } from '@/lib/db/queries/queries'
 import { getAdminCredentialsPage } from '@/lib/db/queries/admin-credentials'
+import { getUser } from '@/lib/db/queries/queries'
 
 export const revalidate = 0
 
@@ -15,8 +13,7 @@ export const revalidate = 0
 /* -------------------------------------------------------------------------- */
 
 type Query = Record<string, string | string[] | undefined>
-const first = (p: Query, k: string) =>
-  Array.isArray(p[k]) ? p[k]?.[0] : p[k]
+const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */
@@ -73,19 +70,19 @@ export default async function AdminCredentialsPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className="space-y-6">
-      <h2 className="text-2xl font-semibold">All Credentials</h2>
+    <section className='space-y-6'>
+      <h2 className='text-2xl font-semibold'>All Credentials</h2>
 
       <Card>
         <CardHeader>
           <CardTitle>Credentials Overview</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent className='overflow-x-auto'>
           <AdminCredentialsTable
             rows={rows}
             sort={sort}
             order={order as 'asc' | 'desc'}
-            basePath="/admin/credentials"
+            basePath='/admin/credentials'
             initialParams={initialParams}
             searchQuery={searchTerm}
           />
@@ -93,7 +90,7 @@ export default async function AdminCredentialsPage({
           <TablePagination
             page={page}
             hasNext={hasNext}
-            basePath="/admin/credentials"
+            basePath='/admin/credentials'
             initialParams={initialParams}
             pageSize={pageSize}
           />

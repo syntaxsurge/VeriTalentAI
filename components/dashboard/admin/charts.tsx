@@ -1,8 +1,8 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { PieChart } from '@/components/ui/charts/pie-chart'
 import { type ChartConfig } from '@/components/ui/charts/chart'
+import { PieChart } from '@/components/ui/charts/pie-chart'
 
 export interface Datum {
   name: string
@@ -30,11 +30,7 @@ function buildConfig(title: string, data: Datum[]): ChartConfig {
   return cfg as ChartConfig
 }
 
-export default function AdminCharts({
-  usersData,
-  issuerData,
-  credentialData,
-}: AdminChartsProps) {
+export default function AdminCharts({ usersData, issuerData, credentialData }: AdminChartsProps) {
   const charts = [
     { title: 'Users by Role', data: usersData },
     { title: 'Issuer Status', data: issuerData },
@@ -42,7 +38,7 @@ export default function AdminCharts({
   ]
 
   return (
-    <div className='grid gap-6 lg:grid-cols-3 md:grid-cols-2'>
+    <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
       {charts.map(({ title, data }) => {
         const pieData = data.map((d) => ({
           category: d.name.toLowerCase(),

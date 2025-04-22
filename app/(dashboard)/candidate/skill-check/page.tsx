@@ -1,12 +1,13 @@
 import { eq } from 'drizzle-orm'
 
+import { DidRequiredModal } from '@/components/dashboard/candidate/did-required-modal'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import { skillQuizzes } from '@/lib/db/schema/viskify'
 import { teams, teamMembers } from '@/lib/db/schema/core'
-import { DidRequiredModal } from '@/components/dashboard/candidate/did-required-modal'
+import { skillQuizzes } from '@/lib/db/schema/viskify'
+
 import StartQuizForm from './start-quiz-form'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const revalidate = 0
 
@@ -15,13 +16,12 @@ export default async function SkillCheckPage() {
   if (!user) return <div>Please sign in</div>
 
   /* Does the user’s team already have a DID? */
-  const [{ did } = {}] =
-    await db
-      .select({ did: teams.did })
-      .from(teamMembers)
-      .leftJoin(teams, eq(teamMembers.teamId, teams.id))
-      .where(eq(teamMembers.userId, user.id))
-      .limit(1)
+  const [{ did } = {}] = await db
+    .select({ did: teams.did })
+    .from(teamMembers)
+    .leftJoin(teams, eq(teamMembers.teamId, teams.id))
+    .where(eq(teamMembers.userId, user.id))
+    .limit(1)
 
   if (!did) {
     /* Hard-block with modal */

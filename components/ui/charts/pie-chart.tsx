@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+
 import { Pie as RePie, PieChart as RePieChart, Cell } from 'recharts'
 
 import {
@@ -39,7 +40,7 @@ export function PieChart<D extends Record<string, any> = any>({
     <ChartContainer
       config={config}
       className={cn(
-        'mx-auto aspect-square max-h-[300px] pb-0 [&_.recharts-pie-label-text]:fill-foreground',
+        '[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[300px] pb-0',
         className,
       )}
     >

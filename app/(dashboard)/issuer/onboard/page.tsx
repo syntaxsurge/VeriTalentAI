@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
-import { eq } from 'drizzle-orm'
 
+import { eq } from 'drizzle-orm'
 import {
   Building2,
   AtSign,
@@ -34,15 +34,12 @@ function prettify(text?: string | null) {
 }
 
 function StatusPill({ status }: { status: string }) {
-  const base =
-    'inline-flex items-center rounded-full px-3 py-0.5 text-sm font-semibold capitalize'
+  const base = 'inline-flex items-center rounded-full px-3 py-0.5 text-sm font-semibold capitalize'
   const map: Record<string, string> = {
     [IssuerStatus.ACTIVE]:
       'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-    [IssuerStatus.PENDING]:
-      'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    [IssuerStatus.REJECTED]:
-      'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+    [IssuerStatus.PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    [IssuerStatus.REJECTED]: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
   }
   return (
     <span className={cn(base, map[status] ?? 'bg-muted text-foreground/80')}>
@@ -79,10 +76,10 @@ function Detail({
 }) {
   return (
     <div className={cn('flex items-start gap-3', className)}>
-      <Icon className='mt-0.5 h-5 w-5 text-muted-foreground' />
+      <Icon className='text-muted-foreground mt-0.5 h-5 w-5' />
       <div>
-        <p className='text-xs font-medium uppercase text-muted-foreground'>{label}</p>
-        <p className={cn('break-all font-medium', capitalize && 'capitalize')}>{value}</p>
+        <p className='text-muted-foreground text-xs font-medium uppercase'>{label}</p>
+        <p className={cn('font-medium break-all', capitalize && 'capitalize')}>{value}</p>
       </div>
     </div>
   )
@@ -96,11 +93,7 @@ export default async function IssuerOnboardPage() {
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
-  const [issuer] = await db
-    .select()
-    .from(issuers)
-    .where(eq(issuers.ownerUserId, user.id))
-    .limit(1)
+  const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
 
   /* ----------------------- First-time creation ----------------------- */
   if (!issuer) {
@@ -127,12 +120,7 @@ export default async function IssuerOnboardPage() {
             <div className='space-y-2'>
               <Detail icon={Building2} label='Name' value={issuer.name} />
               <Detail icon={AtSign} label='Domain' value={issuer.domain} />
-              <Detail
-                icon={Tag}
-                label='Category'
-                value={prettify(issuer.category)}
-                capitalize
-              />
+              <Detail icon={Tag} label='Category' value={prettify(issuer.category)} capitalize />
               <Detail
                 icon={BriefcaseBusiness}
                 label='Industry'
@@ -143,9 +131,7 @@ export default async function IssuerOnboardPage() {
 
             {issuer.logoUrl && (
               <div className='flex flex-col gap-2'>
-                <p className='text-xs font-medium uppercase text-muted-foreground'>
-                  Logo Preview
-                </p>
+                <p className='text-muted-foreground text-xs font-medium uppercase'>Logo Preview</p>
                 <Image
                   src={issuer.logoUrl}
                   alt={`${issuer.name} logo`}
@@ -158,8 +144,7 @@ export default async function IssuerOnboardPage() {
 
             {issuer.rejectionReason && (
               <p className='rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-900/20 dark:text-rose-300'>
-                <span className='font-semibold'>Rejection reason:</span>{' '}
-                {issuer.rejectionReason}
+                <span className='font-semibold'>Rejection reason:</span> {issuer.rejectionReason}
               </p>
             )}
           </CardContent>
@@ -185,13 +170,11 @@ export default async function IssuerOnboardPage() {
               className='h-24 w-24 flex-shrink-0 rounded-lg border object-contain'
             />
           ) : (
-            <Building2 className='h-24 w-24 flex-shrink-0 rounded-lg bg-muted p-4 text-muted-foreground' />
+            <Building2 className='bg-muted text-muted-foreground h-24 w-24 flex-shrink-0 rounded-lg p-4' />
           )}
 
           <div className='flex-1 space-y-1'>
-            <h1 className='text-3xl font-extrabold leading-tight tracking-tight'>
-              {issuer.name}
-            </h1>
+            <h1 className='text-3xl leading-tight font-extrabold tracking-tight'>{issuer.name}</h1>
             <p className='text-muted-foreground text-sm'>Organisation profile</p>
           </div>
 
@@ -209,12 +192,7 @@ export default async function IssuerOnboardPage() {
         </CardHeader>
         <CardContent className='grid gap-6 p-6 sm:grid-cols-2'>
           <Detail icon={AtSign} label='Domain' value={issuer.domain} />
-          <Detail
-            icon={Tag}
-            label='Category'
-            value={prettify(issuer.category)}
-            capitalize
-          />
+          <Detail icon={Tag} label='Category' value={prettify(issuer.category)} capitalize />
           <Detail
             icon={BriefcaseBusiness}
             label='Industry'
@@ -237,8 +215,7 @@ export default async function IssuerOnboardPage() {
 
       {issuer.status === IssuerStatus.PENDING && (
         <div className='rounded-md border-l-4 border-amber-500 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-400 dark:bg-amber-900/20 dark:text-amber-200'>
-          Your issuer is awaiting admin approval. You’ll receive an email once it
-          becomes active.
+          Your issuer is awaiting admin approval. You’ll receive an email once it becomes active.
         </div>
       )}
     </section>

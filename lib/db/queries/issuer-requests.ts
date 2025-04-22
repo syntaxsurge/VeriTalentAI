@@ -1,21 +1,8 @@
-import { db } from '../drizzle'
-import {
-  asc,
-  desc,
-  eq,
-  ilike,
-  or,
-  and,
-  sql,
-} from 'drizzle-orm'
+import { asc, desc, eq, ilike, or, and, sql } from 'drizzle-orm'
 
-import { issuers } from '../schema/issuer'
-import {
-  candidateCredentials,
-  candidates,
-  CredentialStatus,
-} from '../schema/viskify'
+import { db } from '../drizzle'
 import { users } from '../schema/core'
+import { candidateCredentials, candidates, CredentialStatus } from '../schema/viskify'
 
 export interface IssuerRequestRow {
   id: number
@@ -47,8 +34,7 @@ export async function getIssuerRequestsPage(
     candidate: sql`coalesce(${users.name}, ${users.email})`,
   } as const
 
-  const orderExpr =
-    order === 'asc' ? asc(sortMap[sortBy]) : desc(sortMap[sortBy])
+  const orderExpr = order === 'asc' ? asc(sortMap[sortBy]) : desc(sortMap[sortBy])
 
   /* --------------------------- WHERE clause ------------------------------ */
   const baseWhere = eq(candidateCredentials.issuerId, issuerId)

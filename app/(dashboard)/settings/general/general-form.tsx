@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
+import { updateAccount } from '@/app/(auth)/actions'
 import { ActionButton } from '@/components/ui/action-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { updateAccount } from '@/app/(auth)/actions'
 
 interface Props {
   defaultName: string

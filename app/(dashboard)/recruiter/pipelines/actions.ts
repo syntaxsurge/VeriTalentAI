@@ -1,6 +1,6 @@
 'use server'
 
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
@@ -44,7 +44,9 @@ export const addCandidateToPipelineAction = validatedActionWithUser(
     const [pipeline] = await db
       .select()
       .from(recruiterPipelines)
-      .where(and(eq(recruiterPipelines.id, pipelineId), eq(recruiterPipelines.recruiterId, user.id)))
+      .where(
+        and(eq(recruiterPipelines.id, pipelineId), eq(recruiterPipelines.recruiterId, user.id)),
+      )
       .limit(1)
 
     if (!pipeline) return { error: 'Pipeline not found.' }
@@ -97,7 +99,10 @@ export const updateCandidateStageAction = validatedActionWithUser(
     if (!row) return { error: 'Record not found.' }
     if (!row.pipeline || row.pipeline.recruiterId !== user.id) return { error: 'Unauthorized.' }
 
-    await db.update(pipelineCandidates).set({ stage }).where(eq(pipelineCandidates.id, pipelineCandidateId))
+    await db
+      .update(pipelineCandidates)
+      .set({ stage })
+      .where(eq(pipelineCandidates.id, pipelineCandidateId))
 
     return { success: 'Stage updated.' }
   },
@@ -120,7 +125,9 @@ export const deletePipelineAction = validatedActionWithUser(
     const [pipeline] = await db
       .select()
       .from(recruiterPipelines)
-      .where(and(eq(recruiterPipelines.id, pipelineId), eq(recruiterPipelines.recruiterId, user.id)))
+      .where(
+        and(eq(recruiterPipelines.id, pipelineId), eq(recruiterPipelines.recruiterId, user.id)),
+      )
       .limit(1)
 
     if (!pipeline) return { error: 'Pipeline not found.' }

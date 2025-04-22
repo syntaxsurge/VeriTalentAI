@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import {
   LayoutDashboard,
   Users,
@@ -151,41 +152,41 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   function SidebarContent() {
     return (
       <>
-        <SidebarNav title="Main" items={mainNav} />
+        <SidebarNav title='Main' items={mainNav} />
         {intrinsicNav.length > 0 && (
           <SidebarNav title={roleTitle(user?.role)} items={intrinsicNav} />
         )}
-        {user && <SidebarNav title="Settings" items={settingsNav} />}
+        {user && <SidebarNav title='Settings' items={settingsNav} />}
       </>
     )
   }
 
   /* --------------------------- Template --------------------------- */
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl">
+    <div className='mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl'>
       {/* Desktop sidebar */}
-      <aside className="sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-sm ring-1 ring-border/30 lg:block">
+      <aside className='bg-background ring-border/30 sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r shadow-sm ring-1 lg:block'>
         <SidebarContent />
       </aside>
 
       {/* Mobile & content wrapper */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className='flex min-w-0 flex-1 flex-col'>
         {/* Mobile header */}
-        <div className="sticky top-16 z-20 flex items-center justify-between border-b bg-background p-4 lg:hidden">
-          <span className="font-medium capitalize">{user?.role ?? 'Dashboard'}</span>
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen((p) => !p)}>
-            <Menu className="h-6 w-6" />
-            <span className="sr-only">Toggle sidebar</span>
+        <div className='bg-background sticky top-16 z-20 flex items-center justify-between border-b p-4 lg:hidden'>
+          <span className='font-medium capitalize'>{user?.role ?? 'Dashboard'}</span>
+          <Button variant='ghost' size='icon' onClick={() => setSidebarOpen((p) => !p)}>
+            <Menu className='h-6 w-6' />
+            <span className='sr-only'>Toggle sidebar</span>
           </Button>
         </div>
 
         {sidebarOpen && (
-          <aside className="fixed top-16 z-40 h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r bg-background shadow-md ring-1 ring-border/30 lg:hidden">
+          <aside className='bg-background ring-border/30 fixed top-16 z-40 h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r shadow-md ring-1 lg:hidden'>
             <SidebarContent />
           </aside>
         )}
 
-        <main className="flex-1 overflow-y-auto p-4">{children}</main>
+        <main className='flex-1 overflow-y-auto p-4'>{children}</main>
       </div>
     </div>
   )

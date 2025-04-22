@@ -2,11 +2,10 @@
 
 import * as React from 'react'
 import { startTransition } from 'react'
+
 import { Pencil, Loader2, RefreshCcw, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -18,6 +17,8 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 import { upsertPlatformDidAction } from './actions'
 
@@ -101,40 +102,40 @@ export default function UpdateDidForm({ defaultDid }: Props) {
   /*                                   UI                                       */
   /* -------------------------------------------------------------------------- */
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* DID field + copy button */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-center'>
         <Input
           value={didInput}
           onChange={(e) => setDidInput(e.target.value)}
           readOnly={!editing}
           disabled={!editing}
-          placeholder="did:cheqd:testnet:xxxx"
-          className="flex-1 font-mono"
+          placeholder='did:cheqd:testnet:xxxx'
+          className='flex-1 font-mono'
         />
 
         <Button
-          variant="outline"
-          size="icon"
+          variant='outline'
+          size='icon'
           onClick={copyDid}
           disabled={!currentDid}
-          className="shrink-0"
-          type="button"
+          className='shrink-0'
+          type='button'
         >
-          <Copy className="h-4 w-4" />
-          <span className="sr-only">Copy DID</span>
+          <Copy className='h-4 w-4' />
+          <span className='sr-only'>Copy DID</span>
         </Button>
       </div>
 
       {/* Edit / Save controls */}
       {editing ? (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className='flex flex-wrap items-center gap-2'>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button disabled={saving} className="w-full sm:w-auto">
+              <Button disabled={saving} className='w-full sm:w-auto'>
                 {saving ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                     Saving…
                   </>
                 ) : (
@@ -152,25 +153,21 @@ export default function UpdateDidForm({ defaultDid }: Props) {
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction onClick={confirmSave} disabled={saving}>
-                  {saving ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    'Save'
-                  )}
+                  {saving ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : 'Save'}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
 
           <Button
-            type="button"
-            variant="outline"
+            type='button'
+            variant='outline'
             onClick={() => {
               setDidInput(currentDid)
               setEditing(false)
             }}
             disabled={saving}
-            className="w-full sm:w-auto"
+            className='w-full sm:w-auto'
           >
             Cancel
           </Button>
@@ -178,8 +175,8 @@ export default function UpdateDidForm({ defaultDid }: Props) {
       ) : (
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" className="w-full sm:w-auto">
-              <Pencil className="mr-2 h-4 w-4" />
+            <Button variant='outline' className='w-full sm:w-auto'>
+              <Pencil className='mr-2 h-4 w-4' />
               Edit
             </Button>
           </AlertDialogTrigger>
@@ -199,9 +196,9 @@ export default function UpdateDidForm({ defaultDid }: Props) {
       )}
 
       {/* Divider */}
-      <div className="relative">
-        <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t" />
-        <span className="relative mx-auto bg-background px-3 text-xs uppercase text-muted-foreground">
+      <div className='relative'>
+        <span className='absolute inset-x-0 top-1/2 -translate-y-1/2 border-t' />
+        <span className='bg-background text-muted-foreground relative mx-auto px-3 text-xs uppercase'>
           or
         </span>
       </div>
@@ -209,15 +206,15 @@ export default function UpdateDidForm({ defaultDid }: Props) {
       {/* Generate new DID */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="outline" className="w-full sm:w-auto" disabled={generating}>
+          <Button variant='outline' className='w-full sm:w-auto' disabled={generating}>
             {generating ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 Generating…
               </>
             ) : (
               <>
-                <RefreshCcw className="mr-2 h-4 w-4" />
+                <RefreshCcw className='mr-2 h-4 w-4' />
                 Generate New DID
               </>
             )}
@@ -234,11 +231,7 @@ export default function UpdateDidForm({ defaultDid }: Props) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmGenerate} disabled={generating}>
-              {generating ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                'Generate'
-              )}
+              {generating ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : 'Generate'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

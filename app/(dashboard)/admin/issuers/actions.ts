@@ -1,17 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { and, eq } from 'drizzle-orm'
+
+import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
-import { db } from '@/lib/db/drizzle'
-import {
-  candidateCredentials,
-  CredentialStatus,
-} from '@/lib/db/schema/viskify'
-import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import { createCheqdDID } from '@/lib/cheqd'
+import { db } from '@/lib/db/drizzle'
+import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
+import { candidateCredentials, CredentialStatus } from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
 /*                               U P D A T E                                  */
@@ -20,11 +18,7 @@ import { createCheqdDID } from '@/lib/cheqd'
 const updateIssuerStatusSchema = z
   .object({
     issuerId: z.coerce.number(),
-    status: z.enum([
-      IssuerStatus.PENDING,
-      IssuerStatus.ACTIVE,
-      IssuerStatus.REJECTED,
-    ]),
+    status: z.enum([IssuerStatus.PENDING, IssuerStatus.ACTIVE, IssuerStatus.REJECTED]),
     rejectionReason: z.string().max(2000).optional(),
   })
   .superRefine((val, ctx) => {
@@ -70,24 +64,19 @@ const _updateIssuerStatus = validatedActionWithUser(
       .update(issuers)
       .set({
         status,
-        rejectionReason:
-          status === IssuerStatus.REJECTED ? rejectionReason ?? null : null,
+        rejectionReason: status === IssuerStatus.REJECTED ? (rejectionReason ?? null) : null,
         ...(didToPersist ? { did: didToPersist } : {}),
       })
       .where(eq(issuers.id, issuerId))
 
     revalidatePath('/admin/issuers')
     return {
-      success: `Issuer status updated to ${status}${
-        didToPersist ? ' and DID generated.' : '.'
-      }`,
+      success: `Issuer status updated to ${status}${didToPersist ? ' and DID generated.' : '.'}`,
     }
   },
 )
 
-export const updateIssuerStatusAction = async (
-  ...args: Parameters<typeof _updateIssuerStatus>
-) => {
+export const updateIssuerStatusAction = async (...args: Parameters<typeof _updateIssuerStatus>) => {
   'use server'
   return _updateIssuerStatus(...args)
 }
@@ -127,9 +116,7 @@ const _deleteIssuer = validatedActionWithUser(
   },
 )
 
-export const deleteIssuerAction = async (
-  ...args: Parameters<typeof _deleteIssuer>
-) => {
+export const deleteIssuerAction = async (...args: Parameters<typeof _deleteIssuer>) => {
   'use server'
   return _deleteIssuer(...args)
 }

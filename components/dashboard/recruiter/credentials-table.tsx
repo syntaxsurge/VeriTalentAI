@@ -1,13 +1,13 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
+
 import { ArrowUpDown, FileText } from 'lucide-react'
 
-import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import StatusBadge from '@/components/ui/status-badge'
-
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { CredentialStatus } from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
@@ -35,11 +35,7 @@ interface CredentialsTableProps {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => !v && sp.delete(k))
@@ -83,8 +79,8 @@ export default function CredentialsTable({
       q: search,
     })
     return (
-      <Link href={href} scroll={false} className="flex items-center gap-1">
-        {label} <ArrowUpDown className="h-4 w-4" />
+      <Link href={href} scroll={false} className='flex items-center gap-1'>
+        {label} <ArrowUpDown className='h-4 w-4' />
       </Link>
     )
   }
@@ -96,7 +92,7 @@ export default function CredentialsTable({
         key: 'title',
         header: sortableHeader('Title', 'title'),
         sortable: false,
-        render: (v) => <span className="font-medium">{v as string}</span>,
+        render: (v) => <span className='font-medium'>{v as string}</span>,
       },
       {
         key: 'issuer',
@@ -119,11 +115,11 @@ export default function CredentialsTable({
           v ? (
             <a
               href={v as string}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-primary underline"
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-primary inline-flex items-center gap-1 underline'
             >
-              <FileText className="h-4 w-4" />
+              <FileText className='h-4 w-4' />
               View
             </a>
           ) : (
@@ -139,7 +135,7 @@ export default function CredentialsTable({
     <DataTable
       columns={columns}
       rows={rows}
-      filterKey="title"
+      filterKey='title'
       filterValue={search}
       onFilterChange={handleSearchChange}
       pageSize={rows.length}

@@ -1,13 +1,13 @@
 import { asc, desc, eq, ilike, or } from 'drizzle-orm'
 
 import { db } from '../drizzle'
+import { users as usersT } from '../schema/core'
+import { issuers as issuersT } from '../schema/issuer'
 import {
   candidateCredentials as credsT,
   candidates as candT,
   CredentialStatus,
 } from '../schema/viskify'
-import { users as usersT } from '../schema/core'
-import { issuers as issuersT } from '../schema/issuer'
 
 export type AdminCredentialRow = {
   id: number
@@ -77,7 +77,10 @@ export async function getAdminCredentialsPage(
 
   if (where) q = q.where(where)
 
-  const rows = await q.orderBy(orderBy).limit(pageSize + 1).offset(offset)
+  const rows = await q
+    .orderBy(orderBy)
+    .limit(pageSize + 1)
+    .offset(offset)
 
   const hasNext = rows.length > pageSize
   if (hasNext) rows.pop()

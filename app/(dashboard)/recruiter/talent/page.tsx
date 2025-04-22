@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation'
 
+import TalentFilters from '@/components/dashboard/recruiter/talent-filters'
+import TalentTable, { RowType } from '@/components/dashboard/recruiter/talent-table'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTalentSearchPage } from '@/lib/db/queries/recruiter-talent'
-import { TablePagination } from '@/components/ui/tables/table-pagination'
-import TalentTable, { RowType } from '@/components/dashboard/recruiter/talent-table'
-import TalentFilters from '@/components/dashboard/recruiter/talent-filters'
 
 export const revalidate = 0
 
@@ -83,12 +83,12 @@ export default async function TalentSearchPage({
 
   /* ------------------------------- View ---------------------------------- */
   return (
-    <section className="flex-1 p-4 lg:p-8">
-      <h1 className="mb-6 text-lg font-medium lg:text-2xl">Talent Search</h1>
+    <section className='flex-1 p-4 lg:p-8'>
+      <h1 className='mb-6 text-lg font-medium lg:text-2xl'>Talent Search</h1>
 
       {/* Filters */}
       <TalentFilters
-        basePath="/recruiter/talent"
+        basePath='/recruiter/talent'
         initialParams={initialParams}
         skillMin={skillMin}
         skillMax={skillMax}
@@ -96,12 +96,12 @@ export default async function TalentSearchPage({
       />
 
       {/* Results table */}
-      <div className="overflow-x-auto rounded-md border">
+      <div className='overflow-x-auto rounded-md border'>
         <TalentTable
           rows={rows}
           sort={sort}
           order={order as 'asc' | 'desc'}
-          basePath="/recruiter/talent"
+          basePath='/recruiter/talent'
           initialParams={{
             ...initialParams,
             skillMin: String(skillMin),
@@ -115,7 +115,7 @@ export default async function TalentSearchPage({
       <TablePagination
         page={page}
         hasNext={hasNext}
-        basePath="/recruiter/talent"
+        basePath='/recruiter/talent'
         initialParams={{
           ...initialParams,
           skillMin: String(skillMin),

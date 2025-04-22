@@ -1,13 +1,8 @@
 'use client'
 
 import React from 'react'
-import {
-  Bar as ReBar,
-  BarChart as ReBarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from 'recharts'
+
+import { Bar as ReBar, BarChart as ReBarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 
 import {
   ChartContainer,

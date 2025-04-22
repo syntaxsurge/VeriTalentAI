@@ -1,31 +1,16 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowUpDown,
-  ChevronDown,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  Loader2,
-} from 'lucide-react'
+import * as React from 'react'
+
 import { formatDistanceToNow } from 'date-fns'
+import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { removeTeamMember } from '@/app/(auth)/actions'
+import { updateTeamMemberRoleAction } from '@/app/(dashboard)/settings/team/actions'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
@@ -33,11 +18,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Label } from '@/components/ui/label'
-
-import { removeTeamMember } from '@/app/(auth)/actions'
-import { updateTeamMemberRoleAction } from '@/app/(dashboard)/settings/team/actions'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -65,11 +55,7 @@ interface MembersTableProps {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -85,13 +71,7 @@ function buildLink(
 
 const ROLES = ['member', 'owner'] as const
 
-function EditMemberForm({
-  row,
-  onDone,
-}: {
-  row: RowType
-  onDone: () => void
-}) {
+function EditMemberForm({ row, onDone }: { row: RowType; onDone: () => void }) {
   const [role, setRole] = React.useState<RowType['role']>(row.role)
   const [pending, startTransition] = React.useTransition()
   const router = useRouter()
@@ -114,14 +94,14 @@ function EditMemberForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} className='space-y-4'>
       <div>
-        <Label htmlFor="role">Role</Label>
+        <Label htmlFor='role'>Role</Label>
         <select
-          id="role"
+          id='role'
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          className="h-10 w-full rounded-md border px-2 capitalize"
+          className='h-10 w-full rounded-md border px-2 capitalize'
         >
           {ROLES.map((r) => (
             <option key={r} value={r}>
@@ -131,10 +111,10 @@ function EditMemberForm({
         </select>
       </div>
 
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type='submit' className='w-full' disabled={pending}>
         {pending ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
             Saving…
           </>
         ) : (
@@ -181,28 +161,28 @@ function RowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
     <>
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+          <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
             {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className='h-4 w-4 animate-spin' />
             ) : (
-              <MoreHorizontal className="h-4 w-4" />
+              <MoreHorizontal className='h-4 w-4' />
             )}
-            <span className="sr-only">Open menu</span>
+            <span className='sr-only'>Open menu</span>
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" className="rounded-md p-1 shadow-lg">
+        <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={openEditDialog} className="cursor-pointer">
-            <Pencil className="mr-2 h-4 w-4" /> Edit
+          <DropdownMenuItem onSelect={openEditDialog} className='cursor-pointer'>
+            <Pencil className='mr-2 h-4 w-4' /> Edit
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={destroy}
             disabled={isPending}
-            className="cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400"
+            className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
           >
-            <Trash2 className="mr-2 h-4 w-4" /> Remove
+            <Trash2 className='mr-2 h-4 w-4' /> Remove
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -211,9 +191,7 @@ function RowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Member</DialogTitle>
-            <DialogDescription>
-              Modify the member’s role, then save your changes.
-            </DialogDescription>
+            <DialogDescription>Modify the member’s role, then save your changes.</DialogDescription>
           </DialogHeader>
           <EditMemberForm row={row} onDone={() => setEditOpen(false)} />
         </DialogContent>
@@ -226,9 +204,7 @@ function RowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
 /*                               Bulk actions                                 */
 /* -------------------------------------------------------------------------- */
 
-function buildBulkActions(
-  router: ReturnType<typeof useRouter>,
-): BulkAction<RowType>[] {
+function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
   const [isPending, startTransition] = React.useTransition()
 
   return [
@@ -293,8 +269,8 @@ export default function MembersTable({
       q: search,
     })
     return (
-      <Link href={href} scroll={false} className="flex items-center gap-1">
-        {label} <ArrowUpDown className="h-4 w-4" />
+      <Link href={href} scroll={false} className='flex items-center gap-1'>
+        {label} <ArrowUpDown className='h-4 w-4' />
       </Link>
     )
   }
@@ -305,7 +281,7 @@ export default function MembersTable({
         key: 'name',
         header: sortableHeader('Name', 'name'),
         sortable: false,
-        render: (v) => <span className="font-medium">{v as string}</span>,
+        render: (v) => <span className='font-medium'>{v as string}</span>,
       },
       {
         key: 'email',
@@ -324,8 +300,7 @@ export default function MembersTable({
         key: 'joinedAt',
         header: sortableHeader('Joined', 'joinedAt'),
         sortable: false,
-        render: (v) =>
-          formatDistanceToNow(new Date(v as string), { addSuffix: true }),
+        render: (v) => formatDistanceToNow(new Date(v as string), { addSuffix: true }),
       },
     ]
 
@@ -346,7 +321,7 @@ export default function MembersTable({
     <DataTable
       columns={columns}
       rows={rows}
-      filterKey="name"
+      filterKey='name'
       filterValue={search}
       onFilterChange={handleSearchChange}
       bulkActions={bulkActions}

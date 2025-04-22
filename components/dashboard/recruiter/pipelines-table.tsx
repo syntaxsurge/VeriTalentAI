@@ -1,19 +1,14 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowUpDown,
-  Trash2,
-  MoreHorizontal,
-  Loader2,
-  FolderKanban,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import { formatDistanceToNow } from 'date-fns'
+import * as React from 'react'
 
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { formatDistanceToNow } from 'date-fns'
+import { ArrowUpDown, Trash2, MoreHorizontal, Loader2, FolderKanban } from 'lucide-react'
+import { toast } from 'sonner'
+
+import { deletePipelineAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -22,8 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-
-import { deletePipelineAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -49,11 +43,7 @@ interface PipelinesTableProps {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -119,20 +109,20 @@ function RowActions({ row }: { row: RowType }) {
   return (
     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
           {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className='h-4 w-4 animate-spin' />
           ) : (
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreHorizontal className='h-4 w-4' />
           )}
-          <span className="sr-only">Open menu</span>
+          <span className='sr-only'>Open menu</span>
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="rounded-md p-1 shadow-lg">
+      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
         <DropdownMenuItem asChild>
-          <Link href={`/recruiter/pipelines/${row.id}`} className="cursor-pointer">
-            <FolderKanban className="mr-2 h-4 w-4" />
+          <Link href={`/recruiter/pipelines/${row.id}`} className='cursor-pointer'>
+            <FolderKanban className='mr-2 h-4 w-4' />
             Open&nbsp;Board
           </Link>
         </DropdownMenuItem>
@@ -140,9 +130,9 @@ function RowActions({ row }: { row: RowType }) {
         <DropdownMenuItem
           onClick={destroy}
           disabled={isPending}
-          className="cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400"
+          className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
         >
-          <Trash2 className="mr-2 h-4 w-4" />
+          <Trash2 className='mr-2 h-4 w-4' />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -188,51 +178,51 @@ export default function PipelinesTable({
       q: search,
     })
     return (
-      <Link href={href} scroll={false} className="flex items-center gap-1">
-        {label} <ArrowUpDown className="h-4 w-4" />
+      <Link href={href} scroll={false} className='flex items-center gap-1'>
+        {label} <ArrowUpDown className='h-4 w-4' />
       </Link>
     )
   }
 
   /* ----------------------------- Columns --------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => [
-    {
-      key: 'name',
-      header: sortableHeader('Name', 'name'),
-      sortable: false,
-      render: (v) => <span className="font-medium">{v as string}</span>,
-    },
-    {
-      key: 'description',
-      header: 'Description',
-      sortable: false,
-      render: (v) => (
-        <span className="line-clamp-2 max-w-[480px]">{(v as string) || '—'}</span>
-      ),
-    },
-    {
-      key: 'createdAt',
-      header: sortableHeader('Created', 'createdAt'),
-      sortable: false,
-      render: (v) =>
-        formatDistanceToNow(new Date(v as string), { addSuffix: true }),
-    },
-    {
-      /* NOTE: use existing `id` key (valid keyof RowType) for actions column */
-      key: 'id',
-      header: '',
-      enableHiding: false,
-      sortable: false,
-      render: (_v, row) => <RowActions row={row} />,
-    },
-  ], [sort, order, basePath, initialParams, search])
+  const columns = React.useMemo<Column<RowType>[]>(
+    () => [
+      {
+        key: 'name',
+        header: sortableHeader('Name', 'name'),
+        sortable: false,
+        render: (v) => <span className='font-medium'>{v as string}</span>,
+      },
+      {
+        key: 'description',
+        header: 'Description',
+        sortable: false,
+        render: (v) => <span className='line-clamp-2 max-w-[480px]'>{(v as string) || '—'}</span>,
+      },
+      {
+        key: 'createdAt',
+        header: sortableHeader('Created', 'createdAt'),
+        sortable: false,
+        render: (v) => formatDistanceToNow(new Date(v as string), { addSuffix: true }),
+      },
+      {
+        /* NOTE: use existing `id` key (valid keyof RowType) for actions column */
+        key: 'id',
+        header: '',
+        enableHiding: false,
+        sortable: false,
+        render: (_v, row) => <RowActions row={row} />,
+      },
+    ],
+    [sort, order, basePath, initialParams, search],
+  )
 
   /* ------------------------------- View ---------------------------------- */
   return (
     <DataTable
       columns={columns}
       rows={rows}
-      filterKey="name"
+      filterKey='name'
       filterValue={search}
       onFilterChange={handleSearchChange}
       bulkActions={bulkActions}

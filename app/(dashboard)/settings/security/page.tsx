@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useUser } from '@/lib/auth'
 
-import UpdatePasswordForm from './update-password-form'
 import DeleteAccountForm from './delete-account-form'
+import UpdatePasswordForm from './update-password-form'
 
 export default function SecurityPage() {
   const { userPromise } = useUser()

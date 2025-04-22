@@ -3,14 +3,14 @@
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { IssuerStatus } from '@/lib/db/schema/issuer'
 import {
   updateIssuerStatusAction,
   deleteIssuerAction,
 } from '@/app/(dashboard)/admin/issuers/actions'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { IssuerStatus } from '@/lib/db/schema/issuer'
 
 interface Props {
   issuerId: number
@@ -123,12 +123,7 @@ export default function IssuerStatusButtons({ issuerId, status }: Props) {
           >
             Cancel
           </Button>
-          <Button
-            size='sm'
-            variant='destructive'
-            disabled={isPending}
-            onClick={deleteIssuer}
-          >
+          <Button size='sm' variant='destructive' disabled={isPending} onClick={deleteIssuer}>
             Delete
           </Button>
         </div>

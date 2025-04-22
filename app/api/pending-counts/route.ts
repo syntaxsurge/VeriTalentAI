@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
+
 import { and, eq } from 'drizzle-orm'
 
-import { getUser } from '@/lib/db/queries/queries'
 import { db } from '@/lib/db/drizzle'
+import { getUser } from '@/lib/db/queries/queries'
 import { invitations } from '@/lib/db/schema'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import { candidateCredentials, CredentialStatus } from '@/lib/db/schema/viskify'
@@ -50,14 +51,15 @@ export async function GET() {
   }
 
   /* -------------------- Admin Pending Issuers ------------------- */
-  const adminPendingIssuersCount = user.role === 'admin'
-    ? (
-        await db
-          .select({ id: issuers.id })
-          .from(issuers)
-          .where(eq(issuers.status, IssuerStatus.PENDING))
-      ).length
-    : 0
+  const adminPendingIssuersCount =
+    user.role === 'admin'
+      ? (
+          await db
+            .select({ id: issuers.id })
+            .from(issuers)
+            .where(eq(issuers.status, IssuerStatus.PENDING))
+        ).length
+      : 0
 
   return NextResponse.json({
     invitations: invitationsCount,

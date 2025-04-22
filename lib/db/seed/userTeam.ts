@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 
 import { hashPassword } from '@/lib/auth/session'
+
 import { db } from '../drizzle'
 import { users, teams, teamMembers } from '../schema'
 
@@ -51,7 +52,11 @@ export async function seedUserTeam() {
     ids.set(lowerEmail, u.id)
 
     const personalName = `${name}'s Team`
-    const [existingTeam] = await db.select().from(teams).where(eq(teams.name, personalName)).limit(1)
+    const [existingTeam] = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.name, personalName))
+      .limit(1)
 
     if (!existingTeam) {
       await db.insert(teams).values({ name: personalName, creatorUserId: u.id })

@@ -1,18 +1,15 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
-import {
-  candidateCredentials,
-  candidates,
-  CredentialStatus,
-} from '@/lib/db/schema/viskify'
-import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import { teams, teamMembers } from '@/lib/db/schema/core'
+import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
+import { candidateCredentials, candidates, CredentialStatus } from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
 /*                               A D D  C R E D                               */
@@ -64,10 +61,7 @@ export const addCredential = validatedActionWithUser(
       .limit(1)
 
     if (!candidate) {
-      const [newCand] = await db
-        .insert(candidates)
-        .values({ userId: user.id, bio: '' })
-        .returning()
+      const [newCand] = await db.insert(candidates).values({ userId: user.id, bio: '' }).returning()
       candidate = newCand
     }
 

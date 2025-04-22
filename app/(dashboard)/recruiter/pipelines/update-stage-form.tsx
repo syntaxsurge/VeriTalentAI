@@ -1,10 +1,11 @@
 'use client'
 
-import * as React from 'react'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
 
 import { ActionButton } from '@/components/ui/action-button'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
+
 import { updateCandidateStageAction } from './actions'
 
 interface Props {
@@ -39,12 +40,7 @@ export default function UpdateStageForm({ pipelineCandidateId, initialStage }: P
         ))}
       </select>
 
-      <ActionButton
-        onAction={handleUpdate}
-        pendingLabel='Updating…'
-        variant='outline'
-        size='sm'
-      >
+      <ActionButton onAction={handleUpdate} pendingLabel='Updating…' variant='outline' size='sm'>
         Update
       </ActionButton>
     </div>

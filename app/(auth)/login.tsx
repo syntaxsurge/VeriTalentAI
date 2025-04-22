@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useActionState, useEffect } from 'react'
+
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -55,18 +56,17 @@ export function Login({ mode = 'signin', fixedRole }: LoginProps) {
     return `${base}?${qp.toString()}`
   }
 
-  const heading =
-    mode === 'signin' ? 'Sign in to Viskify' : 'Create your Viskify account'
+  const heading = mode === 'signin' ? 'Sign in to Viskify' : 'Create your Viskify account'
 
   /* ---------------------------------------------------------------------- */
   /*                                   View                                 */
   /* ---------------------------------------------------------------------- */
   return (
-    <div className='relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-gradient-to-br from-background via-muted to-background px-4 py-12 sm:px-6 lg:px-8'>
+    <div className='from-background via-muted to-background relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-gradient-to-br px-4 py-12 sm:px-6 lg:px-8'>
       {/* Decorative backdrop */}
-      <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent' />
+      <div className='from-primary/10 pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] via-transparent to-transparent' />
 
-      <Card className='w-full max-w-md border-none shadow-xl ring-1 ring-border/40 backdrop-blur-sm'>
+      <Card className='ring-border/40 w-full max-w-md border-none shadow-xl ring-1 backdrop-blur-sm'>
         <CardHeader className='space-y-4 text-center'>
           <div className='flex justify-center'>
             <Image
@@ -96,7 +96,7 @@ export function Login({ mode = 'signin', fixedRole }: LoginProps) {
                   id='role'
                   name='role'
                   defaultValue={role || 'candidate'}
-                  className='border-border focus-visible:ring-primary mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2'
+                  className='border-border focus-visible:ring-primary bg-background mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus-visible:ring-2 focus-visible:outline-none'
                 >
                   <option value='candidate'>Candidate</option>
                   <option value='recruiter'>Recruiter / Employer</option>

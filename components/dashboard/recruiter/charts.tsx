@@ -1,9 +1,9 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { PieChart } from '@/components/ui/charts/pie-chart'
 import { BarChart } from '@/components/ui/charts/bar-chart'
 import { type ChartConfig } from '@/components/ui/charts/chart'
+import { PieChart } from '@/components/ui/charts/pie-chart'
 
 interface StageDatum {
   stage: string
@@ -15,10 +15,7 @@ interface RecruiterChartsProps {
   uniqueCandidates: number
 }
 
-export default function RecruiterCharts({
-  stageData,
-  uniqueCandidates,
-}: RecruiterChartsProps) {
+export default function RecruiterCharts({ stageData, uniqueCandidates }: RecruiterChartsProps) {
   /* --------------------- bar-chart config --------------------- */
   const barConfig = {
     count: { label: 'Candidates', color: 'var(--color-primary)' },

@@ -1,38 +1,23 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { eq, and, sql } from 'drizzle-orm'
+import { redirect } from 'next/navigation'
+
 import { format } from 'date-fns'
+import { eq, and, sql } from 'drizzle-orm'
 
-import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
-import {
-  candidates,
-  candidateCredentials,
-  CredentialStatus,
-  quizAttempts,
-} from '@/lib/db/schema/viskify'
-import {
-  pipelineCandidates,
-  recruiterPipelines,
-} from '@/lib/db/schema/recruiter'
-import { users } from '@/lib/db/schema/core'
-import { issuers } from '@/lib/db/schema/issuer'
-
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from '@/components/ui/card'
-import { TablePagination } from '@/components/ui/tables/table-pagination'
 import CredentialsTable, {
   RowType as CredRow,
 } from '@/components/dashboard/recruiter/credentials-table'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import StatusBadge from '@/components/ui/status-badge'
-
+import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { db } from '@/lib/db/drizzle'
+import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterCandidateCredentialsPage } from '@/lib/db/queries/recruiter-candidate-credentials'
+import { users } from '@/lib/db/schema/core'
+import { pipelineCandidates, recruiterPipelines } from '@/lib/db/schema/recruiter'
+import { candidates, candidateCredentials, quizAttempts } from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
 
@@ -55,9 +40,7 @@ function getParam(params: Query, key: string): string | undefined {
 function initials(name?: string | null, email?: string): string {
   if (name && name.trim()) {
     const parts = name.split(' ')
-    return (
-      (parts[0]?.[0] ?? '') + (parts[parts.length - 1]?.[0] ?? '')
-    ).toUpperCase()
+    return ((parts[0]?.[0] ?? '') + (parts[parts.length - 1]?.[0] ?? '')).toUpperCase()
   }
   return email?.slice(0, 2).toUpperCase() ?? ''
 }
@@ -184,30 +167,23 @@ export default async function CandidateProfilePage({
   /*                               UI                                   */
   /* ------------------------------------------------------------------ */
   return (
-    <section className="space-y-8">
+    <section className='space-y-8'>
       {/* ---------- Header ---------- */}
-      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-        <Avatar className="size-20 text-2xl">
-          <AvatarFallback>
-            {initials(row.userRow?.name, row.userRow?.email)}
-          </AvatarFallback>
+      <div className='flex flex-col items-start gap-4 sm:flex-row sm:items-center'>
+        <Avatar className='size-20 text-2xl'>
+          <AvatarFallback>{initials(row.userRow?.name, row.userRow?.email)}</AvatarFallback>
         </Avatar>
 
-        <div className="space-y-1">
-          <h2 className="text-3xl font-semibold">
-            {row.userRow?.name || 'Unnamed Candidate'}
-          </h2>
-          <Link
-            href={`mailto:${row.userRow?.email}`}
-            className="text-sm text-primary underline"
-          >
+        <div className='space-y-1'>
+          <h2 className='text-3xl font-semibold'>{row.userRow?.name || 'Unnamed Candidate'}</h2>
+          <Link href={`mailto:${row.userRow?.email}`} className='text-primary text-sm underline'>
             {row.userRow?.email}
           </Link>
 
           {inPipeline ? (
-            <Badge className="bg-primary/10 text-primary">In&nbsp;Pipeline</Badge>
+            <Badge className='bg-primary/10 text-primary'>In&nbsp;Pipeline</Badge>
           ) : (
-            <Badge variant="outline">Not&nbsp;in&nbsp;Your&nbsp;Pipelines</Badge>
+            <Badge variant='outline'>Not&nbsp;in&nbsp;Your&nbsp;Pipelines</Badge>
           )}
         </div>
       </div>
@@ -218,41 +194,23 @@ export default async function CandidateProfilePage({
           <CardTitle>About</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="whitespace-pre-line text-sm">
-            {row.cand.bio || 'No bio provided.'}
-          </p>
+          <p className='text-sm whitespace-pre-line'>{row.cand.bio || 'No bio provided.'}</p>
         </CardContent>
       </Card>
 
       {/* ---------- Credentials ---------- */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2">
+          <CardTitle className='flex flex-wrap items-center gap-2'>
             Credentials
-            <StatusBadge
-              status="verified"
-              showIcon
-              count={statusCounts.verified}
-            />
-            <StatusBadge
-              status="pending"
-              showIcon
-              count={statusCounts.pending}
-            />
-            <StatusBadge
-              status="rejected"
-              showIcon
-              count={statusCounts.rejected}
-            />
-            <StatusBadge
-              status="unverified"
-              showIcon
-              count={statusCounts.unverified}
-            />
+            <StatusBadge status='verified' showIcon count={statusCounts.verified} />
+            <StatusBadge status='pending' showIcon count={statusCounts.pending} />
+            <StatusBadge status='rejected' showIcon count={statusCounts.rejected} />
+            <StatusBadge status='unverified' showIcon count={statusCounts.unverified} />
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto rounded-md border">
+          <div className='overflow-x-auto rounded-md border'>
             <CredentialsTable
               rows={credRows}
               sort={sort}
@@ -277,9 +235,9 @@ export default async function CandidateProfilePage({
         <CardHeader>
           <CardTitle>Skill&nbsp;Quiz&nbsp;Passes</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
+        <CardContent className='space-y-2 text-sm'>
           {passes.length === 0 ? (
-            <p className="text-muted-foreground">None.</p>
+            <p className='text-muted-foreground'>None.</p>
           ) : (
             passes.map((p) => (
               <p key={p.id}>
@@ -297,9 +255,9 @@ export default async function CandidateProfilePage({
           <CardHeader>
             <CardTitle>Pipeline&nbsp;Entries</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+          <CardContent className='space-y-2 text-sm'>
             {pipelineEntries.map((e, idx) => (
-              <p key={idx} className="flex items-center gap-2">
+              <p key={idx} className='flex items-center gap-2'>
                 {e.pipelineName}
                 <StatusBadge status={e.stage} />
               </p>

@@ -1,20 +1,22 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowUpDown,
-  ChevronDown,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  Loader2,
-} from 'lucide-react'
+import * as React from 'react'
+
+import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { deleteUserAction } from '@/app/(dashboard)/admin/users/actions'
+import EditUserForm from '@/app/(dashboard)/admin/users/edit-user-form'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -23,16 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
-
-import { deleteUserAction } from '@/app/(dashboard)/admin/users/actions'
-import EditUserForm from '@/app/(dashboard)/admin/users/edit-user-form'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -60,11 +53,7 @@ interface UsersTableProps {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -120,28 +109,28 @@ function RowActions({ row }: { row: RowType }) {
     <>
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+          <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
             {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className='h-4 w-4 animate-spin' />
             ) : (
-              <MoreHorizontal className="h-4 w-4" />
+              <MoreHorizontal className='h-4 w-4' />
             )}
-            <span className="sr-only">Open menu</span>
+            <span className='sr-only'>Open menu</span>
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" className="rounded-md p-1 shadow-lg">
+        <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={openEditDialog} className="cursor-pointer">
-            <Pencil className="mr-2 h-4 w-4" /> Edit
+          <DropdownMenuItem onSelect={openEditDialog} className='cursor-pointer'>
+            <Pencil className='mr-2 h-4 w-4' /> Edit
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={destroy}
             disabled={isPending}
-            className="cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400"
+            className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
           >
-            <Trash2 className="mr-2 h-4 w-4" /> Delete
+            <Trash2 className='mr-2 h-4 w-4' /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -233,8 +222,8 @@ export default function AdminUsersTable({
       q: search,
     })
     return (
-      <Link href={href} scroll={false} className="flex items-center gap-1">
-        {label} <ArrowUpDown className="h-4 w-4" />
+      <Link href={href} scroll={false} className='flex items-center gap-1'>
+        {label} <ArrowUpDown className='h-4 w-4' />
       </Link>
     )
   }
@@ -281,7 +270,7 @@ export default function AdminUsersTable({
     <DataTable
       columns={columns}
       rows={rows}
-      filterKey="name"
+      filterKey='name'
       filterValue={search}
       onFilterChange={handleSearchChange}
       bulkActions={bulkActions}

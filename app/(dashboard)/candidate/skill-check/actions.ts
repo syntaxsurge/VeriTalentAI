@@ -5,12 +5,9 @@ import { eq } from 'drizzle-orm'
 import { issueCredential } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import {
-  quizAttempts,
-  skillQuizzes,
-  candidates,
-} from '@/lib/db/schema/viskify'
 import { teams, teamMembers } from '@/lib/db/schema/core'
+import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/viskify'
+
 import { openAIAssess } from './openai'
 
 export async function startQuizAction(formData: FormData) {
@@ -29,10 +26,7 @@ export async function startQuizAction(formData: FormData) {
     .limit(1)
 
   if (!candidateRow) {
-    const [newCand] = await db
-      .insert(candidates)
-      .values({ userId: user.id, bio: '' })
-      .returning()
+    const [newCand] = await db.insert(candidates).values({ userId: user.id, bio: '' }).returning()
     candidateRow = newCand
   }
 

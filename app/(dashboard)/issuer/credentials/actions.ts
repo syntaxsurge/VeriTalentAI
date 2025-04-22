@@ -8,11 +8,7 @@ import { issueCredential } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
 import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
-import {
-  candidateCredentials,
-  CredentialStatus,
-  candidates,
-} from '@/lib/db/schema/viskify'
+import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
 /*                               U T I L S                                    */
@@ -38,8 +34,7 @@ export const approveCredentialAction = validatedActionWithUser(
       .limit(1)
 
     if (!issuer) return buildError('Issuer not found.')
-    if (!issuer.did)
-      return buildError('Link a DID before approving credentials.')
+    if (!issuer.did) return buildError('Link a DID before approving credentials.')
 
     /* ------------------ credential lookup ------------------ */
     const [cred] = await db
@@ -66,8 +61,7 @@ export const approveCredentialAction = validatedActionWithUser(
       .limit(1)
 
     /* ---- NEW: ensure candUser is not null for TS safety --- */
-    if (!cand || !cand.candUser)
-      return buildError('Candidate user not found.')
+    if (!cand || !cand.candUser) return buildError('Candidate user not found.')
 
     const [teamRow] = await db
       .select({ did: teams.did })
@@ -78,9 +72,7 @@ export const approveCredentialAction = validatedActionWithUser(
 
     const subjectDid = teamRow?.did
     if (!subjectDid)
-      return buildError(
-        'Candidate has no DID – ask them to generate one before verification.',
-      )
+      return buildError('Candidate has no DID – ask them to generate one before verification.')
 
     /* ------------------ VC handling ------------------------ */
     let vcJwt = cred.vcIssuedId ?? undefined
@@ -99,26 +91,23 @@ export const approveCredentialAction = validatedActionWithUser(
           subjectDid,
           attributes: {
             credentialTitle: cred.title,
-            candidateName:
-              cand.candUser?.name || cand.candUser?.email || 'Unknown',
+            candidateName: cand.candUser?.name || cand.candUser?.email || 'Unknown',
           },
           credentialName: cred.type,
         })
         vcJwt = vc?.proof?.jwt
         if (!vcJwt) {
-          return buildError(
-            'Verifiable credential issued without a JWT proof.',
-            { ...debugCtx, vc },
-          )
+          return buildError('Verifiable credential issued without a JWT proof.', {
+            ...debugCtx,
+            vc,
+          })
         }
       }
     } catch (err: any) {
-      return buildError(
-        `Failed to issue verifiable credential: ${
-          err?.message || String(err)
-        }`,
-        { ...debugCtx, err },
-      )
+      return buildError(`Failed to issue verifiable credential: ${err?.message || String(err)}`, {
+        ...debugCtx,
+        err,
+      })
     }
 
     /* ------------------ persist changes -------------------- */

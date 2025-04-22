@@ -1,8 +1,9 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
+
 import {
   Settings,
   LogOut,
@@ -16,9 +17,9 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { ActivityType } from '@/lib/db/schema'
 import { relativeTime } from '@/lib/utils/time'
-import { DataTable, type Column } from '@/components/ui/tables/data-table'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -62,11 +63,7 @@ const iconMap: Record<ActivityType, LucideIcon> = {
 /*                                    Util                                    */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -179,7 +176,7 @@ export default function ActivityLogsTable({
         sortable: false,
         className: 'min-w-[120px]',
         render: (v) => (
-          <span className='text-xs text-muted-foreground'>
+          <span className='text-muted-foreground text-xs'>
             {relativeTime(new Date(v as string))}
           </span>
         ),

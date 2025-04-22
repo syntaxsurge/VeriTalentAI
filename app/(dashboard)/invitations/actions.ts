@@ -1,17 +1,13 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+
 import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
-import {
-  invitations,
-  teamMembers,
-  activityLogs,
-  ActivityType,
-} from '@/lib/db/schema'
+import { invitations, teamMembers, activityLogs, ActivityType } from '@/lib/db/schema'
 
 /* -------------------------------------------------------------------------- */
 /*                                  A C C E P T                               */
@@ -71,10 +67,7 @@ const _acceptInvitation = validatedActionWithUser(
       }
 
       /* Mark invitation as accepted */
-      await tx
-        .update(invitations)
-        .set({ status: 'accepted' })
-        .where(eq(invitations.id, inv.id))
+      await tx.update(invitations).set({ status: 'accepted' }).where(eq(invitations.id, inv.id))
 
       /* Log activity */
       await tx.insert(activityLogs).values({
@@ -89,9 +82,7 @@ const _acceptInvitation = validatedActionWithUser(
   },
 )
 
-export const acceptInvitationAction = async (
-  ...args: Parameters<typeof _acceptInvitation>
-) => {
+export const acceptInvitationAction = async (...args: Parameters<typeof _acceptInvitation>) => {
   'use server'
   return _acceptInvitation(...args)
 }
@@ -123,9 +114,7 @@ const _declineInvitation = validatedActionWithUser(
   },
 )
 
-export const declineInvitationAction = async (
-  ...args: Parameters<typeof _declineInvitation>
-) => {
+export const declineInvitationAction = async (...args: Parameters<typeof _declineInvitation>) => {
   'use server'
   return _declineInvitation(...args)
 }
@@ -151,9 +140,7 @@ const _deleteInvitation = validatedActionWithUser(
   },
 )
 
-export const deleteInvitationAction = async (
-  ...args: Parameters<typeof _deleteInvitation>
-) => {
+export const deleteInvitationAction = async (...args: Parameters<typeof _deleteInvitation>) => {
   'use server'
   return _deleteInvitation(...args)
 }

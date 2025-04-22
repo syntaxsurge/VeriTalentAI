@@ -1,8 +1,10 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
+
+import { formatDistanceToNow } from 'date-fns'
 import {
   ArrowUpDown,
   MoreHorizontal,
@@ -13,13 +15,12 @@ import {
   type LucideProps,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatDistanceToNow } from 'date-fns'
 
 import {
-  DataTable,
-  type Column,
-  type BulkAction,
-} from '@/components/ui/tables/data-table'
+  acceptInvitationAction,
+  declineInvitationAction,
+  deleteInvitationAction,
+} from '@/app/(dashboard)/invitations/actions'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -29,29 +30,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
-
-import {
-  acceptInvitationAction,
-  declineInvitationAction,
-  deleteInvitationAction,
-} from '@/app/(dashboard)/invitations/actions'
 import { StatusBadge } from '@/components/ui/status-badge'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 
 /* -------------------------------------------------------------------------- */
 /*                              C O L O U R  I C O N S                        */
 /* -------------------------------------------------------------------------- */
 
 const AcceptIcon = (props: LucideProps) => (
-  <CheckCircle2
-    {...props}
-    className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400"
-  />
+  <CheckCircle2 {...props} className='mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400' />
 )
 const DeclineIcon = (props: LucideProps) => (
-  <XCircle
-    {...props}
-    className="mr-2 h-4 w-4 text-amber-600 dark:text-amber-400"
-  />
+  <XCircle {...props} className='mr-2 h-4 w-4 text-amber-600 dark:text-amber-400' />
 )
 
 /* -------------------------------------------------------------------------- */
@@ -81,11 +71,7 @@ interface Props {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -127,17 +113,17 @@ function RowActions({ row }: { row: RowType }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
           {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className='h-4 w-4 animate-spin' />
           ) : (
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreHorizontal className='h-4 w-4' />
           )}
-          <span className="sr-only">Open menu</span>
+          <span className='sr-only'>Open menu</span>
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="rounded-md p-1 shadow-lg">
+      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
         {isPendingStatus && (
@@ -163,9 +149,9 @@ function RowActions({ row }: { row: RowType }) {
         <DropdownMenuItem
           onClick={() => runAction(deleteInvitationAction, 'Invitation deleted.')}
           disabled={isPending}
-          className="font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400"
+          className='font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
         >
-          <Trash2 className="mr-2 h-4 w-4" />
+          <Trash2 className='mr-2 h-4 w-4' />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -286,8 +272,8 @@ export default function InvitationsTable({
       q: search,
     })
     return (
-      <Link href={href} scroll={false} className="flex items-center gap-1">
-        {label} <ArrowUpDown className="h-4 w-4" />
+      <Link href={href} scroll={false} className='flex items-center gap-1'>
+        {label} <ArrowUpDown className='h-4 w-4' />
       </Link>
     )
   }
@@ -299,7 +285,7 @@ export default function InvitationsTable({
         key: 'team',
         header: sortableHeader('Team', 'team'),
         sortable: false,
-        render: (v) => <span className="font-medium">{v as string}</span>,
+        render: (v) => <span className='font-medium'>{v as string}</span>,
       },
       {
         key: 'role',
@@ -342,7 +328,7 @@ export default function InvitationsTable({
     <DataTable
       columns={columns}
       rows={rows}
-      filterKey="team"
+      filterKey='team'
       filterValue={search}
       onFilterChange={handleSearchChange}
       bulkActions={bulkActions}

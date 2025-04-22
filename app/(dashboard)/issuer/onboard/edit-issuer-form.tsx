@@ -1,16 +1,18 @@
 'use client'
 
-import * as React from 'react'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
 import { useActionState, startTransition } from 'react'
+
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { updateIssuerDetailsAction } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
+
+import { updateIssuerDetailsAction } from './actions'
 
 type ActionState = { error?: string; success?: string }
 

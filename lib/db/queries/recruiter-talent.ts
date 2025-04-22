@@ -1,8 +1,8 @@
 import { and, asc, desc, ilike, or, sql } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import { candidates } from '../schema/viskify'
 import { users } from '../schema/core'
+import { candidates } from '../schema/viskify'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -45,8 +45,8 @@ export async function getTalentSearchPage(
           : desc(candidates.id)
         : /* default — name */
           order === 'asc'
-            ? asc(users.name)
-            : desc(users.name)
+          ? asc(users.name)
+          : desc(users.name)
 
   /* ----------------------------- WHERE clause ---------------------------- */
   const filters: any[] = []

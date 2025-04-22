@@ -1,17 +1,14 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowUpDown,
-  MoreHorizontal,
-  Trash2,
-  Loader2,
-} from 'lucide-react'
+import * as React from 'react'
+
+import { ArrowUpDown, MoreHorizontal, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -20,9 +17,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
-import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
 import { StatusBadge } from '@/components/ui/status-badge'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -50,11 +46,7 @@ interface CredentialsTableProps {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  base: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(base: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -85,20 +77,24 @@ function RowActions({ id }: { id: number }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
-          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
-          <span className="sr-only">Open menu</span>
+        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
+          {isPending ? (
+            <Loader2 className='h-4 w-4 animate-spin' />
+          ) : (
+            <MoreHorizontal className='h-4 w-4' />
+          )}
+          <span className='sr-only'>Open menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="rounded-md p-1 shadow-lg">
+      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={destroy}
           disabled={isPending}
-          className="cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400"
+          className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
         >
-          <Trash2 className="mr-2 h-4 w-4" /> Delete
+          <Trash2 className='mr-2 h-4 w-4' /> Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -172,53 +168,56 @@ export default function AdminCredentialsTable({
       q: search,
     })
     return (
-      <Link href={href} scroll={false} className="flex items-center gap-1">
-        {label} <ArrowUpDown className="h-4 w-4" />
+      <Link href={href} scroll={false} className='flex items-center gap-1'>
+        {label} <ArrowUpDown className='h-4 w-4' />
       </Link>
     )
   }
 
   /* ------------------------------ Columns --------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => [
-    {
-      key: 'title',
-      header: sortableHeader('Title', 'title'),
-      sortable: false,
-      render: (v) => (v ? String(v) : '—'),
-    },
-    {
-      key: 'candidate',
-      header: sortableHeader('Candidate', 'candidate'),
-      sortable: false,
-      render: (v) => String(v),
-    },
-    {
-      key: 'issuer',
-      header: sortableHeader('Issuer', 'issuer'),
-      sortable: false,
-      render: (v) => (v ? String(v) : '—'),
-    },
-    {
-      key: 'status',
-      header: sortableHeader('Status', 'status'),
-      sortable: false,
-      render: (v) => <StatusBadge status={String(v)} />,
-    },
-    {
-      key: 'id',
-      header: '',
-      enableHiding: false,
-      sortable: false,
-      render: (_v, row) => <RowActions id={row.id} />,
-    },
-  ], [sort, order, basePath, initialParams, search])
+  const columns = React.useMemo<Column<RowType>[]>(
+    () => [
+      {
+        key: 'title',
+        header: sortableHeader('Title', 'title'),
+        sortable: false,
+        render: (v) => (v ? String(v) : '—'),
+      },
+      {
+        key: 'candidate',
+        header: sortableHeader('Candidate', 'candidate'),
+        sortable: false,
+        render: (v) => String(v),
+      },
+      {
+        key: 'issuer',
+        header: sortableHeader('Issuer', 'issuer'),
+        sortable: false,
+        render: (v) => (v ? String(v) : '—'),
+      },
+      {
+        key: 'status',
+        header: sortableHeader('Status', 'status'),
+        sortable: false,
+        render: (v) => <StatusBadge status={String(v)} />,
+      },
+      {
+        key: 'id',
+        header: '',
+        enableHiding: false,
+        sortable: false,
+        render: (_v, row) => <RowActions id={row.id} />,
+      },
+    ],
+    [sort, order, basePath, initialParams, search],
+  )
 
   /* ------------------------------ Render ---------------------------------- */
   return (
     <DataTable
       columns={columns}
       rows={rows}
-      filterKey="title"
+      filterKey='title'
       filterValue={search}
       onFilterChange={handleSearchChange}
       bulkActions={bulkActions}

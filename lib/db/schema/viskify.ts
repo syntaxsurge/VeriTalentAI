@@ -26,9 +26,7 @@ export const candidates = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (t) => [
-    uniqueIndex('candidates_user_id_idx').on(t.userId),
-  ],
+  (t) => [uniqueIndex('candidates_user_id_idx').on(t.userId)],
 )
 
 export const candidatesRelations = relations(candidates, ({ one, many }) => ({

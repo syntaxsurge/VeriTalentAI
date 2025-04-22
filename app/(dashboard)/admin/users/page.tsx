@@ -1,12 +1,10 @@
 import { redirect } from 'next/navigation'
 
+import AdminUsersTable, { type RowType } from '@/components/dashboard/admin/users-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import AdminUsersTable, {
-  type RowType,
-} from '@/components/dashboard/admin/users-table'
-import { getUser } from '@/lib/db/queries/queries'
 import { getAdminUsersPage } from '@/lib/db/queries/admin-users'
+import { getUser } from '@/lib/db/queries/queries'
 
 export const revalidate = 0
 
@@ -77,19 +75,19 @@ export default async function AdminUsersPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className="space-y-6">
-      <h2 className="text-2xl font-semibold">All Users</h2>
+    <section className='space-y-6'>
+      <h2 className='text-2xl font-semibold'>All Users</h2>
 
       <Card>
         <CardHeader>
           <CardTitle>User Accounts</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent className='overflow-x-auto'>
           <AdminUsersTable
             rows={rows}
             sort={sort}
             order={order as 'asc' | 'desc'}
-            basePath="/admin/users"
+            basePath='/admin/users'
             initialParams={initialParams}
             searchQuery={searchTerm}
           />
@@ -97,7 +95,7 @@ export default async function AdminUsersPage({
           <TablePagination
             page={page}
             hasNext={hasNext}
-            basePath="/admin/users"
+            basePath='/admin/users'
             initialParams={initialParams}
             pageSize={pageSize}
           />

@@ -1,10 +1,8 @@
-import { db } from '../drizzle'
-import {
-  candidateCredentials as credsT,
-  CredentialStatus,
-} from '../schema/viskify'
-import { issuers as issuersT } from '../schema/issuer'
 import { eq, ilike, and, asc, desc } from 'drizzle-orm'
+
+import { db } from '../drizzle'
+import { issuers as issuersT } from '../schema/issuer'
+import { candidateCredentials as credsT, CredentialStatus } from '../schema/viskify'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -69,10 +67,7 @@ export async function getRecruiterCandidateCredentialsPage(
   const where =
     searchTerm.trim().length === 0
       ? eq(credsT.candidateId, candidateId)
-      : and(
-          eq(credsT.candidateId, candidateId),
-          ilike(credsT.title, `%${searchTerm}%`),
-        )
+      : and(eq(credsT.candidateId, candidateId), ilike(credsT.title, `%${searchTerm}%`))
 
   /* ------------------------------ Query ---------------------------------- */
   const rows = await db

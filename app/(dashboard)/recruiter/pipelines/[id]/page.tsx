@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
-import { eq } from 'drizzle-orm'
+
 import { format } from 'date-fns'
+import { eq } from 'drizzle-orm'
 
 import PipelineBoard from '@/components/dashboard/recruiter/pipeline-board'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
@@ -15,11 +16,7 @@ export const revalidate = 0
 /**
  * Recruiter pipeline board (Kanban‑style) — charts removed per UX feedback.
  */
-export default async function PipelineBoardPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function PipelineBoardPage({ params }: { params: Promise<{ id: string }> }) {
   /* ------------------------- dynamic param -------------------------- */
   const { id } = await params
   const pipelineId = Number(id)
@@ -79,23 +76,23 @@ export default async function PipelineBoardPage({
 
   /* ------------------------------ UI ------------------------------- */
   return (
-    <section className="space-y-8">
+    <section className='space-y-8'>
       {/* Header */}
-      <header className="space-y-1">
-        <h2 className="flex items-center gap-2 text-2xl font-semibold">
+      <header className='space-y-1'>
+        <h2 className='flex items-center gap-2 text-2xl font-semibold'>
           {pipeline.name}
-          <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+          <span className='bg-muted rounded-full px-2 py-0.5 text-xs'>
             {totalCandidates}&nbsp;{totalCandidates === 1 ? 'Candidate' : 'Candidates'}
           </span>
         </h2>
 
         {pipeline.description && (
-          <p className="max-w-3xl whitespace-pre-line text-muted-foreground">
+          <p className='text-muted-foreground max-w-3xl whitespace-pre-line'>
             {pipeline.description}
           </p>
         )}
 
-        <p className="text-xs text-muted-foreground">
+        <p className='text-muted-foreground text-xs'>
           Created&nbsp;{format(pipeline.createdAt, 'PPP')} • Updated&nbsp;
           {format(pipeline.updatedAt, 'PPP')}
         </p>

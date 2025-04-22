@@ -2,18 +2,13 @@
 
 import * as React from 'react'
 import { useActionState, useRef } from 'react'
-import { toast } from 'sonner'
+
 import { Loader2, PlusCircle } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { inviteTeamMember } from '@/app/(auth)/actions'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -24,10 +19,10 @@ export function InviteTeamMember({ isOwner }: { isOwner: boolean }) {
   /* ------------------------------------------------------------------ */
   /*                         S E R V E R  A C T I O N                    */
   /* ------------------------------------------------------------------ */
-  const [state, formAction, pending] = useActionState<ActionState, FormData>(
-    inviteTeamMember,
-    { error: '', success: '' },
-  )
+  const [state, formAction, pending] = useActionState<ActionState, FormData>(inviteTeamMember, {
+    error: '',
+    success: '',
+  })
 
   /* Keep a ref to the form so we can clear it after a successful invite */
   const formRef = useRef<HTMLFormElement>(null)

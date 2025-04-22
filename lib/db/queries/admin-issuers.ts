@@ -1,8 +1,8 @@
 import { asc, desc, eq, ilike, or } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import { issuers as issuersT } from '../schema/issuer'
 import { users as usersT } from '../schema/core'
+import { issuers as issuersT } from '../schema/issuer'
 
 export type AdminIssuerRow = {
   id: number
@@ -82,7 +82,10 @@ export async function getAdminIssuersPage(
 
   if (where) q = q.where(where)
 
-  const rows = await q.orderBy(orderBy).limit(pageSize + 1).offset(offset)
+  const rows = await q
+    .orderBy(orderBy)
+    .limit(pageSize + 1)
+    .offset(offset)
 
   const hasNext = rows.length > pageSize
   if (hasNext) rows.pop()

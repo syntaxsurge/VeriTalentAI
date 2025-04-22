@@ -1,16 +1,13 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  type DropResult,
-} from '@hello-pangea/dnd'
 
-import { STAGES, type Stage } from '@/lib/constants/recruiter'
+import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
+import { toast } from 'sonner'
+
 import { updateCandidateStageAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
+import { STAGES, type Stage } from '@/lib/constants/recruiter'
+
 import CandidateCard from './candidate-card'
 
 /* -------------------------------------------------------------------------- */
@@ -79,7 +76,7 @@ export default function PipelineBoard({ pipelineId, initialData }: Props) {
   /* ------------------------------ View ------------------------------ */
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="grid gap-6 md:grid-cols-4">
+      <div className='grid gap-6 md:grid-cols-4'>
         {STAGES.map((stage) => {
           const items = columns[stage]
           return (
@@ -89,22 +86,20 @@ export default function PipelineBoard({ pipelineId, initialData }: Props) {
                   ref={prov.innerRef}
                   {...prov.droppableProps}
                   className={`flex max-h-[80vh] flex-col gap-3 overflow-y-auto rounded-lg border p-3 transition-colors ${
-                    snapshot.isDraggingOver
-                      ? 'bg-primary/10 ring-2 ring-primary'
-                      : 'bg-muted/30'
+                    snapshot.isDraggingOver ? 'bg-primary/10 ring-primary ring-2' : 'bg-muted/30'
                   }`}
                 >
                   {/* Column header */}
-                  <h3 className="mb-1 flex items-center justify-between text-sm font-semibold capitalize">
+                  <h3 className='mb-1 flex items-center justify-between text-sm font-semibold capitalize'>
                     {stage}
-                    <span className="rounded-full bg-background px-2 py-0.5 text-xs">
+                    <span className='bg-background rounded-full px-2 py-0.5 text-xs'>
                       {items.length}
                     </span>
                   </h3>
 
                   {/* Cards */}
                   {items.length === 0 ? (
-                    <p className="text-muted-foreground text-xs">Empty</p>
+                    <p className='text-muted-foreground text-xs'>Empty</p>
                   ) : (
                     items.map((cand, idx) => (
                       <Draggable key={cand.id} draggableId={String(cand.id)} index={idx}>

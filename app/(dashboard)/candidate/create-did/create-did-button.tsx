@@ -2,10 +2,12 @@
 
 import * as React from 'react'
 import { useActionState, startTransition } from 'react'
+
 import { Loader2, KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+
 import { createDidAction } from './actions'
 
 /* -------------------------------------------------------------------------- */
@@ -46,26 +48,25 @@ export function CreateDidButton() {
         toast.success(state.success, { id: toastId.current })
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, pending])
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className='flex flex-col gap-2'>
       <Button
         onClick={handleClick}
         disabled={pending}
-        className="group relative overflow-hidden px-6 py-3 font-semibold"
+        className='group relative overflow-hidden px-6 py-3 font-semibold'
       >
         {/* Gradient hover aura */}
-        <span className="absolute inset-0 -z-10 rounded-md bg-gradient-to-r from-primary/80 via-primary to-primary/80 opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+        <span className='from-primary/80 via-primary to-primary/80 absolute inset-0 -z-10 rounded-md bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-20' />
         {pending ? (
           <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            <Loader2 className='mr-2 h-5 w-5 animate-spin' />
             Creating DID…
           </>
         ) : (
           <>
-            <KeyRound className="mr-2 h-5 w-5 flex-shrink-0" />
+            <KeyRound className='mr-2 h-5 w-5 flex-shrink-0' />
             Create DID&nbsp;for&nbsp;My&nbsp;Company
           </>
         )}

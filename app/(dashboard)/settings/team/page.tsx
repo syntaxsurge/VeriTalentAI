@@ -1,10 +1,11 @@
 import { redirect } from 'next/navigation'
+
 import { eq } from 'drizzle-orm'
 
-import { getUser } from '@/lib/db/queries/queries'
 import { db } from '@/lib/db/drizzle'
-import { teamMembers, teams } from '@/lib/db/schema/core'
+import { getUser } from '@/lib/db/queries/queries'
 import { getTeamMembersPage } from '@/lib/db/queries/team-members'
+import { teamMembers, teams } from '@/lib/db/schema/core'
 
 import { Settings } from './settings'
 
@@ -117,7 +118,7 @@ export default async function TeamSettingsPage({
       sort={sort}
       order={order as 'asc' | 'desc'}
       searchQuery={searchTerm}
-      basePath="/settings/team"
+      basePath='/settings/team'
       initialParams={initialParams}
     />
   )

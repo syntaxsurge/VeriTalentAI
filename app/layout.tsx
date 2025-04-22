@@ -1,14 +1,13 @@
 import './globals.css'
 import { Manrope } from 'next/font/google'
 
-import SiteHeader from '@/components/site-header'
-
+import type { Metadata, Viewport } from 'next'
 import { Toaster } from 'sonner'
 
+import SiteHeader from '@/components/site-header'
 import { ThemeProvider } from '@/components/theme-provider'
 import { UserProvider } from '@/lib/auth'
 import { getUser } from '@/lib/db/queries/queries'
-import type { Metadata, Viewport } from 'next'
 
 export const metadata: Metadata = {
   title: 'Viskify',
@@ -22,29 +21,25 @@ export const viewport: Viewport = {
 
 const manrope = Manrope({ subsets: ['latin'] })
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const userPromise = getUser()
 
   return (
     <html
-      lang="en"
+      lang='en'
       className={`bg-background text-foreground ${manrope.className}`}
       suppressHydrationWarning
     >
-      <body className="min-h-[100dvh]">
+      <body className='min-h-[100dvh]'>
         <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
+          attribute='class'
+          defaultTheme='system'
           enableSystem
           disableTransitionOnChange
         >
           {/* Global toast provider */}
           <Toaster
-            position="bottom-right"
+            position='bottom-right'
             toastOptions={{
               classNames: {
                 toast:
@@ -64,9 +59,7 @@ export default async function RootLayout({
           <UserProvider userPromise={userPromise}>
             <SiteHeader />
 
-            <main className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-              {children}
-            </main>
+            <main className='mx-auto max-w-7xl px-4 py-6 md:px-6'>{children}</main>
           </UserProvider>
         </ThemeProvider>
       </body>

@@ -1,24 +1,12 @@
-import { KeyRound, Sparkles } from 'lucide-react'
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card'
-import { db } from '@/lib/db/drizzle'
-import { teamMembers, users as usersT } from '@/lib/db/schema/core'
 import { eq, sql } from 'drizzle-orm'
+import { KeyRound, Sparkles } from 'lucide-react'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
+import { teamMembers, users as usersT } from '@/lib/db/schema/core'
 
 import { CreateDidButton } from './create-did-button'
 
@@ -103,13 +91,13 @@ export default async function CreateDIDPage() {
       <Card className='relative overflow-hidden shadow-md transition-shadow hover:shadow-xl'>
         {/* Decorative sparkles */}
         <Sparkles
-          className='absolute -right-5 -top-5 h-28 w-28 rotate-12 text-primary/10'
+          className='text-primary/10 absolute -top-5 -right-5 h-28 w-28 rotate-12'
           aria-hidden='true'
         />
 
         <CardHeader className='pb-4'>
           <div className='flex items-center gap-3'>
-            <KeyRound className='h-10 w-10 flex-shrink-0 rounded-lg bg-primary/10 p-2 text-primary' />
+            <KeyRound className='bg-primary/10 text-primary h-10 w-10 flex-shrink-0 rounded-lg p-2' />
             <div>
               <CardTitle className='text-2xl font-extrabold tracking-tight'>
                 Create your Team DID
@@ -130,7 +118,7 @@ export default async function CreateDIDPage() {
               return (
                 <HoverCard key={member.id}>
                   <HoverCardTrigger asChild>
-                    <Avatar className='ring-background size-10 cursor-pointer rounded-full border-2 border-background shadow'>
+                    <Avatar className='ring-background border-background size-10 cursor-pointer rounded-full border-2 shadow'>
                       <AvatarImage alt={label} />
                       <AvatarFallback className='bg-muted text-sm font-semibold'>
                         {initial}
@@ -141,9 +129,7 @@ export default async function CreateDIDPage() {
                   <HoverCardContent className='w-48 text-sm'>
                     {member.name ?? 'Unnamed'}
                     <br />
-                    <span className='break-all text-xs text-muted-foreground'>
-                      {member.email}
-                    </span>
+                    <span className='text-muted-foreground text-xs break-all'>{member.email}</span>
                   </HoverCardContent>
                 </HoverCard>
               )
@@ -152,7 +138,7 @@ export default async function CreateDIDPage() {
             {overflow > 0 && (
               <HoverCard>
                 <HoverCardTrigger asChild>
-                  <div className='flex size-10 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-primary text-xs font-medium text-primary-foreground shadow'>
+                  <div className='border-background bg-primary text-primary-foreground flex size-10 cursor-pointer items-center justify-center rounded-full border-2 text-xs font-medium shadow'>
                     +{overflow}
                   </div>
                 </HoverCardTrigger>
@@ -164,10 +150,10 @@ export default async function CreateDIDPage() {
           </div>
 
           <p className='text-sm leading-relaxed'>
-            A Decentralised Identifier (DID) acts like a verified username for your
-            company. Once created, your team can issue&nbsp;
-            <span className='font-semibold'>signed</span>&nbsp;credentials that employers,
-            clients, and platforms can trust instantly.
+            A Decentralised Identifier (DID) acts like a verified username for your company. Once
+            created, your team can issue&nbsp;
+            <span className='font-semibold'>signed</span>&nbsp;credentials that employers, clients,
+            and platforms can trust instantly.
           </p>
 
           <CreateDidButton />

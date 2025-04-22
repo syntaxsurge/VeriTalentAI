@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 
+import InvitationsTable, { RowType } from '@/components/dashboard/invitations-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import InvitationsTable, { RowType } from '@/components/dashboard/invitations-table'
 import { getInvitationsPage } from '@/lib/db/queries/invitations'
 import { getUser } from '@/lib/db/queries/queries'
 
@@ -71,19 +71,19 @@ export default async function InvitationsPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className="flex-1">
-      <h2 className="mb-4 text-xl font-semibold">Team Invitations</h2>
+    <section className='flex-1'>
+      <h2 className='mb-4 text-xl font-semibold'>Team Invitations</h2>
 
       <Card>
         <CardHeader>
           <CardTitle>Invitations Overview</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent className='overflow-x-auto'>
           <InvitationsTable
             rows={rows}
             sort={sort}
             order={order as 'asc' | 'desc'}
-            basePath="/invitations"
+            basePath='/invitations'
             initialParams={initialParams}
             searchQuery={searchTerm}
           />
@@ -91,7 +91,7 @@ export default async function InvitationsPage({
           <TablePagination
             page={page}
             hasNext={hasNext}
-            basePath="/invitations"
+            basePath='/invitations'
             initialParams={initialParams}
             pageSize={pageSize}
           />

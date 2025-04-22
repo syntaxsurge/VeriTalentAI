@@ -1,16 +1,17 @@
 import Image from 'next/image'
+
 import { eq } from 'drizzle-orm'
 
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { db } from '@/lib/db/drizzle'
 import {
   issuers as issuersTable,
   IssuerCategory,
   IssuerIndustry,
   IssuerStatus,
 } from '@/lib/db/schema/issuer'
-import { db } from '@/lib/db/drizzle'
 
 export const revalidate = 0
 
@@ -29,12 +30,9 @@ function prettify(text: string) {
 }
 
 /** Safely extract the first string value for a query key. */
-function getQueryValue(
-  params: Record<string, string | string[] | undefined>,
-  key: string,
-): string {
+function getQueryValue(params: Record<string, string | string[] | undefined>, key: string): string {
   const value = params[key]
-  return Array.isArray(value) ? value[0] ?? '' : value ?? ''
+  return Array.isArray(value) ? (value[0] ?? '') : (value ?? '')
 }
 
 /* -------------------------------------------------------------------------- */
@@ -164,11 +162,11 @@ export default async function IssuerDirectory({
               className='group relative overflow-hidden border shadow-sm transition-shadow hover:shadow-lg'
             >
               {/* Decorative gradient blur */}
-              <div className='pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-0 transition-opacity group-hover:opacity-100' />
+              <div className='from-primary/10 to-secondary/10 pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br via-transparent opacity-0 transition-opacity group-hover:opacity-100' />
 
               <CardHeader className='flex flex-row items-start gap-4'>
                 {/* Logo with themed background */}
-                <div className='flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-muted ring-1 ring-border'>
+                <div className='bg-muted ring-border flex h-14 w-14 shrink-0 items-center justify-center rounded-md ring-1'>
                   {i.logoUrl ? (
                     <Image
                       src={i.logoUrl}
@@ -196,7 +194,7 @@ export default async function IssuerDirectory({
                   <span className='font-medium'>Industry:</span> {i.industry.toLowerCase()}
                 </p>
                 {i.did && (
-                  <p className='break-all text-xs text-muted-foreground'>
+                  <p className='text-muted-foreground text-xs break-all'>
                     <span className='font-medium'>DID:</span> {i.did}
                   </p>
                 )}
