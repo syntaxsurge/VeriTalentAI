@@ -119,7 +119,6 @@ export default async function CreateDIDPage() {
                     <UserAvatar
                       name={member.name}
                       email={member.email}
-                      initialsLength={1}
                       className='ring-background border-background size-10 cursor-pointer rounded-full border-2 shadow'
                     />
                   </HoverCardTrigger>

@@ -224,9 +224,9 @@ export default async function CandidateProfilePage({
       <div className='relative overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary/70 p-10 text-primary-foreground shadow-lg'>
         <div className='flex flex-col items-center gap-8 sm:flex-row'>
           <UserAvatar
+            src={(row.userRow as any)?.image ?? undefined}
             name={row.userRow?.name ?? null}
             email={row.userRow?.email ?? null}
-            initialsLength={2}
             className='size-32 text-4xl ring-4 ring-white/40'
           />
 
