@@ -3,16 +3,10 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowUpDown,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  HelpCircle,
-  FileText,
-} from 'lucide-react'
+import { ArrowUpDown, FileText } from 'lucide-react'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import StatusBadge from '@/components/ui/status-badge'
 
 import { CredentialStatus } from '@/lib/db/schema/viskify'
 
@@ -51,41 +45,6 @@ function buildLink(
   Array.from(sp.entries()).forEach(([k, v]) => !v && sp.delete(k))
   const qs = sp.toString()
   return `${basePath}${qs ? `?${qs}` : ''}`
-}
-
-function statusBadge(status: CredentialStatus) {
-  const base =
-    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium'
-  switch (status) {
-    case 'verified':
-      return (
-        <span className={`${base} bg-emerald-500/10 text-emerald-700 dark:text-emerald-400`}>
-          <CheckCircle2 className="h-3 w-3" />
-          Verified
-        </span>
-      )
-    case 'pending':
-      return (
-        <span className={`${base} bg-amber-500/10 text-amber-700 dark:text-amber-400`}>
-          <Clock className="h-3 w-3" />
-          Pending
-        </span>
-      )
-    case 'rejected':
-      return (
-        <span className={`${base} bg-rose-500/10 text-rose-700 dark:text-rose-400`}>
-          <XCircle className="h-3 w-3" />
-          Rejected
-        </span>
-      )
-    default:
-      return (
-        <span className={`${base} bg-muted text-muted-foreground`}>
-          <HelpCircle className="h-3 w-3" />
-          Unverified
-        </span>
-      )
-  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -149,7 +108,7 @@ export default function CredentialsTable({
         key: 'status',
         header: sortableHeader('Status', 'status'),
         sortable: false,
-        render: (v) => statusBadge(v as CredentialStatus),
+        render: (v) => <StatusBadge status={v as string} />,
       },
       {
         key: 'fileUrl',

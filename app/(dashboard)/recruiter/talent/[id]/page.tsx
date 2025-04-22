@@ -7,7 +7,6 @@ import {
   Clock,
   XCircle,
   HelpCircle,
-  BadgeCheck,
 } from 'lucide-react'
 
 import { db } from '@/lib/db/drizzle'
@@ -39,6 +38,7 @@ import CredentialsTable, {
   RowType as CredRow,
 } from '@/components/dashboard/recruiter/credentials-table'
 import { Badge } from '@/components/ui/badge'
+import StatusBadge from '@/components/ui/status-badge'
 
 import { getRecruiterCandidateCredentialsPage } from '@/lib/db/queries/recruiter-candidate-credentials'
 
@@ -49,7 +49,6 @@ export const revalidate = 0
 /* -------------------------------------------------------------------------- */
 
 type Params = { id: string }
-
 type Query = Record<string, string | string[] | undefined>
 
 /* -------------------------------------------------------------------------- */
@@ -125,9 +124,13 @@ export default async function CandidateProfilePage({
   const page = Math.max(1, Number(getParam(q, 'page') ?? '1'))
   const sizeRaw = Number(getParam(q, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = getParam(q, 'sort') ?? 'createdAt'
-  const order = getParam(q, 'order') === 'asc' ? 'asc' : 'desc'
+  const sortParamRaw = getParam(q, 'sort')
+  const orderParamRaw = getParam(q, 'order')
+  const sort = sortParamRaw ?? 'createdAt'
+  const order = orderParamRaw === 'asc' ? 'asc' : 'desc'
   const searchTerm = (getParam(q, 'q') ?? '').trim()
+
+  const verifiedFirst = !sortParamRaw && !orderParamRaw
 
   const { credentials, hasNext } = await getRecruiterCandidateCredentialsPage(
     candidateId,
@@ -136,6 +139,7 @@ export default async function CandidateProfilePage({
     sort as any,
     order as any,
     searchTerm,
+    verifiedFirst,
   )
 
   const credRows: CredRow[] = credentials.map((c) => ({
@@ -332,9 +336,7 @@ export default async function CandidateProfilePage({
             {pipelineEntries.map((e, idx) => (
               <p key={idx} className="flex items-center gap-2">
                 {e.pipelineName}
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs capitalize">
-                  {e.stage}
-                </span>
+                <StatusBadge status={e.stage} />
               </p>
             ))}
           </CardContent>

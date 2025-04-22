@@ -4,7 +4,7 @@ import {
   CredentialStatus,
 } from '../schema/viskify'
 import { issuers as issuersT } from '../schema/issuer'
-import { eq, ilike, and, asc, desc, sql } from 'drizzle-orm'
+import { eq, ilike, and, asc, desc } from 'drizzle-orm'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -24,6 +24,12 @@ export type RecruiterCredentialRow = {
 /*                             Paginated fetch                                */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Fetch a page of credentials for a candidate with optional search/sort.
+ *
+ * When `verifiedFirst` is true the result is additionally ordered with all
+ * verified rows first (descending boolean), used for the default view.
+ */
 export async function getRecruiterCandidateCredentialsPage(
   candidateId: number,
   page: number,
@@ -31,6 +37,7 @@ export async function getRecruiterCandidateCredentialsPage(
   sortBy: 'title' | 'issuer' | 'status' | 'createdAt' | 'id' = 'createdAt',
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
+  verifiedFirst = false,
 ): Promise<{ credentials: RecruiterCredentialRow[]; hasNext: boolean }> {
   const offset = (page - 1) * pageSize
 
@@ -56,8 +63,7 @@ export async function getRecruiterCandidateCredentialsPage(
               ? asc(credsT.id)
               : desc(credsT.id)
 
-  /* Always keep verified credentials on top. */
-  const orderBy = [desc(credsT.verified), secondary]
+  const orderByParts = verifiedFirst ? [desc(credsT.verified), secondary] : [secondary]
 
   /* ----------------------------- WHERE clause ---------------------------- */
   const where =
@@ -82,7 +88,7 @@ export async function getRecruiterCandidateCredentialsPage(
     .from(credsT)
     .leftJoin(issuersT, eq(credsT.issuerId, issuersT.id))
     .where(where as any)
-    .orderBy(...orderBy)
+    .orderBy(...orderByParts)
     .limit(pageSize + 1)
     .offset(offset)
 

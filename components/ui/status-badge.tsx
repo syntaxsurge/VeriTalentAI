@@ -1,15 +1,16 @@
 'use client'
 
+import { STAGES } from '@/lib/constants/recruiter'
 import { cn } from '@/lib/utils'
 
 /**
- * High‑contrast badge for credential / issuer / invitation statuses that adapts to light & dark themes.
+ * Global status badge — supports credential, invitation, issuer and
+ * recruiter‑pipeline stages so every status indicator is centralised.
  *
- * Supported keys (case‑insensitive):
- *   verified · active · accepted · pending · unverified · inactive · declined · rejected
- * Any unknown value falls back to the "unverified” style but still shows the raw text.
+ * Add/adjust colours here only; all callers simply import `<StatusBadge />`.
  */
 const STYLE_MAP: Record<string, string> = {
+  /* Credential / generic states */
   verified:
     'bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/20 dark:text-emerald-200',
   active:
@@ -27,6 +28,18 @@ const STYLE_MAP: Record<string, string> = {
   rejected:
     'bg-rose-600/15 text-rose-900 dark:bg-rose-500/20 dark:text-rose-200',
 }
+
+/* -------------------------------------------------------------------------- */
+/*                       Dynamic recruiter‑pipeline stages                    */
+/* -------------------------------------------------------------------------- */
+
+/** Neutral primary‑tinted chip for every pipeline stage. */
+const PIPELINE_STYLE =
+  'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-200'
+
+STAGES.forEach((stage) => {
+  STYLE_MAP[stage.toLowerCase()] = PIPELINE_STYLE
+})
 
 /* -------------------------------------------------------------------------- */
 /*                                   Badge                                    */
@@ -48,7 +61,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         className,
       )}
     >
-      {key}
+      {status}
     </span>
   )
 }
