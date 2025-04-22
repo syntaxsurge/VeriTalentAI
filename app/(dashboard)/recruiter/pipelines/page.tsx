@@ -4,9 +4,10 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import PipelinesTable, {
   RowType,
 } from '@/components/dashboard/recruiter/pipelines-table'
-import CreatePipelineForm from './create-pipeline-form'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
 import { getUser } from '@/lib/db/queries/queries'
+
+import NewPipelineDialog from './new-pipeline-dialog'
 
 export const revalidate = 0
 
@@ -80,9 +81,7 @@ export default async function PipelinesPage({
     <section className="flex-1 p-4 lg:p-8">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <h1 className="text-lg font-medium lg:text-2xl">Pipelines</h1>
-        <a href="#create-pipeline-form" className="text-primary underline">
-          + New&nbsp;Pipeline
-        </a>
+        <NewPipelineDialog />
       </div>
 
       {/* Results */}
@@ -104,9 +103,6 @@ export default async function PipelinesPage({
         initialParams={initialParams}
         pageSize={pageSize}
       />
-
-      {/* New pipeline form */}
-      <CreatePipelineForm />
     </section>
   )
 }
