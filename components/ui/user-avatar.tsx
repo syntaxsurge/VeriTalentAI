@@ -33,7 +33,8 @@ export function UserAvatar({
   return (
     <Avatar className={cn(className)} {...props}>
       <AvatarImage src={src ?? undefined} alt={name ?? email ?? 'User avatar'} />
-      <AvatarFallback>
+      {/* Explicitly style fallback to stay legible on any background */}
+      <AvatarFallback className='bg-muted text-foreground'>
         {getAvatarInitials(name, email, initialsLength)}
       </AvatarFallback>
     </Avatar>
