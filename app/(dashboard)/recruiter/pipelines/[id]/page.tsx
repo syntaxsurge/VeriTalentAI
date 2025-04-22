@@ -13,8 +13,19 @@ import { candidates } from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
 
-export default async function PipelineBoardPage({ params }: { params: { id: string } }) {
-  const pipelineId = Number(params.id)
+/**
+ * Pipeline board view for a specific recruiter pipeline.
+ * Dynamic route params are now asynchronous in Next 15,
+ * so we await `params` before accessing its properties.
+ */
+export default async function PipelineBoardPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  // ---------------------- dynamic param -----------------------
+  const { id } = await params
+  const pipelineId = Number(id)
 
   /* -------------------------------------------------------------------- */
   /*                          Auth & ownership check                      */
@@ -46,7 +57,7 @@ export default async function PipelineBoardPage({ params }: { params: { id: stri
     .where(eq(pipelineCandidates.pipelineId, pipelineId))
 
   type Candidate = {
-    id: number          // pipeline‑candidate PK
+    id: number // pipeline‑candidate PK
     candidateId: number // original candidate PK
     name: string
     email: string
