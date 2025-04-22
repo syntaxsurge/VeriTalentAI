@@ -8,10 +8,6 @@ import { STAGES } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 
-/* -------------------------------------------------------------------------- */
-/*                               C R E A T E                                  */
-/* -------------------------------------------------------------------------- */
-
 export const createPipelineAction = validatedActionWithUser(
   z.object({
     name: z.string().min(2).max(150),
@@ -30,17 +26,12 @@ export const createPipelineAction = validatedActionWithUser(
   },
 )
 
-/* -------------------------------------------------------------------------- */
-/*                           A D D   C A N D I D A T E                         */
-/* -------------------------------------------------------------------------- */
-
 export const addCandidateToPipelineAction = validatedActionWithUser(
   z.object({
     candidateId: z.coerce.number(),
     pipelineId: z.coerce.number(),
   }),
   async ({ candidateId, pipelineId }, _, user) => {
-    /* Verify ownership */
     const [pipeline] = await db
       .select()
       .from(recruiterPipelines)
@@ -51,7 +42,6 @@ export const addCandidateToPipelineAction = validatedActionWithUser(
 
     if (!pipeline) return { error: 'Pipeline not found.' }
 
-    /* Prevent duplicates */
     const existing = await db
       .select()
       .from(pipelineCandidates)
@@ -75,17 +65,12 @@ export const addCandidateToPipelineAction = validatedActionWithUser(
   },
 )
 
-/* -------------------------------------------------------------------------- */
-/*                              U P D A T E                                   */
-/* -------------------------------------------------------------------------- */
-
 export const updateCandidateStageAction = validatedActionWithUser(
   z.object({
     pipelineCandidateId: z.coerce.number(),
     stage: z.enum(STAGES),
   }),
   async ({ pipelineCandidateId, stage }, _, user) => {
-    /* Load row + verify ownership */
     const [row] = await db
       .select({
         pc: pipelineCandidates,
@@ -108,20 +93,11 @@ export const updateCandidateStageAction = validatedActionWithUser(
   },
 )
 
-/* -------------------------------------------------------------------------- */
-/*                              D E L E T E                                   */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Delete a single pipeline (used by bulk‑delete as well).
- * Removes pipeline candidates first (ON DELETE CASCADE not guaranteed).
- */
 export const deletePipelineAction = validatedActionWithUser(
   z.object({
     pipelineId: z.coerce.number(),
   }),
   async ({ pipelineId }, _formData, user) => {
-    /* Verify ownership */
     const [pipeline] = await db
       .select()
       .from(recruiterPipelines)
@@ -136,5 +112,30 @@ export const deletePipelineAction = validatedActionWithUser(
     await db.delete(recruiterPipelines).where(eq(recruiterPipelines.id, pipelineId))
 
     return { success: 'Pipeline deleted.' }
+  },
+)
+
+export const deletePipelineCandidateAction = validatedActionWithUser(
+  z.object({
+    pipelineCandidateId: z.coerce.number(),
+  }),
+  async ({ pipelineCandidateId }, _formData, user) => {
+    const [row] = await db
+      .select({
+        pc: pipelineCandidates,
+        pipeline: recruiterPipelines,
+      })
+      .from(pipelineCandidates)
+      .leftJoin(recruiterPipelines, eq(pipelineCandidates.pipelineId, recruiterPipelines.id))
+      .where(eq(pipelineCandidates.id, pipelineCandidateId))
+      .limit(1)
+
+    if (!row || !row.pipeline || row.pipeline.recruiterId !== user.id) {
+      return { error: 'Unauthorized or record not found.' }
+    }
+
+    await db.delete(pipelineCandidates).where(eq(pipelineCandidates.id, pipelineCandidateId))
+
+    return { success: 'Candidate removed from pipeline.' }
   },
 )
