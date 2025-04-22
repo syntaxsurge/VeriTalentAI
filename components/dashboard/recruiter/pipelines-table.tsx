@@ -21,7 +21,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu'
 
 import { deletePipelineAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
@@ -196,38 +195,37 @@ export default function PipelinesTable({
   }
 
   /* ----------------------------- Columns --------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
-    return [
-      {
-        key: 'name',
-        header: sortableHeader('Name', 'name'),
-        sortable: false,
-        render: (v) => <span className="font-medium">{v as string}</span>,
-      },
-      {
-        key: 'description',
-        header: 'Description',
-        sortable: false,
-        render: (v) => (
-          <span className="line-clamp-2 max-w-[480px]">{(v as string) || '—'}</span>
-        ),
-      },
-      {
-        key: 'createdAt',
-        header: sortableHeader('Created', 'createdAt'),
-        sortable: false,
-        render: (v) =>
-          formatDistanceToNow(new Date(v as string), { addSuffix: true }),
-      },
-      {
-        key: 'actions',
-        header: '',
-        enableHiding: false,
-        sortable: false,
-        render: (_v, row) => <RowActions row={row} />,
-      },
-    ]
-  }, [sort, order, basePath, initialParams, search])
+  const columns = React.useMemo<Column<RowType>[]>(() => [
+    {
+      key: 'name',
+      header: sortableHeader('Name', 'name'),
+      sortable: false,
+      render: (v) => <span className="font-medium">{v as string}</span>,
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      sortable: false,
+      render: (v) => (
+        <span className="line-clamp-2 max-w-[480px]">{(v as string) || '—'}</span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: sortableHeader('Created', 'createdAt'),
+      sortable: false,
+      render: (v) =>
+        formatDistanceToNow(new Date(v as string), { addSuffix: true }),
+    },
+    {
+      /* NOTE: use existing `id` key (valid keyof RowType) for actions column */
+      key: 'id',
+      header: '',
+      enableHiding: false,
+      sortable: false,
+      render: (_v, row) => <RowActions row={row} />,
+    },
+  ], [sort, order, basePath, initialParams, search])
 
   /* ------------------------------- View ---------------------------------- */
   return (
