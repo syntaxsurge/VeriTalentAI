@@ -8,18 +8,20 @@ import {
   Draggable,
   type DropResult,
 } from '@hello-pangea/dnd'
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from '@/components/ui/card'
+
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
 import { updateCandidateStageAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
 import CandidateCard from './candidate-card'
 
-type Candidate = {
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
+
+export type Candidate = {
+  /** Pipeline‑candidate row id */
   id: number
+  /** Original candidate id (for profile link) */
+  candidateId: number
   name: string
   email: string
   stage: Stage
@@ -34,8 +36,7 @@ interface Props {
  * Responsive drag‑and‑drop Kanban board for recruiter pipelines.
  */
 export default function PipelineBoard({ pipelineId, initialData }: Props) {
-  const [columns, setColumns] =
-    useState<Record<Stage, Candidate[]>>(initialData)
+  const [columns, setColumns] = useState<Record<Stage, Candidate[]>>(initialData)
   const [isPending, startTransition] = useTransition()
 
   /* --------------------------- Persist move --------------------------- */
@@ -87,16 +88,16 @@ export default function PipelineBoard({ pipelineId, initialData }: Props) {
                 <div
                   ref={prov.innerRef}
                   {...prov.droppableProps}
-                  className={`space-y-4 rounded-lg border p-3 transition-colors ${
+                  className={`flex max-h-[80vh] flex-col gap-3 overflow-y-auto rounded-lg border p-3 transition-colors ${
                     snapshot.isDraggingOver
                       ? 'bg-primary/10 ring-2 ring-primary'
                       : 'bg-muted/30'
                   }`}
                 >
                   {/* Column header */}
-                  <h3 className="mb-1 flex items-center justify-between text-sm font-medium capitalize">
+                  <h3 className="mb-1 flex items-center justify-between text-sm font-semibold capitalize">
                     {stage}
-                    <span className="rounded-full bg-background px-2 py-0.5 text-xs font-semibold">
+                    <span className="rounded-full bg-background px-2 py-0.5 text-xs">
                       {items.length}
                     </span>
                   </h3>
@@ -106,11 +107,7 @@ export default function PipelineBoard({ pipelineId, initialData }: Props) {
                     <p className="text-muted-foreground text-xs">Empty</p>
                   ) : (
                     items.map((cand, idx) => (
-                      <Draggable
-                        key={cand.id}
-                        draggableId={String(cand.id)}
-                        index={idx}
-                      >
+                      <Draggable key={cand.id} draggableId={String(cand.id)} index={idx}>
                         {(dragProv, dragSnap) => (
                           <div
                             ref={dragProv.innerRef}

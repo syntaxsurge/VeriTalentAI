@@ -1,35 +1,38 @@
 'use client'
 
-import { Pencil } from 'lucide-react'
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from '@/components/ui/card'
+import Link from 'next/link'
+import { Pencil, Info } from 'lucide-react'
+
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import EditCandidateModal from './edit-candidate-modal'
 import { type Stage } from '@/lib/constants/recruiter'
 
 export interface Candidate {
+  /** Pipeline‑candidate row id (primary key) */
   id: number
+  /** Original candidate id (for profile link) */
+  candidateId: number
   name: string
   email: string
   stage: Stage
 }
 
+/**
+ * Compact candidate card with edit and quick‑view actions.
+ */
 export default function CandidateCard({ candidate }: { candidate: Candidate }) {
   return (
-    <Card>
+    <Card className="relative">
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-        <div>
-          <CardTitle className="truncate text-sm">
+        <div className="min-w-0">
+          <CardTitle className="truncate text-sm font-medium">
             {candidate.name || candidate.email}
           </CardTitle>
-          <p className="text-xs text-muted-foreground truncate">
-            {candidate.email}
-          </p>
+          <p className="truncate text-xs text-muted-foreground">{candidate.email}</p>
         </div>
+
+        {/* Edit modal trigger */}
         <EditCandidateModal
           pipelineCandidateId={candidate.id}
           currentStage={candidate.stage}
@@ -40,7 +43,21 @@ export default function CandidateCard({ candidate }: { candidate: Candidate }) {
           </Button>
         </EditCandidateModal>
       </CardHeader>
-      <CardContent />
+
+      {/* View details link */}
+      <CardContent className="pt-0">
+        <Button
+          asChild
+          variant="link"
+          size="sm"
+          className="h-6 px-0 text-xs text-primary"
+        >
+          <Link href={`/recruiter/talent/${candidate.candidateId}`} scroll={false}>
+            <Info className="mr-1 h-3 w-3" />
+            View&nbsp;Details
+          </Link>
+        </Button>
+      </CardContent>
     </Card>
   )
 }

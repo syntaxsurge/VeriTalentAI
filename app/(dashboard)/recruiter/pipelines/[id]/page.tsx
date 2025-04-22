@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
+import { format } from 'date-fns'
 
 import PipelineBoard from '@/components/dashboard/recruiter/pipeline-board'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
@@ -40,7 +41,8 @@ export default async function PipelineBoardPage({ params }: { params: { id: stri
     .where(eq(pipelineCandidates.pipelineId, pipelineId))
 
   type Candidate = {
-    id: number
+    id: number          // pipeline‑candidate PK
+    candidateId: number // original candidate PK
     name: string
     email: string
     stage: Stage
@@ -55,6 +57,7 @@ export default async function PipelineBoardPage({ params }: { params: { id: stri
     const stageKey = r.pc.stage as Stage
     initialData[stageKey].push({
       id: r.pc.id,
+      candidateId: r.cand?.id ?? 0,
       name: r.userRow?.name ?? '',
       email: r.userRow?.email ?? '',
       stage: stageKey,
@@ -64,7 +67,20 @@ export default async function PipelineBoardPage({ params }: { params: { id: stri
   /* ---------------------------------- View ----------------------------------- */
   return (
     <section className="space-y-6">
-      <h2 className="text-2xl font-semibold">{pipeline.name}</h2>
+      {/* Pipeline header */}
+      <div>
+        <h2 className="text-2xl font-semibold">{pipeline.name}</h2>
+        {pipeline.description && (
+          <p className="mt-1 max-w-3xl whitespace-pre-line text-muted-foreground">
+            {pipeline.description}
+          </p>
+        )}
+        <p className="mt-1 text-xs text-muted-foreground">
+          Created&nbsp;{format(pipeline.createdAt, 'PPP')}
+        </p>
+      </div>
+
+      {/* Kanban board */}
       <PipelineBoard pipelineId={pipelineId} initialData={initialData} />
     </section>
   )
