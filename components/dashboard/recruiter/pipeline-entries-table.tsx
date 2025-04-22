@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import StatusBadge from '@/components/ui/status-badge'
 import { DataTable, type BulkAction, type Column } from '@/components/ui/tables/data-table'
@@ -89,6 +90,7 @@ function RowActions({ row }: { row: RowType }) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuItem asChild>
           <Link href={`/recruiter/pipelines/${row.pipelineId}`} className='cursor-pointer'>
             <FolderKanban className='mr-2 h-4 w-4' />
