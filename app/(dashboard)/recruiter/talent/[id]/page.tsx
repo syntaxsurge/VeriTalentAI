@@ -25,9 +25,7 @@ import {
   CardTitle,
   CardContent,
 } from '@/components/ui/card'
-import {
-  TablePagination,
-} from '@/components/ui/tables/table-pagination'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
 import CredentialsTable, {
   RowType as CredRow,
 } from '@/components/dashboard/recruiter/credentials-table'
@@ -254,29 +252,23 @@ export default async function CandidateProfilePage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {credRows.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No credentials submitted.</p>
-          ) : (
-            <>
-              <div className="overflow-x-auto rounded-md border">
-                <CredentialsTable
-                  rows={credRows}
-                  sort={sort}
-                  order={order as 'asc' | 'desc'}
-                  basePath={`/recruiter/talent/${candidateId}`}
-                  initialParams={initialParams}
-                  searchQuery={searchTerm}
-                />
-              </div>
-              <TablePagination
-                page={page}
-                hasNext={hasNext}
-                basePath={`/recruiter/talent/${candidateId}`}
-                initialParams={initialParams}
-                pageSize={pageSize}
-              />
-            </>
-          )}
+          <div className="overflow-x-auto rounded-md border">
+            <CredentialsTable
+              rows={credRows}
+              sort={sort}
+              order={order as 'asc' | 'desc'}
+              basePath={`/recruiter/talent/${candidateId}`}
+              initialParams={initialParams}
+              searchQuery={searchTerm}
+            />
+          </div>
+          <TablePagination
+            page={page}
+            hasNext={hasNext}
+            basePath={`/recruiter/talent/${candidateId}`}
+            initialParams={initialParams}
+            pageSize={pageSize}
+          />
         </CardContent>
       </Card>
 
