@@ -11,7 +11,7 @@ import PipelineEntriesTable, {
   RowType as PipeRow,
 } from '@/components/dashboard/recruiter/pipeline-entries-table'
 import AddToPipelineForm from './add-to-pipeline-form'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import StatusBadge from '@/components/ui/status-badge'
@@ -23,7 +23,6 @@ import { getCandidatePipelineEntriesPage } from '@/lib/db/queries/recruiter-pipe
 import { users } from '@/lib/db/schema/core'
 import { pipelineCandidates, recruiterPipelines } from '@/lib/db/schema/recruiter'
 import { candidates, candidateCredentials, quizAttempts } from '@/lib/db/schema/viskify'
-import { getAvatarInitials } from '@/lib/utils/avatar'
 
 export const revalidate = 0
 
@@ -224,11 +223,12 @@ export default async function CandidateProfilePage({
       {/* ----------- Hero / header ----------- */}
       <div className='relative overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary/70 p-10 text-primary-foreground shadow-lg'>
         <div className='flex flex-col items-center gap-8 sm:flex-row'>
-          <Avatar className='size-32 text-4xl ring-4 ring-white/40'>
-            <AvatarFallback>
-              {getAvatarInitials(row.userRow?.name, row.userRow?.email, 2)}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            name={row.userRow?.name ?? null}
+            email={row.userRow?.email ?? null}
+            initialsLength={2}
+            className='size-32 text-4xl ring-4 ring-white/40'
+          />
 
           <div className='space-y-4 text-center sm:text-left'>
             <div>

@@ -1,13 +1,12 @@
 import { eq, sql } from 'drizzle-orm'
 import { KeyRound, Sparkles } from 'lucide-react'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { teamMembers, users as usersT } from '@/lib/db/schema/core'
-import { getAvatarInitials } from '@/lib/utils/avatar'
 
 import { CreateDidButton } from './create-did-button'
 
@@ -117,12 +116,12 @@ export default async function CreateDIDPage() {
               return (
                 <HoverCard key={member.id}>
                   <HoverCardTrigger asChild>
-                    <Avatar className='ring-background border-background size-10 cursor-pointer rounded-full border-2 shadow'>
-                      <AvatarImage alt={member.name ?? member.email} />
-                      <AvatarFallback className='bg-muted text-sm font-semibold'>
-                        {getAvatarInitials(member.name, member.email, 1)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                      name={member.name}
+                      email={member.email}
+                      initialsLength={1}
+                      className='ring-background border-background size-10 cursor-pointer rounded-full border-2 shadow'
+                    />
                   </HoverCardTrigger>
 
                   <HoverCardContent className='w-48 text-sm'>
