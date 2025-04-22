@@ -2,11 +2,12 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { format } from 'date-fns'
-import { eq, and, sql } from 'drizzle-orm'
+import { eq, and, sql, asc } from 'drizzle-orm'
 
 import CredentialsTable, {
   RowType as CredRow,
 } from '@/components/dashboard/recruiter/credentials-table'
+import AddToPipelineForm from './add-to-pipeline-form'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -27,6 +28,11 @@ export const revalidate = 0
 
 type Params = { id: string }
 type Query = Record<string, string | string[] | undefined>
+
+interface Pipeline {
+  id: number
+  name: string
+}
 
 /* -------------------------------------------------------------------------- */
 /*                               Helpers                                      */
@@ -78,6 +84,16 @@ export default async function CandidateProfilePage({
     .limit(1)
 
   if (!row) return <div>Candidate not found.</div>
+
+  /* --------------- Pipelines for selector --------------- */
+  const pipelines: Pipeline[] = await db
+    .select({
+      id: recruiterPipelines.id,
+      name: recruiterPipelines.name,
+    })
+    .from(recruiterPipelines)
+    .where(eq(recruiterPipelines.recruiterId, user.id))
+    .orderBy(asc(recruiterPipelines.name))
 
   /* -------------------- Credentials (paged) -------------------- */
   const page = Math.max(1, Number(getParam(q, 'page') ?? '1'))
@@ -175,44 +191,60 @@ export default async function CandidateProfilePage({
   return (
     <section className='space-y-8'>
       {/* ---------- Header ---------- */}
-      <div className='flex flex-col items-start gap-4 sm:flex-row sm:items-center'>
-        <Avatar className='size-20 text-2xl'>
-          <AvatarFallback>{initials(row.userRow?.name, row.userRow?.email)}</AvatarFallback>
-        </Avatar>
+      <div className='flex flex-col gap-6 sm:flex-row'>
+        {/* Avatar & basics */}
+        <div className='flex items-start gap-4'>
+          <Avatar className='size-20 text-2xl'>
+            <AvatarFallback>{initials(row.userRow?.name, row.userRow?.email)}</AvatarFallback>
+          </Avatar>
 
-        <div className='flex flex-col gap-2'>
-          <h2 className='text-3xl font-semibold'>{row.userRow?.name || 'Unnamed Candidate'}</h2>
+          <div className='flex flex-col gap-2'>
+            <h2 className='text-3xl font-semibold'>
+              {row.userRow?.name || 'Unnamed Candidate'}
+            </h2>
 
-          <div className='flex flex-wrap items-center gap-3 text-sm'>
-            <Link href={`mailto:${row.userRow?.email}`} className='text-primary hover:underline'>
-              {row.userRow?.email}
-            </Link>
+            <div className='flex flex-wrap items-center gap-3 text-sm'>
+              <Link
+                href={`mailto:${row.userRow?.email}`}
+                className='text-primary hover:underline'
+              >
+                {row.userRow?.email}
+              </Link>
 
-            <span className='h-1 w-1 rounded-full bg-muted-foreground' />
+              <span className='h-1 w-1 rounded-full bg-muted-foreground' />
 
-            <Badge variant='outline' className='capitalize'>
-              {pipelineSummary}
-            </Badge>
+              <Badge variant='outline' className='capitalize'>
+                {pipelineSummary}
+              </Badge>
 
-            {totalVerified > 0 && (
-              <>
-                <span className='h-1 w-1 rounded-full bg-muted-foreground' />
-                <span className='text-muted-foreground'>
-                  {totalVerified} verified credential{totalVerified === 1 ? '' : 's'}
-                </span>
-              </>
-            )}
+              {totalVerified > 0 && (
+                <>
+                  <span className='h-1 w-1 rounded-full bg-muted-foreground' />
+                  <span className='text-muted-foreground'>
+                    {totalVerified} verified credential
+                    {totalVerified === 1 ? '' : 's'}
+                  </span>
+                </>
+              )}
 
-            {passes.length > 0 && (
-              <>
-                <span className='h-1 w-1 rounded-full bg-muted-foreground' />
-                <span className='text-muted-foreground'>
-                  {passes.length} skill quiz pass{passes.length === 1 ? '' : 'es'}
-                </span>
-              </>
-            )}
+              {passes.length > 0 && (
+                <>
+                  <span className='h-1 w-1 rounded-full bg-muted-foreground' />
+                  <span className='text-muted-foreground'>
+                    {passes.length} skill quiz pass{passes.length === 1 ? '' : 'es'}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Add‑to‑pipeline selector */}
+        {pipelines.length > 0 && (
+          <div className='sm:ml-auto'>
+            <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />
+          </div>
+        )}
       </div>
 
       {/* ---------- Bio ---------- */}
@@ -221,7 +253,9 @@ export default async function CandidateProfilePage({
           <CardTitle>About</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className='text-sm whitespace-pre-line'>{row.cand.bio || 'No bio provided.'}</p>
+          <p className='whitespace-pre-line text-sm'>
+            {row.cand.bio || 'No bio provided.'}
+          </p>
         </CardContent>
       </Card>
 
