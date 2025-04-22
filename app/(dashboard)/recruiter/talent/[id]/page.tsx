@@ -196,6 +196,7 @@ export default async function CandidateProfilePage({
 
   const pipeRows: PipeRow[] = pipeEntries.map((e) => ({
     id: e.id,
+    pipelineId: e.pipelineId,
     pipelineName: e.pipelineName,
     stage: e.stage,
   }))
@@ -226,78 +227,89 @@ export default async function CandidateProfilePage({
   /*                               UI                                   */
   /* ------------------------------------------------------------------ */
   return (
-    <section className='space-y-8'>
-      {/* ---------- Header ---------- */}
-      <div className='flex flex-col gap-6 sm:flex-row'>
-        {/* Avatar & basics */}
-        <div className='flex items-start gap-4'>
-          <Avatar className='size-20 text-2xl'>
+    <section className='space-y-10'>
+      {/* ----------- Hero / header ----------- */}
+      <div className='relative overflow-hidden rounded-lg bg-gradient-to-r from-primary/80 to-primary/40 p-8 text-primary-foreground shadow-lg'>
+        <div className='flex flex-col items-center gap-6 sm:flex-row'>
+          <Avatar className='size-28 text-3xl ring-4 ring-white/30'>
             <AvatarFallback>{initials(row.userRow?.name, row.userRow?.email)}</AvatarFallback>
           </Avatar>
 
-          <div className='flex flex-col gap-2'>
-            <h2 className='text-3xl font-semibold'>
+          <div className='space-y-2 text-center sm:text-left'>
+            <h1 className='text-3xl font-semibold sm:text-4xl'>
               {row.userRow?.name || 'Unnamed Candidate'}
-            </h2>
+            </h1>
 
-            <div className='flex flex-wrap items-center gap-3 text-sm'>
+            <div className='flex flex-wrap items-center justify-center gap-3 sm:justify-start'>
               <Link
                 href={`mailto:${row.userRow?.email}`}
-                className='text-primary hover:underline'
+                className='underline-offset-4 hover:underline'
               >
                 {row.userRow?.email}
               </Link>
 
-              <span className='h-1 w-1 rounded-full bg-muted-foreground' />
-
-              <Badge variant='outline' className='capitalize'>
+              <Badge variant='secondary' className='capitalize'>
                 {pipelineSummary}
               </Badge>
 
               {totalVerified > 0 && (
-                <>
-                  <span className='h-1 w-1 rounded-full bg-muted-foreground' />
-                  <span className='text-muted-foreground'>
-                    {totalVerified} verified credential
-                    {totalVerified === 1 ? '' : 's'}
-                  </span>
-                </>
+                <Badge variant='secondary'>
+                  {totalVerified} verified credential{totalVerified === 1 ? '' : 's'}
+                </Badge>
               )}
 
               {passes.length > 0 && (
-                <>
-                  <span className='h-1 w-1 rounded-full bg-muted-foreground' />
-                  <span className='text-muted-foreground'>
-                    {passes.length} skill quiz pass{passes.length === 1 ? '' : 'es'}
-                  </span>
-                </>
+                <Badge variant='secondary'>
+                  {passes.length} skill quiz pass{passes.length === 1 ? '' : 'es'}
+                </Badge>
               )}
             </div>
           </div>
         </div>
-
-        {/* Add‑to‑pipeline selector */}
-        {pipelines.length > 0 && (
-          <div className='sm:ml-auto'>
-            <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />
-          </div>
-        )}
       </div>
 
-      {/* ---------- Bio ---------- */}
+      {/* ---------- About ---------- */}
       <Card>
         <CardHeader>
-          <CardTitle>About</CardTitle>
+          <CardTitle>Bio</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className='whitespace-pre-line text-sm'>
+          <p className='whitespace-pre-line text-sm leading-relaxed'>
             {row.cand.bio || 'No bio provided.'}
           </p>
         </CardContent>
       </Card>
 
+      {/* ---------- Pipeline entries (now first) ---------- */}
+      <Card id='pipeline-entries'>
+        <CardHeader className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
+          <CardTitle>Pipeline&nbsp;Entries</CardTitle>
+
+          {pipelines.length > 0 && (
+            <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />
+          )}
+        </CardHeader>
+        <CardContent>
+          <PipelineEntriesTable
+            rows={pipeRows}
+            sort={pipeSort}
+            order={pipeOrder as 'asc' | 'desc'}
+            basePath={`/recruiter/talent/${candidateId}`}
+            initialParams={initialPipeParams}
+            searchQuery={pipeSearchTerm}
+          />
+          <TablePagination
+            page={pipePage}
+            hasNext={pipeHasNext}
+            basePath={`/recruiter/talent/${candidateId}`}
+            initialParams={initialPipeParams}
+            pageSize={pipePageSize}
+          />
+        </CardContent>
+      </Card>
+
       {/* ---------- Credentials ---------- */}
-      <Card>
+      <Card id='credentials'>
         <CardHeader>
           <CardTitle className='flex flex-wrap items-center gap-2'>
             Credentials
@@ -326,32 +338,8 @@ export default async function CandidateProfilePage({
         </CardContent>
       </Card>
 
-      {/* ---------- Pipeline entries ---------- */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Pipeline&nbsp;Entries</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PipelineEntriesTable
-            rows={pipeRows}
-            sort={pipeSort}
-            order={pipeOrder as 'asc' | 'desc'}
-            basePath={`/recruiter/talent/${candidateId}`}
-            initialParams={initialPipeParams}
-            searchQuery={pipeSearchTerm}
-          />
-          <TablePagination
-            page={pipePage}
-            hasNext={pipeHasNext}
-            basePath={`/recruiter/talent/${candidateId}`}
-            initialParams={initialPipeParams}
-            pageSize={pipePageSize}
-          />
-        </CardContent>
-      </Card>
-
       {/* ---------- Skill passes ---------- */}
-      <Card>
+      <Card id='skill-passes'>
         <CardHeader>
           <CardTitle>Skill&nbsp;Quiz&nbsp;Passes</CardTitle>
         </CardHeader>

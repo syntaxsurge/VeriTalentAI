@@ -1,8 +1,7 @@
 import { and, asc, desc, eq, ilike } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import { recruiterPipelines as rp } from '../schema/recruiter'
-import { pipelineCandidates as pc } from '../schema/recruiter'
+import { recruiterPipelines as rp, pipelineCandidates as pc } from '../schema/recruiter'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -10,6 +9,7 @@ import { pipelineCandidates as pc } from '../schema/recruiter'
 
 export type PipelineEntryRow = {
   id: number
+  pipelineId: number
   pipelineName: string
   stage: string
   addedAt: Date
@@ -20,8 +20,8 @@ export type PipelineEntryRow = {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Return a server‑side page of pipeline entries for a given candidate belonging
- * to pipelines owned by the recruiter.
+ * Return a page of pipeline entries for a candidate, limited to pipelines
+ * owned by the recruiter. Supports search, sort and pagination.
  */
 export async function getCandidatePipelineEntriesPage(
   candidateId: number,
@@ -66,6 +66,7 @@ export async function getCandidatePipelineEntriesPage(
   const rows = await db
     .select({
       id: pc.id,
+      pipelineId: rp.id,
       pipelineName: rp.name,
       stage: pc.stage,
       addedAt: pc.addedAt,
