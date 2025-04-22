@@ -1,11 +1,17 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, sql } from 'drizzle-orm'
 import { format } from 'date-fns'
+import {
+  CheckCircle2,
+  Clock,
+  XCircle,
+  HelpCircle,
+  BadgeCheck,
+} from 'lucide-react'
 
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import { users } from '@/lib/db/schema/core'
 import {
   candidates,
   candidateCredentials,
@@ -13,22 +19,28 @@ import {
   quizAttempts,
 } from '@/lib/db/schema/viskify'
 import {
-  recruiterPipelines,
   pipelineCandidates,
+  recruiterPipelines,
 } from '@/lib/db/schema/recruiter'
+import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
-  Table,
-  TableHeader,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-} from '@/components/ui/tables/table'
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from '@/components/ui/card'
+import {
+  TablePagination,
+} from '@/components/ui/tables/table-pagination'
+import CredentialsTable, {
+  RowType as CredRow,
+} from '@/components/dashboard/recruiter/credentials-table'
 import { Badge } from '@/components/ui/badge'
+
+import { getRecruiterCandidateCredentialsPage } from '@/lib/db/queries/recruiter-candidate-credentials'
 
 export const revalidate = 0
 
@@ -38,20 +50,19 @@ export const revalidate = 0
 
 type Params = { id: string }
 
-type CredentialRow = {
-  id: number
-  title: string
-  issuer: string | null
-  status: CredentialStatus
-  fileUrl: string | null
-}
+type Query = Record<string, string | string[] | undefined>
 
 /* -------------------------------------------------------------------------- */
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
+function getParam(params: Query, key: string): string | undefined {
+  const v = params[key]
+  return Array.isArray(v) ? v[0] : v
+}
+
 function initials(name?: string | null, email?: string): string {
-  if (name && name.trim().length > 0) {
+  if (name && name.trim()) {
     const parts = name.split(' ')
     return (
       (parts[0]?.[0] ?? '') + (parts[parts.length - 1]?.[0] ?? '')
@@ -60,17 +71,20 @@ function initials(name?: string | null, email?: string): string {
   return email?.slice(0, 2).toUpperCase() ?? ''
 }
 
-function statusColor(status: CredentialStatus): string {
-  switch (status) {
-    case CredentialStatus.VERIFIED:
-      return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-    case CredentialStatus.PENDING:
-      return 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
-    case CredentialStatus.REJECTED:
-      return 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
-    default:
-      return 'bg-muted'
-  }
+function statusChip(
+  label: string,
+  count: number,
+  color: string,
+  Icon: any,
+) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${color}`}
+    >
+      <Icon className="h-3 w-3" />
+      {label}: {count}
+    </span>
+  )
 }
 
 /* -------------------------------------------------------------------------- */
@@ -79,12 +93,15 @@ function statusColor(status: CredentialStatus): string {
 
 export default async function CandidateProfilePage({
   params,
+  searchParams,
 }: {
   params: Params | Promise<Params>
+  searchParams: Query | Promise<Query>
 }) {
   /* --------------- Resolve dynamic parameter --------------- */
   const { id } = (await params) as Params
   const candidateId = Number(id)
+  const q = (await searchParams) as Query
 
   /* --------------- Auth guard --------------- */
   const user = await getUser()
@@ -104,18 +121,50 @@ export default async function CandidateProfilePage({
 
   if (!row) return <div>Candidate not found.</div>
 
-  /* --------------- Credentials (all statuses) --------------- */
-  const creds = (await db
+  /* -------------------- Credentials (paged) -------------------- */
+  const page = Math.max(1, Number(getParam(q, 'page') ?? '1'))
+  const sizeRaw = Number(getParam(q, 'size') ?? '10')
+  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
+  const sort = getParam(q, 'sort') ?? 'createdAt'
+  const order = getParam(q, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (getParam(q, 'q') ?? '').trim()
+
+  const { credentials, hasNext } = await getRecruiterCandidateCredentialsPage(
+    candidateId,
+    page,
+    pageSize,
+    sort as any,
+    order as any,
+    searchTerm,
+  )
+
+  const credRows: CredRow[] = credentials.map((c) => ({
+    id: c.id,
+    title: c.title,
+    issuer: c.issuer,
+    status: c.status,
+    fileUrl: c.fileUrl,
+  }))
+
+  /* ---------- Credential status counts ---------- */
+  const statusCountsRaw = await db
     .select({
-      id: candidateCredentials.id,
-      title: candidateCredentials.title,
       status: candidateCredentials.status,
-      issuer: issuers.name,
-      fileUrl: candidateCredentials.fileUrl,
+      count: sql<number>`COUNT(*)`,
     })
     .from(candidateCredentials)
-    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .where(eq(candidateCredentials.candidateId, candidateId))) as CredentialRow[]
+    .where(eq(candidateCredentials.candidateId, candidateId))
+    .groupBy(candidateCredentials.status)
+
+  const statusCounts: Record<string, number> = {
+    verified: 0,
+    pending: 0,
+    rejected: 0,
+    unverified: 0,
+  }
+  statusCountsRaw.forEach((r) => {
+    statusCounts[r.status] = Number(r.count)
+  })
 
   /* --------------- Skill quiz passes --------------- */
   const passes = await db
@@ -139,6 +188,17 @@ export default async function CandidateProfilePage({
     )
 
   const inPipeline = pipelineEntries.length > 0
+
+  /* ------------------------ Build initialParams -------------------------- */
+  const initialParams: Record<string, string> = {}
+  const add = (k: string) => {
+    const val = getParam(q, k)
+    if (val) initialParams[k] = val
+  }
+  add('size')
+  add('sort')
+  add('order')
+  if (searchTerm) initialParams['q'] = searchTerm
 
   /* ------------------------------------------------------------------ */
   /*                               UI                                   */
@@ -187,53 +247,58 @@ export default async function CandidateProfilePage({
       {/* ---------- Credentials ---------- */}
       <Card>
         <CardHeader>
-          <CardTitle>Credentials</CardTitle>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            Credentials
+            {/* Status chips */}
+            {statusChip(
+              'Verified',
+              statusCounts.verified,
+              'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+              CheckCircle2,
+            )}
+            {statusChip(
+              'Pending',
+              statusCounts.pending,
+              'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+              Clock,
+            )}
+            {statusChip(
+              'Rejected',
+              statusCounts.rejected,
+              'bg-rose-500/10 text-rose-700 dark:text-rose-400',
+              XCircle,
+            )}
+            {statusChip(
+              'Unverified',
+              statusCounts.unverified,
+              'bg-muted text-muted-foreground',
+              HelpCircle,
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {creds.length === 0 ? (
+          {credRows.length === 0 ? (
             <p className="text-muted-foreground text-sm">No credentials submitted.</p>
           ) : (
-            <Table className="min-w-[640px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Issuer</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>File</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {creds.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.title}</TableCell>
-                    <TableCell>{c.issuer || '—'}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs capitalize ${statusColor(
-                          c.status,
-                        )}`}
-                      >
-                        {c.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {c.fileUrl ? (
-                        <a
-                          href={c.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary underline"
-                        >
-                          View
-                        </a>
-                      ) : (
-                        '—'
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <>
+              <div className="overflow-x-auto rounded-md border">
+                <CredentialsTable
+                  rows={credRows}
+                  sort={sort}
+                  order={order as 'asc' | 'desc'}
+                  basePath={`/recruiter/talent/${candidateId}`}
+                  initialParams={initialParams}
+                  searchQuery={searchTerm}
+                />
+              </div>
+              <TablePagination
+                page={page}
+                hasNext={hasNext}
+                basePath={`/recruiter/talent/${candidateId}`}
+                initialParams={initialParams}
+                pageSize={pageSize}
+              />
+            </>
           )}
         </CardContent>
       </Card>
@@ -249,15 +314,15 @@ export default async function CandidateProfilePage({
           ) : (
             passes.map((p) => (
               <p key={p.id}>
-                Quiz&nbsp;#{p.quizId}&nbsp;—&nbsp;Score&nbsp;{p.score}&nbsp;/&nbsp;{p.maxScore}
-                &nbsp;•&nbsp;{format(p.createdAt, 'PPP')}
+                Quiz&nbsp;#{p.quizId}&nbsp;—&nbsp;Score&nbsp;{p.score}
+                &nbsp;/&nbsp;{p.maxScore}&nbsp;•&nbsp;{format(p.createdAt, 'PPP')}
               </p>
             ))
           )}
         </CardContent>
       </Card>
 
-      {/* ---------- Pipeline details (if any) ---------- */}
+      {/* ---------- Pipeline details ---------- */}
       {inPipeline && (
         <Card>
           <CardHeader>
@@ -265,8 +330,11 @@ export default async function CandidateProfilePage({
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             {pipelineEntries.map((e, idx) => (
-              <p key={idx}>
-                {e.pipelineName} — <span className="capitalize">{e.stage}</span>
+              <p key={idx} className="flex items-center gap-2">
+                {e.pipelineName}
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs capitalize">
+                  {e.stage}
+                </span>
               </p>
             ))}
           </CardContent>
