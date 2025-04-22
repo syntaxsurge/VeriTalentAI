@@ -9,7 +9,7 @@ import { ChevronDown, LayoutDashboard, LogOut, Settings } from 'lucide-react'
 
 import { signOut } from '@/app/(auth)/actions'
 import { ModeToggle } from '@/components/theme-toggle'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -141,20 +141,12 @@ export default function SiteHeader() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Avatar className='cursor-pointer'>
-                  <AvatarImage
-                    src={(user as any)?.image ?? undefined}
-                    alt={(user as any)?.name ?? (user as any)?.email}
-                  />
-                  <AvatarFallback>
-                    {(user.name || user.email || 'U')
-                      .split(' ')
-                      .map((n: string) => n[0])
-                      .join('')
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                  src={(user as any)?.image ?? undefined}
+                  name={(user as any)?.name ?? null}
+                  email={(user as any)?.email ?? null}
+                  className='cursor-pointer'
+                />
               </DropdownMenuTrigger>
 
               <DropdownMenuContent

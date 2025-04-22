@@ -7,6 +7,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/h
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { teamMembers, users as usersT } from '@/lib/db/schema/core'
+import { getAvatarInitials } from '@/lib/utils/avatar'
 
 import { CreateDidButton } from './create-did-button'
 
@@ -113,15 +114,13 @@ export default async function CreateDIDPage() {
           {/* Team avatars with HoverCard tooltips */}
           <div className='flex -space-x-3'>
             {displayMembers.map((member) => {
-              const label = member.name || member.email
-              const initial = label ? label.charAt(0).toUpperCase() : '?'
               return (
                 <HoverCard key={member.id}>
                   <HoverCardTrigger asChild>
                     <Avatar className='ring-background border-background size-10 cursor-pointer rounded-full border-2 shadow'>
-                      <AvatarImage alt={label} />
+                      <AvatarImage alt={member.name ?? member.email} />
                       <AvatarFallback className='bg-muted text-sm font-semibold'>
-                        {initial}
+                        {getAvatarInitials(member.name, member.email, 1)}
                       </AvatarFallback>
                     </Avatar>
                   </HoverCardTrigger>
