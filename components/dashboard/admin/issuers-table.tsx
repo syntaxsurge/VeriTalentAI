@@ -200,7 +200,7 @@ function RowActions({ id, status }: { id: number; status: string }) {
 /* -------------------------------------------------------------------------- */
 
 function useBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, startTransition] = React.useTransition()
+  const [isPending, _] = React.useTransition()
 
   async function bulkUpdate(
     selected: RowType[],
