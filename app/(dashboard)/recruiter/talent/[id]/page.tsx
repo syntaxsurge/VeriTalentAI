@@ -7,6 +7,9 @@ import { eq, and, sql, asc } from 'drizzle-orm'
 import CredentialsTable, {
   RowType as CredRow,
 } from '@/components/dashboard/recruiter/credentials-table'
+import PipelineEntriesTable, {
+  RowType as PipeRow,
+} from '@/components/dashboard/recruiter/pipeline-entries-table'
 import AddToPipelineForm from './add-to-pipeline-form'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +19,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterCandidateCredentialsPage } from '@/lib/db/queries/recruiter-candidate-credentials'
+import { getCandidatePipelineEntriesPage } from '@/lib/db/queries/recruiter-pipeline-entries'
 import { users } from '@/lib/db/schema/core'
 import { pipelineCandidates, recruiterPipelines } from '@/lib/db/schema/recruiter'
 import { candidates, candidateCredentials, quizAttempts } from '@/lib/db/schema/viskify'
@@ -85,7 +89,7 @@ export default async function CandidateProfilePage({
 
   if (!row) return <div>Candidate not found.</div>
 
-  /* --------------- Pipelines for selector --------------- */
+  /* --------------- Pipelines for selector & summary --------------- */
   const pipelines: Pipeline[] = await db
     .select({
       id: recruiterPipelines.id,
@@ -94,6 +98,27 @@ export default async function CandidateProfilePage({
     .from(recruiterPipelines)
     .where(eq(recruiterPipelines.recruiterId, user.id))
     .orderBy(asc(recruiterPipelines.name))
+
+  const pipelineEntriesAll = await db
+    .select({
+      pipelineName: recruiterPipelines.name,
+      stage: pipelineCandidates.stage,
+    })
+    .from(pipelineCandidates)
+    .innerJoin(recruiterPipelines, eq(pipelineCandidates.pipelineId, recruiterPipelines.id))
+    .where(
+      and(
+        eq(pipelineCandidates.candidateId, candidateId),
+        eq(recruiterPipelines.recruiterId, user.id),
+      ),
+    )
+
+  const inPipeline = pipelineEntriesAll.length > 0
+  const pipelineSummary = inPipeline
+    ? pipelineEntriesAll.length === 1
+      ? `In ${pipelineEntriesAll[0].pipelineName}`
+      : `In ${pipelineEntriesAll.length} Pipelines`
+    : 'No Pipelines'
 
   /* -------------------- Credentials (paged) -------------------- */
   const page = Math.max(1, Number(getParam(q, 'page') ?? '1'))
@@ -104,7 +129,6 @@ export default async function CandidateProfilePage({
   const sort = sortParamRaw ?? 'createdAt'
   const order = orderParamRaw === 'asc' ? 'asc' : 'desc'
   const searchTerm = (getParam(q, 'q') ?? '').trim()
-
   const verifiedFirst = !sortParamRaw && !orderParamRaw
 
   const { credentials, hasNext } = await getRecruiterCandidateCredentialsPage(
@@ -152,27 +176,29 @@ export default async function CandidateProfilePage({
     .from(quizAttempts)
     .where(and(eq(quizAttempts.candidateId, candidateId), eq(quizAttempts.pass, 1)))
 
-  /* --------------- Pipeline membership --------------- */
-  const pipelineEntries = await db
-    .select({
-      pipelineName: recruiterPipelines.name,
-      stage: pipelineCandidates.stage,
-    })
-    .from(pipelineCandidates)
-    .innerJoin(recruiterPipelines, eq(pipelineCandidates.pipelineId, recruiterPipelines.id))
-    .where(
-      and(
-        eq(pipelineCandidates.candidateId, candidateId),
-        eq(recruiterPipelines.recruiterId, user.id),
-      ),
-    )
+  /* ---------------- Pipeline entries (paged) ---------------- */
+  const pipePage = Math.max(1, Number(getParam(q, 'pipePage') ?? '1'))
+  const pipeSizeRaw = Number(getParam(q, 'pipeSize') ?? '10')
+  const pipePageSize = [10, 20, 50].includes(pipeSizeRaw) ? pipeSizeRaw : 10
+  const pipeSort = getParam(q, 'pipeSort') ?? 'addedAt'
+  const pipeOrder = getParam(q, 'pipeOrder') === 'asc' ? 'asc' : 'desc'
+  const pipeSearchTerm = (getParam(q, 'pipeQ') ?? '').trim()
 
-  const inPipeline = pipelineEntries.length > 0
-  const pipelineSummary = inPipeline
-    ? pipelineEntries.length === 1
-      ? `In ${pipelineEntries[0].pipelineName}`
-      : `In ${pipelineEntries.length} Pipelines`
-    : 'No Pipelines'
+  const { entries: pipeEntries, hasNext: pipeHasNext } = await getCandidatePipelineEntriesPage(
+    candidateId,
+    user.id,
+    pipePage,
+    pipePageSize,
+    pipeSort as any,
+    pipeOrder as any,
+    pipeSearchTerm,
+  )
+
+  const pipeRows: PipeRow[] = pipeEntries.map((e) => ({
+    id: e.id,
+    pipelineName: e.pipelineName,
+    stage: e.stage,
+  }))
 
   /* ------------------------ Build initialParams -------------------------- */
   const initialParams: Record<string, string> = {}
@@ -184,6 +210,17 @@ export default async function CandidateProfilePage({
   add('sort')
   add('order')
   if (searchTerm) initialParams['q'] = searchTerm
+
+  /* Pipeline‑params */
+  const initialPipeParams: Record<string, string> = {}
+  const addPipe = (k: string) => {
+    const val = getParam(q, k)
+    if (val) initialPipeParams[k] = val
+  }
+  addPipe('pipeSize')
+  addPipe('pipeSort')
+  addPipe('pipeOrder')
+  if (pipeSearchTerm) initialPipeParams['pipeQ'] = pipeSearchTerm
 
   /* ------------------------------------------------------------------ */
   /*                               UI                                   */
@@ -289,6 +326,30 @@ export default async function CandidateProfilePage({
         </CardContent>
       </Card>
 
+      {/* ---------- Pipeline entries ---------- */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Pipeline&nbsp;Entries</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PipelineEntriesTable
+            rows={pipeRows}
+            sort={pipeSort}
+            order={pipeOrder as 'asc' | 'desc'}
+            basePath={`/recruiter/talent/${candidateId}`}
+            initialParams={initialPipeParams}
+            searchQuery={pipeSearchTerm}
+          />
+          <TablePagination
+            page={pipePage}
+            hasNext={pipeHasNext}
+            basePath={`/recruiter/talent/${candidateId}`}
+            initialParams={initialPipeParams}
+            pageSize={pipePageSize}
+          />
+        </CardContent>
+      </Card>
+
       {/* ---------- Skill passes ---------- */}
       <Card>
         <CardHeader>
@@ -307,23 +368,6 @@ export default async function CandidateProfilePage({
           )}
         </CardContent>
       </Card>
-
-      {/* ---------- Pipeline details ---------- */}
-      {inPipeline && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Pipeline&nbsp;Entries</CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-2 text-sm'>
-            {pipelineEntries.map((e, idx) => (
-              <p key={idx} className='flex flex-wrap items-center gap-2'>
-                {e.pipelineName}
-                <StatusBadge status={e.stage} />
-              </p>
-            ))}
-          </CardContent>
-        </Card>
-      )}
     </section>
   )
 }
