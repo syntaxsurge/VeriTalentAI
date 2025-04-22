@@ -181,6 +181,23 @@ export function DataTable<T extends Record<string, any>>({
     pageSize,
   })
 
+  /* ---------------------------------------------------------------------- */
+  /* Sync pageSize with dataset when pagination is hidden (display-all mode) */
+  /* ---------------------------------------------------------------------- */
+  const prevRowsLength = React.useRef(rows.length)
+
+  React.useEffect(() => {
+    if (!hidePagination) return
+    if (rows.length !== prevRowsLength.current) {
+      setPagination((prev) => ({
+        ...prev,
+        pageSize: rows.length,
+        pageIndex: 0,
+      }))
+      prevRowsLength.current = rows.length
+    }
+  }, [rows.length, hidePagination])
+
   /* --------------------------- Column definitions -------------------------- */
   const columnDefs = React.useMemo<ColumnDef<T>[]>(() => {
     const base = buildColumnDefs(columns)
