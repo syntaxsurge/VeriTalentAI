@@ -1,67 +1,109 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-import { eq } from 'drizzle-orm'
-
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
-import { recruiterPipelines } from '@/lib/db/schema/recruiter'
-
+import { TablePagination } from '@/components/ui/tables/table-pagination'
+import PipelinesTable, {
+  RowType,
+} from '@/components/dashboard/recruiter/pipelines-table'
 import CreatePipelineForm from './create-pipeline-form'
+import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
+import { getUser } from '@/lib/db/queries/queries'
 
 export const revalidate = 0
 
-export default async function PipelinesPage() {
+/* -------------------------------------------------------------------------- */
+/*                                   Helpers                                  */
+/* -------------------------------------------------------------------------- */
+
+type Query = Record<string, string | string[] | undefined>
+
+function getParam(params: Query, key: string): string | undefined {
+  const v = params[key]
+  return Array.isArray(v) ? v[0] : v
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                    Page                                    */
+/* -------------------------------------------------------------------------- */
+
+export default async function PipelinesPage({
+  searchParams,
+}: {
+  searchParams: Query | Promise<Query>
+}) {
+  const params = (await searchParams) as Query
+
+  /* ----------------------------- Auth guard ------------------------------ */
   const user = await getUser()
   if (!user) redirect('/sign-in')
   if (user.role !== 'recruiter') redirect('/')
 
-  const pipelines = await db
-    .select()
-    .from(recruiterPipelines)
-    .where(eq(recruiterPipelines.recruiterId, user.id))
+  /* --------------------------- Query params ------------------------------ */
+  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
 
+  const sizeRaw = Number(getParam(params, 'size') ?? '10')
+  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
+
+  const sort = getParam(params, 'sort') ?? 'createdAt'
+  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (getParam(params, 'q') ?? '').trim()
+
+  /* ---------------------------- Data fetch ------------------------------- */
+  const { pipelines, hasNext } = await getRecruiterPipelinesPage(
+    user.id,
+    page,
+    pageSize,
+    sort as 'name' | 'createdAt',
+    order as 'asc' | 'desc',
+    searchTerm,
+  )
+
+  const rows: RowType[] = pipelines.map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    createdAt: p.createdAt.toISOString(),
+  }))
+
+  /* ------------------------ Build initialParams -------------------------- */
+  const initialParams: Record<string, string> = {}
+  const add = (k: string) => {
+    const val = getParam(params, k)
+    if (val) initialParams[k] = val
+  }
+  add('size')
+  add('sort')
+  add('order')
+  if (searchTerm) initialParams['q'] = searchTerm
+
+  /* ------------------------------- View ---------------------------------- */
   return (
-    <section className='space-y-10'>
-      <div className='flex items-center justify-between'>
-        <h2 className='text-2xl font-semibold'>Pipelines</h2>
-
-        {pipelines.length > 0 && (
-          <Button asChild size='sm' variant='outline'>
-            <a href='#create-pipeline-form'>+ New Pipeline</a>
-          </Button>
-        )}
+    <section className="flex-1 p-4 lg:p-8">
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <h1 className="text-lg font-medium lg:text-2xl">Pipelines</h1>
+        <a href="#create-pipeline-form" className="text-primary underline">
+          + New&nbsp;Pipeline
+        </a>
       </div>
 
-      {pipelines.length === 0 ? (
-        <p className='text-muted-foreground'>
-          You don’t have any pipelines yet. Create your first one below to track candidates through
-          your hiring stages.
-        </p>
-      ) : (
-        <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-          {pipelines.map((p) => (
-            <Card key={p.id} className='group transition-shadow hover:shadow-xl'>
-              <CardHeader>
-                <CardTitle className='truncate' title={p.name}>
-                  {p.name}
-                </CardTitle>
-              </CardHeader>
+      {/* Results */}
+      <div className="overflow-x-auto rounded-md border">
+        <PipelinesTable
+          rows={rows}
+          sort={sort}
+          order={order as 'asc' | 'desc'}
+          basePath="/recruiter/pipelines"
+          initialParams={initialParams}
+          searchQuery={searchTerm}
+        />
+      </div>
 
-              <CardContent className='space-y-3 text-sm'>
-                <p className='text-muted-foreground line-clamp-3'>
-                  {p.description || 'No description provided.'}
-                </p>
-                <Link href={`/recruiter/pipelines/${p.id}`} className='text-primary underline'>
-                  Open Board
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <TablePagination
+        page={page}
+        hasNext={hasNext}
+        basePath="/recruiter/pipelines"
+        initialParams={initialParams}
+        pageSize={pageSize}
+      />
 
       {/* New pipeline form */}
       <CreatePipelineForm />
