@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 import { format } from 'date-fns'
 
+import RecruiterCharts from '@/components/dashboard/recruiter/charts'
 import PipelineBoard from '@/components/dashboard/recruiter/pipeline-board'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
@@ -15,7 +16,9 @@ export const revalidate = 0
 export default async function PipelineBoardPage({ params }: { params: { id: string } }) {
   const pipelineId = Number(params.id)
 
-  /* ----------------------------- Auth & ownership ----------------------------- */
+  /* -------------------------------------------------------------------- */
+  /*                          Auth & ownership check                      */
+  /* -------------------------------------------------------------------- */
   const user = await getUser()
   if (!user) redirect('/sign-in')
   if (user.role !== 'recruiter') redirect('/')
@@ -28,7 +31,9 @@ export default async function PipelineBoardPage({ params }: { params: { id: stri
 
   if (!pipeline || pipeline.recruiterId !== user.id) redirect('/recruiter/pipelines')
 
-  /* ------------------------------ Candidate rows ------------------------------ */
+  /* -------------------------------------------------------------------- */
+  /*                            Fetch candidates                          */
+  /* -------------------------------------------------------------------- */
   const rows = await db
     .select({
       pc: pipelineCandidates,
@@ -48,6 +53,7 @@ export default async function PipelineBoardPage({ params }: { params: { id: stri
     stage: Stage
   }
 
+  /* ------------------------ Normalise into columns --------------------- */
   const initialData: Record<Stage, Candidate[]> = STAGES.reduce(
     (acc, s) => ({ ...acc, [s]: [] }),
     {} as Record<Stage, Candidate[]>,
@@ -64,23 +70,46 @@ export default async function PipelineBoardPage({ params }: { params: { id: stri
     })
   })
 
-  /* ---------------------------------- View ----------------------------------- */
+  /* ------------------------- Aggregate statistics ---------------------- */
+  const stageData = STAGES.map((s) => ({
+    stage: s,
+    count: initialData[s].length,
+  }))
+  const totalCandidates = rows.length
+  const uniqueCandidates = totalCandidates // duplicates cannot exist within one pipeline
+
+  /* -------------------------------------------------------------------- */
+  /*                               UI                                     */
+  /* -------------------------------------------------------------------- */
   return (
-    <section className="space-y-6">
-      {/* Pipeline header */}
-      <div>
-        <h2 className="text-2xl font-semibold">{pipeline.name}</h2>
+    <section className="space-y-8">
+      {/* ----------------------- Pipeline header ----------------------- */}
+      <header className="space-y-1">
+        <h2 className="flex items-center gap-2 text-2xl font-semibold">
+          {pipeline.name}
+          <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+            {totalCandidates}&nbsp;{totalCandidates === 1 ? 'Candidate' : 'Candidates'}
+          </span>
+        </h2>
+
         {pipeline.description && (
-          <p className="mt-1 max-w-3xl whitespace-pre-line text-muted-foreground">
+          <p className="max-w-3xl whitespace-pre-line text-muted-foreground">
             {pipeline.description}
           </p>
         )}
-        <p className="mt-1 text-xs text-muted-foreground">
-          Created&nbsp;{format(pipeline.createdAt, 'PPP')}
-        </p>
-      </div>
 
-      {/* Kanban board */}
+        <p className="text-xs text-muted-foreground">
+          Created&nbsp;{format(pipeline.createdAt, 'PPP')} • Updated&nbsp;
+          {format(pipeline.updatedAt, 'PPP')}
+        </p>
+      </header>
+
+      {/* --------------------------- Charts ------------------------------ */}
+      {totalCandidates > 0 && (
+        <RecruiterCharts stageData={stageData} uniqueCandidates={uniqueCandidates} />
+      )}
+
+      {/* ------------------------- Kanban board ------------------------- */}
       <PipelineBoard pipelineId={pipelineId} initialData={initialData} />
     </section>
   )
