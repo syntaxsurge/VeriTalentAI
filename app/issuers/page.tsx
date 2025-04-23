@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { asc, desc, ilike, or, and, eq } from 'drizzle-orm'
 
+import IssuerFilters from '@/components/issuer-directory/issuer-filters'
 import IssuersTable, { type RowType } from '@/components/issuer-directory/issuers-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
@@ -47,7 +48,21 @@ export default async function IssuerDirectoryPage({
 
   const sort = first(params, 'sort') ?? 'name'
   const order = first(params, 'order') === 'desc' ? 'desc' : 'asc'
+
   const searchTerm = (first(params, 'q') ?? '').trim()
+
+  const categoryFilter = first(params, 'category')
+  const industryFilter = first(params, 'industry')
+
+  const validCategory = categoryFilter &&
+    (Object.values(IssuerCategory) as string[]).includes(categoryFilter)
+      ? categoryFilter
+      : undefined
+
+  const validIndustry = industryFilter &&
+    (Object.values(IssuerIndustry) as string[]).includes(industryFilter)
+      ? industryFilter
+      : undefined
 
   /* --------------------------- ORDER BY helper --------------------------- */
   const sortMap = {
@@ -57,30 +72,37 @@ export default async function IssuerDirectoryPage({
     industry: issuersTable.industry,
     createdAt: issuersTable.createdAt,
   } as const
-  const orderExpr = order === 'asc' ? asc(sortMap[sort as keyof typeof sortMap]) : desc(sortMap[sort as keyof typeof sortMap])
+  const orderExpr =
+    order === 'asc'
+      ? asc(sortMap[sort as keyof typeof sortMap])
+      : desc(sortMap[sort as keyof typeof sortMap])
 
   /* ---------------------------- WHERE clause ---------------------------- */
-  const baseWhere = eq(issuersTable.status, IssuerStatus.ACTIVE)
+  let whereExpr: any = eq(issuersTable.status, IssuerStatus.ACTIVE)
 
-  const whereClause =
-    searchTerm.length === 0
-      ? baseWhere
-      : and(
-          baseWhere,
-          or(
-            ilike(issuersTable.name, `%${searchTerm}%`),
-            ilike(issuersTable.domain, `%${searchTerm}%`),
-            ilike(issuersTable.category, `%${searchTerm}%`),
-            ilike(issuersTable.industry, `%${searchTerm}%`),
-          ),
-        )
+  if (validCategory) {
+    whereExpr = and(whereExpr, eq(issuersTable.category, validCategory))
+  }
+  if (validIndustry) {
+    whereExpr = and(whereExpr, eq(issuersTable.industry, validIndustry))
+  }
+
+  if (searchTerm.length > 0) {
+    const searchCond = or(
+      ilike(issuersTable.name, `%${searchTerm}%`),
+      ilike(issuersTable.domain, `%${searchTerm}%`),
+      ilike(issuersTable.category, `%${searchTerm}%`),
+      ilike(issuersTable.industry, `%${searchTerm}%`),
+    )
+    whereExpr = and(whereExpr, searchCond)
+  }
 
   /* ------------------------------ Data ---------------------------------- */
   const offset = (page - 1) * pageSize
   const rowsRaw = await db
     .select()
     .from(issuersTable)
-    .where(whereClause)
+    .where(whereExpr)
     .orderBy(orderExpr)
     .limit(pageSize + 1) // grab one extra to detect "next"
     .offset(offset)
@@ -110,6 +132,8 @@ export default async function IssuerDirectoryPage({
   add('sort')
   add('order')
   if (searchTerm) initialParams['q'] = searchTerm
+  if (validCategory) initialParams['category'] = validCategory
+  if (validIndustry) initialParams['industry'] = validIndustry
 
   /* ------------------------------ UI ------------------------------------ */
   return (
@@ -117,10 +141,20 @@ export default async function IssuerDirectoryPage({
       <header className='space-y-2'>
         <h1 className='text-3xl font-extrabold tracking-tight'>Verified Issuers</h1>
         <p className='text-muted-foreground max-w-2xl text-sm'>
-          Browse all verified organisations. Use the search box, sortable headers, and pagination
-          controls to quickly locate issuers.
+          Browse all verified organisations. Use the search box, category and industry filters,
+          sortable headers, and pagination controls to quickly locate issuers.
         </p>
       </header>
+
+      {/* Filters */}
+      <IssuerFilters
+        basePath={BASE_PATH}
+        initialParams={initialParams}
+        categories={Object.values(IssuerCategory)}
+        industries={Object.values(IssuerIndustry)}
+        selectedCategory={validCategory ?? ''}
+        selectedIndustry={validIndustry ?? ''}
+      />
 
       <Card>
         <CardHeader>
