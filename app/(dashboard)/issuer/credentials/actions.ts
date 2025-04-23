@@ -8,7 +8,12 @@ import { issueCredential } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
 import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
-import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/viskify'
+import {
+  candidateCredentials,
+  CredentialStatus,
+  candidates,
+  verifiedCredentials,
+} from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
 /*                               U T I L S                                    */
@@ -20,7 +25,7 @@ function buildError(message: string, ctx?: Record<string, unknown>) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                       A P P R O V E  /  S I G N  V C                       */
+/*                       A P P R O V E  /  S I G N  V C                       */
 /* -------------------------------------------------------------------------- */
 
 export const approveCredentialAction = validatedActionWithUser(
@@ -60,7 +65,6 @@ export const approveCredentialAction = validatedActionWithUser(
       .where(eq(candidates.id, cred.candidateId))
       .limit(1)
 
-    /* ---- NEW: ensure candUser is not null for TS safety --- */
     if (!cand || !cand.candUser) return buildError('Candidate user not found.')
 
     const [teamRow] = await db
@@ -76,6 +80,8 @@ export const approveCredentialAction = validatedActionWithUser(
 
     /* ------------------ VC handling ------------------------ */
     let vcJwt = cred.vcIssuedId ?? undefined
+    let vcJson: any | null = null
+
     const debugCtx: Record<string, unknown> = {
       credentialId,
       issuerId: issuer.id,
@@ -96,6 +102,7 @@ export const approveCredentialAction = validatedActionWithUser(
           credentialName: cred.type,
         })
         vcJwt = vc?.proof?.jwt
+        vcJson = vc
         if (!vcJwt) {
           return buildError('Verifiable credential issued without a JWT proof.', {
             ...debugCtx,
@@ -121,6 +128,20 @@ export const approveCredentialAction = validatedActionWithUser(
       })
       .where(eq(candidateCredentials.id, cred.id))
 
+    /* --------- NEW: archive the full VC JSON for reuse ------ */
+    try {
+      if (vcJson) {
+        await db.insert(verifiedCredentials).values({
+          candidateId: cred.candidateId,
+          vcJson: JSON.stringify(vcJson),
+          verified: true,
+        })
+      }
+    } catch (archiveErr) {
+      // non-fatal – log and continue
+      console.error('[VC-Issue] Failed to archive VC JSON:', archiveErr)
+    }
+
     console.info('[VC-Issue] Credential approved & VC stored', {
       credentialId,
       issuerId: issuer.id,
@@ -131,7 +152,7 @@ export const approveCredentialAction = validatedActionWithUser(
 )
 
 /* -------------------------------------------------------------------------- */
-/*                              R E J E C T                                   */
+/*                              R E J E C T                                   */
 /* -------------------------------------------------------------------------- */
 
 export const rejectCredentialAction = validatedActionWithUser(
@@ -165,7 +186,7 @@ export const rejectCredentialAction = validatedActionWithUser(
 )
 
 /* -------------------------------------------------------------------------- */
-/*                            U N V E R I F Y                                 */
+/*                            U N V E R I F Y                                 */
 /* -------------------------------------------------------------------------- */
 
 export const unverifyCredentialAction = validatedActionWithUser(

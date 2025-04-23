@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Trash2,
   FileText,
+  Clipboard,
   Loader2,
   ArrowUpDown,
   type LucideProps,
@@ -38,6 +39,7 @@ export interface RowType {
   issuer: string | null
   status: string
   fileUrl: string | null
+  vcJson: string | null
 }
 
 interface Props {
@@ -46,12 +48,17 @@ interface Props {
   order: 'asc' | 'desc'
   basePath: string
   initialParams: Record<string, string>
-  /** Current URL search term. */
   searchQuery: string
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                Helpers                                     */
+/*                                Constants                                   */
+/* -------------------------------------------------------------------------- */
+
+const ARCHIVE_OFFSET = 1_000_000 // keep in sync with page.tsx
+
+/* -------------------------------------------------------------------------- */
+/*                                Helpers                                     */
 /* -------------------------------------------------------------------------- */
 
 function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
@@ -75,6 +82,7 @@ const ViewIcon = (props: LucideProps) => (
 function RowActions({ row }: { row: RowType }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
+  const isArchive = row.id >= ARCHIVE_OFFSET
 
   async function destroy() {
     startTransition(async () => {
@@ -88,6 +96,14 @@ function RowActions({ row }: { row: RowType }) {
         router.refresh()
       }
     })
+  }
+
+  function copyVc() {
+    if (!row.vcJson) return
+    navigator.clipboard.writeText(row.vcJson).then(
+      () => toast.success('VC JSON copied to clipboard'),
+      () => toast.error('Copy failed'),
+    )
   }
 
   return (
@@ -120,16 +136,26 @@ function RowActions({ row }: { row: RowType }) {
           </DropdownMenuItem>
         )}
 
-        <DropdownMenuSeparator />
+        {row.vcJson && (
+          <DropdownMenuItem onClick={copyVc} className='cursor-pointer'>
+            <Clipboard className='mr-2 h-4 w-4' />
+            Copy VC JSON
+          </DropdownMenuItem>
+        )}
 
-        <DropdownMenuItem
-          onClick={destroy}
-          disabled={isPending}
-          className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
-        >
-          <Trash2 className='mr-2 h-4 w-4' />
-          Delete
-        </DropdownMenuItem>
+        {!isArchive && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={destroy}
+              disabled={isPending}
+              className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
+            >
+              <Trash2 className='mr-2 h-4 w-4' />
+              Delete
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -149,9 +175,11 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
       variant: 'destructive',
       onClick: (selected) =>
         startTransition(async () => {
+          const toDelete = selected.filter((c) => c.id < ARCHIVE_OFFSET)
+          if (toDelete.length === 0) return
           const toastId = toast.loading('Deleting credentials…')
           await Promise.all(
-            selected.map(async (cred) => {
+            toDelete.map(async (cred) => {
               const fd = new FormData()
               fd.append('credentialId', cred.id.toString())
               return deleteCredentialAction({}, fd)
@@ -160,7 +188,8 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
           toast.success('Selected credentials deleted.', { id: toastId })
           router.refresh()
         }),
-      isDisabled: () => isPending,
+      isDisabled: (sel) => sel.every((c) => c.id >= ARCHIVE_OFFSET) || isPending,
+      isAvailable: (sel) => sel.some((c) => c.id < ARCHIVE_OFFSET),
     },
   ]
 }
@@ -246,7 +275,6 @@ export default function CandidateCredentialsTable({
     ]
   }, [sort, order, basePath, initialParams, search])
 
-  /* All rows fit on one client page; server handles real paging */
   return (
     <DataTable
       columns={columns}

@@ -29,20 +29,10 @@ export const candidates = pgTable(
   (t) => [uniqueIndex('candidates_user_id_idx').on(t.userId)],
 )
 
-export const candidatesRelations = relations(candidates, ({ one, many }) => ({
-  user: one(users, {
-    fields: [candidates.userId],
-    references: [users.id],
-  }),
-  credentials: many(candidateCredentials),
-  quizAttempts: many(quizAttempts),
-}))
-
 /* -------------------------------------------------------------------------- */
 /*                       C A N D I D A T E   C R E D E N T I A L S             */
 /* -------------------------------------------------------------------------- */
 
-/** Credential verification status */
 export enum CredentialStatus {
   UNVERIFIED = 'unverified',
   PENDING = 'pending',
@@ -55,20 +45,47 @@ export const candidateCredentials = pgTable('candidate_credentials', {
   candidateId: integer('candidate_id')
     .notNull()
     .references(() => candidates.id),
-  /** FK → issuers.id (university, past employer, etc.)  */
   issuerId: integer('issuer_id').references(() => issuers.id),
   title: varchar('title', { length: 200 }).notNull(),
-  /** e.g. diploma, cert, job_ref */
   type: varchar('type', { length: 50 }).notNull(),
   fileUrl: text('file_url'),
   status: varchar('status', { length: 20 }).notNull().default(CredentialStatus.UNVERIFIED),
   verified: boolean('verified').notNull().default(false),
+  /** Stores the issued VC JWT or JSON */
   vcIssuedId: text('vc_issued_id'),
   issuedAt: timestamp('issued_at'),
   verifiedAt: timestamp('verified_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
+
+/* -------------------------------------------------------------------------- */
+/*                       V E R I F I E D   V C   A R C H I V E                 */
+/* -------------------------------------------------------------------------- */
+
+export const verifiedCredentials = pgTable('verified_credentials', {
+  id: serial('id').primaryKey(),
+  candidateId: integer('candidate_id')
+    .notNull()
+    .references(() => candidates.id),
+  vcJson: text('vc_json').notNull(),
+  verified: boolean('verified').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+/* -------------------------------------------------------------------------- */
+/*                                R E L A T I O N S                           */
+/* -------------------------------------------------------------------------- */
+
+export const candidatesRelations = relations(candidates, ({ one, many }) => ({
+  user: one(users, {
+    fields: [candidates.userId],
+    references: [users.id],
+  }),
+  credentials: many(candidateCredentials),
+  quizAttempts: many(quizAttempts),
+  verifiedCredentials: many(verifiedCredentials),
+}))
 
 export const candidateCredentialsRelations = relations(candidateCredentials, ({ one }) => ({
   candidate: one(candidates, {
@@ -78,6 +95,13 @@ export const candidateCredentialsRelations = relations(candidateCredentials, ({ 
   issuer: one(issuers, {
     fields: [candidateCredentials.issuerId],
     references: [issuers.id],
+  }),
+}))
+
+export const verifiedCredentialsRelations = relations(verifiedCredentials, ({ one }) => ({
+  candidate: one(candidates, {
+    fields: [verifiedCredentials.candidateId],
+    references: [candidates.id],
   }),
 }))
 
@@ -117,7 +141,7 @@ export const quizAttemptsRelations = relations(quizAttempts, ({ one }) => ({
 }))
 
 /* -------------------------------------------------------------------------- */
-/*                               T Y P E   E X P O R T S                       */
+/*                               T Y P E S                                    */
 /* -------------------------------------------------------------------------- */
 
 export type Candidate = typeof candidates.$inferSelect
@@ -125,6 +149,9 @@ export type NewCandidate = typeof candidates.$inferInsert
 
 export type CandidateCredential = typeof candidateCredentials.$inferSelect
 export type NewCandidateCredential = typeof candidateCredentials.$inferInsert
+
+export type VerifiedCredential = typeof verifiedCredentials.$inferSelect
+export type NewVerifiedCredential = typeof verifiedCredentials.$inferInsert
 
 export type SkillQuiz = typeof skillQuizzes.$inferSelect
 export type NewSkillQuiz = typeof skillQuizzes.$inferInsert
