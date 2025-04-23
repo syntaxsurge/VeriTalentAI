@@ -5,8 +5,27 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { ArrowUpDown } from 'lucide-react'
+import {
+  ArrowUpDown,
+  MoreHorizontal,
+  Copy as CopyIcon,
+} from 'lucide-react'
+import { toast } from 'sonner'
 
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 
@@ -40,7 +59,11 @@ interface Props {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
+function buildLink(
+  basePath: string,
+  init: Record<string, string>,
+  overrides: Record<string, any>,
+) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -52,6 +75,70 @@ function buildLink(basePath: string, init: Record<string, string>, overrides: Re
 
 function prettify(text: string) {
   return text.replaceAll('_', ' ').toLowerCase()
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Row actions                                   */
+/* -------------------------------------------------------------------------- */
+
+function RowActions({ row }: { row: RowType }) {
+  const [dialogOpen, setDialogOpen] = React.useState(false)
+
+  function copyDid() {
+    if (!row.did) return
+    navigator.clipboard.writeText(row.did).then(() => {
+      toast.success('DID copied to clipboard')
+    })
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant='ghost' className='h-8 w-8 p-0'>
+            <MoreHorizontal className='h-4 w-4' />
+            <span className='sr-only'>Open actions</span>
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem
+            disabled={!row.did}
+            onSelect={() => setDialogOpen(true)}
+            className='cursor-pointer'
+          >
+            View DID
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Issuer DID</DialogTitle>
+          </DialogHeader>
+          {row.did ? (
+            <div className='flex flex-col gap-4'>
+              <code className='break-all rounded-md bg-muted px-3 py-2 text-sm'>
+                {row.did}
+              </code>
+              <Button
+                variant='outline'
+                size='sm'
+                className='self-end'
+                onClick={copyDid}
+              >
+                <CopyIcon className='mr-2 h-4 w-4' /> Copy
+              </Button>
+            </div>
+          ) : (
+            <p className='text-sm text-muted-foreground'>No DID available.</p>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  )
 }
 
 /* -------------------------------------------------------------------------- */
@@ -154,18 +241,22 @@ export default function IssuersTable({
         render: (v) => <StatusBadge status={String(v)} />,
       },
       {
-        key: 'did',
-        header: 'DID',
-        sortable: false,
-        className: 'break-all',
-        render: (v) => v || '—',
-      },
-      {
         key: 'createdAt',
         header: sortableHeader('Created', 'createdAt'),
         sortable: false,
         render: (v) =>
-          v ? new Date(v as string).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—',
+          v
+            ? new Date(v as string).toLocaleDateString(undefined, {
+                dateStyle: 'medium',
+              })
+            : '—',
+      },
+      {
+        key: 'id',
+        header: '',
+        enableHiding: false,
+        sortable: false,
+        render: (_v, row) => <RowActions row={row} />,
       },
     ]
   }, [sort, order, basePath, initialParams, search])
