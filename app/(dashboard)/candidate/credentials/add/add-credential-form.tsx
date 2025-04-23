@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 interface Props {
-  addCredentialAction: (formData: FormData) => Promise<void>
+  addCredentialAction: (formData: FormData) => Promise<{ error?: string } | void>
 }
 
 /**
@@ -27,9 +27,17 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
 
     startTransition(async () => {
       try {
-        await addCredentialAction(fd)
+        const res = await addCredentialAction(fd)
+
+        /* If the server returned an error, surface it immediately */
+        if (res && typeof res === 'object' && 'error' in res && res.error) {
+          toast.error(res.error, { id: toastId })
+          return
+        }
+
         toast.success('Credential added.', { id: toastId })
       } catch (err: any) {
+        /* NEXT redirects throw an error we treat as success */
         if (err?.digest === 'NEXT_REDIRECT' || err?.message === 'NEXT_REDIRECT') {
           toast.success('Credential added.', { id: toastId })
         } else {

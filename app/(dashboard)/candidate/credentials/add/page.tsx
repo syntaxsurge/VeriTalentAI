@@ -27,9 +27,11 @@ export default async function AddCredentialPage() {
   if (!did) return <DidRequiredModal />
 
   /* Wrapper to invoke server action from client component */
-  const addCredentialAction = async (formData: FormData): Promise<void> => {
+  const addCredentialAction = async (
+    formData: FormData,
+  ): Promise<{ error?: string } | void> => {
     'use server'
-    await addCredential({}, formData)
+    return await addCredential({}, formData)
   }
 
   return (

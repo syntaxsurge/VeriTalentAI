@@ -12,7 +12,7 @@ import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import { candidateCredentials, candidates, CredentialStatus } from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
-/*                               A D D  C R E D                               */
+/*                               A D D  C R E D                               */
 /* -------------------------------------------------------------------------- */
 
 export const addCredential = validatedActionWithUser(
@@ -33,9 +33,13 @@ export const addCredential = validatedActionWithUser(
         .from(issuers)
         .where(and(eq(issuers.id, issuerId), eq(issuers.status, IssuerStatus.ACTIVE)))
         .limit(1)
+
       if (issuer) {
         linkedIssuerId = issuer.id
         status = CredentialStatus.PENDING
+      } else {
+        /* Invalid ID or not verified */
+        return { error: 'Issuer not found or not verified.' }
       }
     }
 
