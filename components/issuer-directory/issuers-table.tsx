@@ -9,6 +9,7 @@ import {
   ArrowUpDown,
   MoreHorizontal,
   Copy as CopyIcon,
+  Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -82,6 +83,7 @@ function prettify(text: string) {
 /* -------------------------------------------------------------------------- */
 
 function RowActions({ row }: { row: RowType }) {
+  const [menuOpen, setMenuOpen] = React.useState(false)
   const [dialogOpen, setDialogOpen] = React.useState(false)
 
   function copyDid() {
@@ -91,9 +93,15 @@ function RowActions({ row }: { row: RowType }) {
     })
   }
 
+  function openDialog() {
+    /* Close dropdown first so trigger becomes clickable again after dialog closes */
+    setMenuOpen(false)
+    setTimeout(() => setDialogOpen(true), 0)
+  }
+
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' className='h-8 w-8 p-0'>
             <MoreHorizontal className='h-4 w-4' />
@@ -105,9 +113,10 @@ function RowActions({ row }: { row: RowType }) {
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuItem
             disabled={!row.did}
-            onSelect={() => setDialogOpen(true)}
+            onSelect={openDialog}
             className='cursor-pointer'
           >
+            <Eye className='mr-2 h-4 w-4' />
             View DID
           </DropdownMenuItem>
         </DropdownMenuContent>
