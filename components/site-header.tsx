@@ -21,13 +21,20 @@ import {
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { useUser } from '@/lib/auth'
 
+/* Landing page anchor sections */
 const LANDING_SECTIONS = [
   { id: 'overview', label: 'Overview' },
   { id: 'features', label: 'Features' },
-  { id: 'deep-dive', label: 'Deep Dive' },
+  { id: 'deep-dive', label: 'Deep Dive' },
   { id: 'workflow', label: 'Workflow' },
   { id: 'pricing', label: 'Pricing' },
-  { id: 'cta', label: 'Get Started' },
+  { id: 'cta', label: 'Get Started' },
+] as const
+
+/* Tools dropdown items */
+const TOOLS_MENU = [
+  { href: '/issuers', label: 'Issuers' },
+  { href: '/verify', label: 'Verify' },
 ] as const
 
 export default function SiteHeader() {
@@ -35,44 +42,36 @@ export default function SiteHeader() {
   const { userPromise } = useUser()
   const [user, setUser] = useState<Awaited<typeof userPromise> | null>(null)
 
-  /* -------------------------------------------------------------------------- */
-  /*                       R E S O L V E   U S E R   P R O M I S E              */
-  /* -------------------------------------------------------------------------- */
+  /* Resolve user promise */
   useEffect(() => {
     let active = true
-    const value: unknown = userPromise
-    if (value && typeof value === 'object' && typeof (value as any).then === 'function') {
-      ;(value as Promise<any>).then(
+    const val: unknown = userPromise
+    if (val && typeof val === 'object' && typeof (val as any).then === 'function') {
+      ;(val as Promise<any>).then(
         (u) => active && setUser(u),
         () => active && setUser(null),
       )
     } else {
-      setUser(value as Awaited<typeof userPromise>)
+      setUser(val as Awaited<typeof userPromise>)
     }
     return () => {
       active = false
     }
   }, [userPromise])
 
-  /* -------------------------------------------------------------------------- */
-  /*                               H A N D L E R S                              */
-  /* -------------------------------------------------------------------------- */
   async function handleSignOut() {
     await signOut()
     router.refresh()
     router.push('/')
   }
 
-  /* -------------------------------------------------------------------------- */
-  /*                               R E N D E R                                  */
-  /* -------------------------------------------------------------------------- */
   return (
     <header className='border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b shadow-sm backdrop-blur'>
       <div className='mx-auto grid h-16 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-6 px-4 md:px-6'>
         {/* Brand */}
         <Link
           href='/'
-          className='text-primary flex items-center gap-2 text-lg font-extrabold tracking-tight whitespace-nowrap'
+          className='text-primary flex items-center gap-2 whitespace-nowrap text-lg font-extrabold tracking-tight'
         >
           <Image
             src='/images/viskify-logo.png'
@@ -87,6 +86,7 @@ export default function SiteHeader() {
 
         {/* Desktop nav */}
         <nav className='hidden justify-center gap-8 md:flex'>
+          {/* Home dropdown */}
           <HoverCard openDelay={100} closeDelay={100}>
             <HoverCardTrigger asChild>
               <Link
@@ -113,18 +113,38 @@ export default function SiteHeader() {
             </HoverCardContent>
           </HoverCard>
 
+          {/* Tools dropdown */}
+          <HoverCard openDelay={100} closeDelay={100}>
+            <HoverCardTrigger asChild>
+              <Link
+                href='/issuers'
+                className='text-foreground/80 hover:text-foreground flex items-center gap-1 text-sm font-medium transition-colors'
+              >
+                Tools
+                <ChevronDown className='mt-0.5 h-3 w-3' />
+              </Link>
+            </HoverCardTrigger>
+            <HoverCardContent side='bottom' align='start' className='w-44 rounded-lg p-2'>
+              <ul className='space-y-1'>
+                {TOOLS_MENU.map((t) => (
+                  <li key={t.href}>
+                    <Link
+                      href={t.href}
+                      className='hover:bg-muted block rounded px-2 py-1 text-sm'
+                    >
+                      {t.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </HoverCardContent>
+          </HoverCard>
+
           <Link
             href='/pricing'
             className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
           >
             Pricing
-          </Link>
-
-          <Link
-            href='/issuers'
-            className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
-          >
-            Issuers
           </Link>
 
           <Link
@@ -135,9 +155,10 @@ export default function SiteHeader() {
           </Link>
         </nav>
 
-        {/* Right side */}
+        {/* Right-aligned controls */}
         <div className='flex items-center justify-end gap-3'>
           <ModeToggle />
+
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -153,21 +174,21 @@ export default function SiteHeader() {
                 align='end'
                 className='data-[state=open]:animate-in data-[state=closed]:animate-out w-56 max-w-[90vw] rounded-lg p-1 shadow-lg sm:w-64'
               >
-                {/* User card → Team Settings */}
+                {/* User card */}
                 <DropdownMenuItem
                   asChild
-                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex cursor-pointer flex-col items-start gap-1 rounded-md px-3 py-2 text-left select-none'
+                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex select-none flex-col items-start gap-1 rounded-md px-3 py-2 text-left'
                 >
                   <Link href='/settings/team' className='w-full'>
                     <p className='truncate text-sm font-medium'>
-                      {user.name || user.email || 'Unnamed User'}
+                      {user.name || user.email || 'Unnamed User'}
                     </p>
                     {user.email && (
                       <p className='text-muted-foreground truncate text-xs break-all'>
                         {user.email}
                       </p>
                     )}
-                    <span className='bg-muted text-muted-foreground inline-block rounded px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase'>
+                    <span className='bg-muted text-muted-foreground inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider'>
                       {user.role}
                     </span>
                   </Link>
@@ -175,7 +196,6 @@ export default function SiteHeader() {
 
                 <DropdownMenuSeparator />
 
-                {/* Dashboard */}
                 <DropdownMenuItem
                   asChild
                   className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
@@ -186,7 +206,6 @@ export default function SiteHeader() {
                   </Link>
                 </DropdownMenuItem>
 
-                {/* Settings */}
                 <DropdownMenuItem
                   asChild
                   className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
@@ -199,12 +218,11 @@ export default function SiteHeader() {
 
                 <DropdownMenuSeparator />
 
-                {/* Sign-out */}
                 <form action={handleSignOut} className='w-full'>
                   <button type='submit' className='w-full'>
                     <DropdownMenuItem className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'>
                       <LogOut className='h-4 w-4' />
-                      <span className='text-sm'>Sign out</span>
+                      <span className='text-sm'>Sign out</span>
                     </DropdownMenuItem>
                   </button>
                 </form>
@@ -214,11 +232,11 @@ export default function SiteHeader() {
             <>
               <Link href='/sign-in' className='shrink-0'>
                 <Button variant='ghost' size='sm'>
-                  Sign in
+                  Sign in
                 </Button>
               </Link>
               <Link href='/sign-up' className='shrink-0'>
-                <Button size='sm'>Get started</Button>
+                <Button size='sm'>Get started</Button>
               </Link>
             </>
           )}
