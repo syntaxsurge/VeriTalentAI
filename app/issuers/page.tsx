@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import { asc, desc, ilike, or, and, eq } from 'drizzle-orm'
 
 import IssuerFilters from '@/components/issuer-directory/issuer-filters'
@@ -54,13 +53,13 @@ export default async function IssuerDirectoryPage({
   const categoryFilter = first(params, 'category')
   const industryFilter = first(params, 'industry')
 
-  const validCategory = categoryFilter &&
-    (Object.values(IssuerCategory) as string[]).includes(categoryFilter)
+  const validCategory =
+    categoryFilter && (Object.values(IssuerCategory) as string[]).includes(categoryFilter)
       ? categoryFilter
       : undefined
 
-  const validIndustry = industryFilter &&
-    (Object.values(IssuerIndustry) as string[]).includes(industryFilter)
+  const validIndustry =
+    industryFilter && (Object.values(IssuerIndustry) as string[]).includes(industryFilter)
       ? industryFilter
       : undefined
 
@@ -146,21 +145,25 @@ export default async function IssuerDirectoryPage({
         </p>
       </header>
 
-      {/* Filters */}
-      <IssuerFilters
-        basePath={BASE_PATH}
-        initialParams={initialParams}
-        categories={Object.values(IssuerCategory)}
-        industries={Object.values(IssuerIndustry)}
-        selectedCategory={validCategory ?? ''}
-        selectedIndustry={validIndustry ?? ''}
-      />
-
+      {/* Directory card with embedded filters */}
       <Card>
         <CardHeader>
           <CardTitle>Issuer Directory</CardTitle>
         </CardHeader>
+
         <CardContent className='overflow-x-auto'>
+          {/* Category/Industry filters now live inside the card */}
+          <div className='mb-4'>
+            <IssuerFilters
+              basePath={BASE_PATH}
+              initialParams={initialParams}
+              categories={Object.values(IssuerCategory)}
+              industries={Object.values(IssuerIndustry)}
+              selectedCategory={validCategory ?? ''}
+              selectedIndustry={validIndustry ?? ''}
+            />
+          </div>
+
           <IssuersTable
             rows={rows}
             sort={sort}
