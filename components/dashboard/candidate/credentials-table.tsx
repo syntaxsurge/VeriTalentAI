@@ -4,15 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import {
-  MoreHorizontal,
-  Trash2,
-  FileText,
-  Clipboard,
-  Loader2,
-  ArrowUpDown,
-  type LucideProps,
-} from 'lucide-react'
+import { MoreHorizontal, Trash2, FileText, Clipboard, Loader2, ArrowUpDown } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deleteCredentialAction } from '@/app/(dashboard)/candidate/credentials/actions'
@@ -52,12 +44,6 @@ interface Props {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                Constants                                   */
-/* -------------------------------------------------------------------------- */
-
-const ARCHIVE_OFFSET = 1_000_000 // keep in sync with page.tsx
-
-/* -------------------------------------------------------------------------- */
 /*                                Helpers                                     */
 /* -------------------------------------------------------------------------- */
 
@@ -71,10 +57,6 @@ function buildLink(basePath: string, init: Record<string, string>, overrides: Re
   return `${basePath}${qs ? `?${qs}` : ''}`
 }
 
-const ViewIcon = (props: LucideProps) => (
-  <FileText {...props} className='mr-2 h-4 w-4 text-sky-600 dark:text-sky-400' />
-)
-
 /* -------------------------------------------------------------------------- */
 /*                               Row actions                                  */
 /* -------------------------------------------------------------------------- */
@@ -82,7 +64,6 @@ const ViewIcon = (props: LucideProps) => (
 function RowActions({ row }: { row: RowType }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
-  const isArchive = row.id >= ARCHIVE_OFFSET
 
   async function destroy() {
     startTransition(async () => {
@@ -130,7 +111,7 @@ function RowActions({ row }: { row: RowType }) {
               rel='noopener noreferrer'
               className='flex cursor-pointer items-center'
             >
-              <ViewIcon />
+              <FileText className='mr-2 h-4 w-4 text-sky-600 dark:text-sky-400' />
               View file
             </a>
           </DropdownMenuItem>
@@ -143,19 +124,16 @@ function RowActions({ row }: { row: RowType }) {
           </DropdownMenuItem>
         )}
 
-        {!isArchive && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={destroy}
-              disabled={isPending}
-              className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
-            >
-              <Trash2 className='mr-2 h-4 w-4' />
-              Delete
-            </DropdownMenuItem>
-          </>
-        )}
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={destroy}
+          disabled={isPending}
+          className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
+        >
+          <Trash2 className='mr-2 h-4 w-4' />
+          Delete
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -175,11 +153,9 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
       variant: 'destructive',
       onClick: (selected) =>
         startTransition(async () => {
-          const toDelete = selected.filter((c) => c.id < ARCHIVE_OFFSET)
-          if (toDelete.length === 0) return
           const toastId = toast.loading('Deleting credentials…')
           await Promise.all(
-            toDelete.map(async (cred) => {
+            selected.map(async (cred) => {
               const fd = new FormData()
               fd.append('credentialId', cred.id.toString())
               return deleteCredentialAction({}, fd)
@@ -188,8 +164,7 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
           toast.success('Selected credentials deleted.', { id: toastId })
           router.refresh()
         }),
-      isDisabled: (sel) => sel.every((c) => c.id >= ARCHIVE_OFFSET) || isPending,
-      isAvailable: (sel) => sel.some((c) => c.id < ARCHIVE_OFFSET),
+      isDisabled: () => isPending,
     },
   ]
 }

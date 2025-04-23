@@ -1,27 +1,18 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-import { eq } from 'drizzle-orm'
-
 import CandidateCredentialsTable, {
   RowType,
 } from '@/components/dashboard/candidate/credentials-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { db } from '@/lib/db/drizzle'
 import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credentials'
 import { getUser } from '@/lib/db/queries/queries'
-import {
-  candidates as candT,
-  verifiedCredentials as vcTable,
-} from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
 /*                                   CONFIG                                   */
 /* -------------------------------------------------------------------------- */
-
-const ARCHIVE_OFFSET = 1_000_000 // ensure IDs don’t clash with candidate_credentials
 
 export const revalidate = 0
 
@@ -50,79 +41,25 @@ export default async function CredentialsPage({
   const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
 
-  /* ---------------------------- Candidate row ---------------------------- */
-  const [candidate] = await db.select().from(candT).where(eq(candT.userId, user.id)).limit(1)
+  /* ---------------------------- Credentials ------------------------------ */
+  const { credentials, hasNext } = await getCandidateCredentialsPage(
+    user.id,
+    page,
+    pageSize,
+    sort as any,
+    order as any,
+    searchTerm,
+  )
 
-  let rows: RowType[] = []
-  let hasNext = false
-
-  /* --------------------- Candidate-uploaded credentials ------------------ */
-  if (candidate) {
-    const { credentials, hasNext: next } = await getCandidateCredentialsPage(
-      candidate.id,
-      page,
-      pageSize,
-      sort as 'title' | 'type' | 'issuer' | 'status' | 'id',
-      order as 'asc' | 'desc',
-      searchTerm,
-    )
-
-    rows = credentials.map((c) => ({
-      id: c.id,
-      title: c.title,
-      type: c.type,
-      issuer: c.issuer,
-      status: c.status,
-      fileUrl: null,
-      vcJson: c.vcIssuedId ?? null,
-    }))
-    hasNext = next
-  }
-
-  /* ----------------------- Archived verified credentials ----------------- */
-  if (candidate) {
-    const archived = await db
-      .select({
-        id: vcTable.id,
-        vcJson: vcTable.vcJson,
-        verified: vcTable.verified,
-        createdAt: vcTable.createdAt,
-      })
-      .from(vcTable)
-      .where(eq(vcTable.candidateId, candidate.id))
-
-    /* Minimal parsing to create user-friendly labels */
-    const archiveRows: RowType[] = archived
-      .filter((a) => (searchTerm ? a.vcJson.toLowerCase().includes(searchTerm) : true))
-      .map((a) => {
-        let title = 'Verifiable Credential'
-        let issuer = '—'
-        let type = 'vc'
-        try {
-          const obj = JSON.parse(a.vcJson)
-          if (Array.isArray(obj?.type)) {
-            type = obj.type[obj.type.length - 1] ?? 'vc'
-          } else if (typeof obj?.type === 'string') {
-            type = obj.type
-          }
-          issuer = obj?.issuer?.id ?? issuer
-          title = type.charAt(0).toUpperCase() + type.slice(1)
-        } catch {
-          /* silently ignore JSON parse errors */
-        }
-        return {
-          id: ARCHIVE_OFFSET + a.id,
-          title,
-          type,
-          issuer,
-          status: a.verified ? 'verified' : 'unverified',
-          fileUrl: null,
-          vcJson: a.vcJson,
-        } as RowType
-      })
-
-    rows = [...archiveRows, ...rows]
-  }
+  const rows: RowType[] = credentials.map((c) => ({
+    id: c.id,
+    title: c.title,
+    type: c.type,
+    issuer: c.issuer ?? null,
+    status: c.status,
+    fileUrl: null,
+    vcJson: c.vcJson ?? null,
+  }))
 
   /* ------------------------ Initial query params ------------------------ */
   const initialParams: Record<string, string> = {}

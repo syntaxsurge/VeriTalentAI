@@ -12,15 +12,13 @@ import {
   candidateCredentials,
   CredentialStatus,
   candidates,
-  verifiedCredentials,
 } from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
-/*                               U T I L S                                    */
+/*                               H E L P E R S                                */
 /* -------------------------------------------------------------------------- */
 
-function buildError(message: string, ctx?: Record<string, unknown>) {
-  if (ctx) console.error('[VC-Issue] Context:', ctx)
+function buildError(message: string) {
   return { error: message }
 }
 
@@ -31,123 +29,75 @@ function buildError(message: string, ctx?: Record<string, unknown>) {
 export const approveCredentialAction = validatedActionWithUser(
   z.object({ credentialId: z.coerce.number() }),
   async ({ credentialId }, _, user) => {
-    /* ------------------ issuer validation ------------------ */
+    /* 1. issuer ownership */
     const [issuer] = await db
       .select()
       .from(issuers)
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
-
     if (!issuer) return buildError('Issuer not found.')
     if (!issuer.did) return buildError('Link a DID before approving credentials.')
 
-    /* ------------------ credential lookup ------------------ */
+    /* 2. credential row */
     const [cred] = await db
       .select()
       .from(candidateCredentials)
       .where(
-        and(
-          eq(candidateCredentials.id, credentialId),
-          eq(candidateCredentials.issuerId, issuer.id),
-        ),
+        and(eq(candidateCredentials.id, credentialId), eq(candidateCredentials.issuerId, issuer.id)),
       )
       .limit(1)
-
     if (!cred) return buildError('Credential not found for this issuer.')
     if (cred.status === CredentialStatus.VERIFIED)
-      return buildError('Credential is already verified.')
+      return buildError('Credential already verified.')
 
-    /* ------------------ candidate & DID -------------------- */
-    const [cand] = await db
+    /* 3. subject DID */
+    const [candRow] = await db
       .select({ cand: candidates, candUser: users })
       .from(candidates)
       .leftJoin(users, eq(candidates.userId, users.id))
       .where(eq(candidates.id, cred.candidateId))
       .limit(1)
-
-    if (!cand || !cand.candUser) return buildError('Candidate user not found.')
+    if (!candRow?.candUser) return buildError('Candidate user not found.')
 
     const [teamRow] = await db
       .select({ did: teams.did })
       .from(teamMembers)
       .leftJoin(teams, eq(teamMembers.teamId, teams.id))
-      .where(eq(teamMembers.userId, cand.candUser.id))
+      .where(eq(teamMembers.userId, candRow.candUser.id))
       .limit(1)
+    if (!teamRow?.did)
+      return buildError('Candidate has no DID – ask them to create one before verification.')
 
-    const subjectDid = teamRow?.did
-    if (!subjectDid)
-      return buildError('Candidate has no DID – ask them to generate one before verification.')
-
-    /* ------------------ VC handling ------------------------ */
-    let vcJwt = cred.vcIssuedId ?? undefined
-    let vcJson: any | null = null
-
-    const debugCtx: Record<string, unknown> = {
-      credentialId,
-      issuerId: issuer.id,
-      issuerDid: issuer.did,
-      credentialStatus: cred.status,
-      subjectDid,
-    }
-
-    try {
-      if (!vcJwt) {
-        const vc = await issueCredential({
+    /* 4. Issue VC if not yet issued */
+    let vcJson: any = null
+    if (!cred.vcJson) {
+      try {
+        vcJson = await issueCredential({
           issuerDid: issuer.did,
-          subjectDid,
+          subjectDid: teamRow.did,
           attributes: {
             credentialTitle: cred.title,
-            candidateName: cand.candUser?.name || cand.candUser?.email || 'Unknown',
+            candidateName: candRow.candUser.name || candRow.candUser.email || 'Unknown',
           },
           credentialName: cred.type,
         })
-        vcJwt = vc?.proof?.jwt
-        vcJson = vc
-        if (!vcJwt) {
-          return buildError('Verifiable credential issued without a JWT proof.', {
-            ...debugCtx,
-            vc,
-          })
-        }
+      } catch (err: any) {
+        return buildError(`Failed to issue credential: ${err?.message || String(err)}`)
       }
-    } catch (err: any) {
-      return buildError(`Failed to issue verifiable credential: ${err?.message || String(err)}`, {
-        ...debugCtx,
-        err,
-      })
     }
 
-    /* ------------------ persist changes -------------------- */
+    /* 5. persist */
     await db
       .update(candidateCredentials)
       .set({
         status: CredentialStatus.VERIFIED,
         verified: true,
         verifiedAt: new Date(),
-        vcIssuedId: vcJwt,
+        vcJson: vcJson ? JSON.stringify(vcJson) : cred.vcJson, // preserve if already exists
       })
       .where(eq(candidateCredentials.id, cred.id))
 
-    /* --------- NEW: archive the full VC JSON for reuse ------ */
-    try {
-      if (vcJson) {
-        await db.insert(verifiedCredentials).values({
-          candidateId: cred.candidateId,
-          vcJson: JSON.stringify(vcJson),
-          verified: true,
-        })
-      }
-    } catch (archiveErr) {
-      // non-fatal – log and continue
-      console.error('[VC-Issue] Failed to archive VC JSON:', archiveErr)
-    }
-
-    console.info('[VC-Issue] Credential approved & VC stored', {
-      credentialId,
-      issuerId: issuer.id,
-    })
-
-    return { success: 'Credential approved.' }
+    return { success: 'Credential verified.' }
   },
 )
 
@@ -163,7 +113,6 @@ export const rejectCredentialAction = validatedActionWithUser(
       .from(issuers)
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
-
     if (!issuer) return buildError('Issuer not found.')
 
     await db
@@ -172,13 +121,9 @@ export const rejectCredentialAction = validatedActionWithUser(
         status: CredentialStatus.REJECTED,
         verified: false,
         verifiedAt: new Date(),
-        vcIssuedId: null,
       })
       .where(
-        and(
-          eq(candidateCredentials.id, credentialId),
-          eq(candidateCredentials.issuerId, issuer.id),
-        ),
+        and(eq(candidateCredentials.id, credentialId), eq(candidateCredentials.issuerId, issuer.id)),
       )
 
     return { success: 'Credential rejected.' }
@@ -197,20 +142,15 @@ export const unverifyCredentialAction = validatedActionWithUser(
       .from(issuers)
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
-
     if (!issuer) return buildError('Issuer not found.')
 
     const [cred] = await db
       .select()
       .from(candidateCredentials)
       .where(
-        and(
-          eq(candidateCredentials.id, credentialId),
-          eq(candidateCredentials.issuerId, issuer.id),
-        ),
+        and(eq(candidateCredentials.id, credentialId), eq(candidateCredentials.issuerId, issuer.id)),
       )
       .limit(1)
-
     if (!cred) return buildError('Credential not found for this issuer.')
     if (cred.status !== CredentialStatus.VERIFIED)
       return buildError('Only verified credentials can be unverified.')
@@ -224,6 +164,6 @@ export const unverifyCredentialAction = validatedActionWithUser(
       })
       .where(eq(candidateCredentials.id, cred.id))
 
-    return { success: 'Credential status set to unverified.' }
+    return { success: 'Credential marked unverified.' }
   },
 )

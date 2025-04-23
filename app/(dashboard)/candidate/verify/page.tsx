@@ -9,8 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { verifyCredential } from '@/lib/cheqd'
 
-import { saveVerifiedVc } from './actions'
-
 export default function VerifyCredentialPage() {
   const [vc, setVc] = useState('')
   const [result, setResult] = useState<'verified' | 'failed' | null>(null)
@@ -27,12 +25,8 @@ export default function VerifyCredentialPage() {
         const parsed = JSON.parse(vcStr)
         const { verified } = await verifyCredential(parsed)
         setResult(verified ? 'verified' : 'failed')
-        setMessage(verified ? 'Credential verified successfully.' : 'Verification failed.')
-
-        // Persist to DB (fire-and-forget)
-        saveVerifiedVc(vcStr, verified).catch(() => {})
-
-        toast.success(verified ? 'Verified ✔' : 'Saved for troubleshooting')
+        setMessage(verified ? 'Credential is valid.' : 'Verification failed.')
+        toast.success(verified ? 'Verified ✔' : 'Verification failed')
       } catch (err: any) {
         setResult('failed')
         setMessage('Error verifying: ' + String(err))
@@ -52,8 +46,7 @@ export default function VerifyCredentialPage() {
       <header className='max-w-2xl space-y-2'>
         <h1 className='text-3xl font-extrabold tracking-tight'>Verify Credential</h1>
         <p className='text-muted-foreground text-sm'>
-          Paste the <strong>VC JSON or JWT</strong> you received below. On success, the credential is
-          archived so you can easily copy it later.
+          Paste the <strong>VC JSON or JWT</strong> you received below to check its validity.
         </p>
       </header>
 

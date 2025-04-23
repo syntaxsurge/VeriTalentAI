@@ -51,59 +51,13 @@ export const candidateCredentials = pgTable('candidate_credentials', {
   fileUrl: text('file_url'),
   status: varchar('status', { length: 20 }).notNull().default(CredentialStatus.UNVERIFIED),
   verified: boolean('verified').notNull().default(false),
-  /** Stores the issued VC JWT or JSON */
-  vcIssuedId: text('vc_issued_id'),
+  /** Full VC JSON associated with this credential (if issued or user-provided). */
+  vcJson: text('vc_json'),
   issuedAt: timestamp('issued_at'),
   verifiedAt: timestamp('verified_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
-
-/* -------------------------------------------------------------------------- */
-/*                       V E R I F I E D   V C   A R C H I V E                 */
-/* -------------------------------------------------------------------------- */
-
-export const verifiedCredentials = pgTable('verified_credentials', {
-  id: serial('id').primaryKey(),
-  candidateId: integer('candidate_id')
-    .notNull()
-    .references(() => candidates.id),
-  vcJson: text('vc_json').notNull(),
-  verified: boolean('verified').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
-
-/* -------------------------------------------------------------------------- */
-/*                                R E L A T I O N S                           */
-/* -------------------------------------------------------------------------- */
-
-export const candidatesRelations = relations(candidates, ({ one, many }) => ({
-  user: one(users, {
-    fields: [candidates.userId],
-    references: [users.id],
-  }),
-  credentials: many(candidateCredentials),
-  quizAttempts: many(quizAttempts),
-  verifiedCredentials: many(verifiedCredentials),
-}))
-
-export const candidateCredentialsRelations = relations(candidateCredentials, ({ one }) => ({
-  candidate: one(candidates, {
-    fields: [candidateCredentials.candidateId],
-    references: [candidates.id],
-  }),
-  issuer: one(issuers, {
-    fields: [candidateCredentials.issuerId],
-    references: [issuers.id],
-  }),
-}))
-
-export const verifiedCredentialsRelations = relations(verifiedCredentials, ({ one }) => ({
-  candidate: one(candidates, {
-    fields: [verifiedCredentials.candidateId],
-    references: [candidates.id],
-  }),
-}))
 
 /* -------------------------------------------------------------------------- */
 /*                         A I   S K I L L   Q U I Z Z E S                     */
@@ -129,6 +83,30 @@ export const quizAttempts = pgTable('quiz_attempts', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
+/* -------------------------------------------------------------------------- */
+/*                                R E L A T I O N S                           */
+/* -------------------------------------------------------------------------- */
+
+export const candidatesRelations = relations(candidates, ({ one, many }) => ({
+  user: one(users, {
+    fields: [candidates.userId],
+    references: [users.id],
+  }),
+  credentials: many(candidateCredentials),
+  quizAttempts: many(quizAttempts),
+}))
+
+export const candidateCredentialsRelations = relations(candidateCredentials, ({ one }) => ({
+  candidate: one(candidates, {
+    fields: [candidateCredentials.candidateId],
+    references: [candidates.id],
+  }),
+  issuer: one(issuers, {
+    fields: [candidateCredentials.issuerId],
+    references: [issuers.id],
+  }),
+}))
+
 export const quizAttemptsRelations = relations(quizAttempts, ({ one }) => ({
   candidate: one(candidates, {
     fields: [quizAttempts.candidateId],
@@ -149,9 +127,6 @@ export type NewCandidate = typeof candidates.$inferInsert
 
 export type CandidateCredential = typeof candidateCredentials.$inferSelect
 export type NewCandidateCredential = typeof candidateCredentials.$inferInsert
-
-export type VerifiedCredential = typeof verifiedCredentials.$inferSelect
-export type NewVerifiedCredential = typeof verifiedCredentials.$inferInsert
 
 export type SkillQuiz = typeof skillQuizzes.$inferSelect
 export type NewSkillQuiz = typeof skillQuizzes.$inferInsert
