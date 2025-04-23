@@ -3,10 +3,9 @@ import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
 import { DidRequiredModal } from '@/components/dashboard/candidate/did-required-modal'
-import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
+import { db } from '@/lib/db/drizzle'
 import { teams, teamMembers } from '@/lib/db/schema/core'
-import { issuers as issuersTable, IssuerStatus } from '@/lib/db/schema/issuer'
 
 import AddCredentialForm from './add-credential-form'
 import { addCredential } from '../actions'
@@ -25,31 +24,18 @@ export default async function AddCredentialPage() {
     .where(eq(teamMembers.userId, user.id))
     .limit(1)
 
-  if (!did) {
-    return <DidRequiredModal />
-  }
+  if (!did) return <DidRequiredModal />
 
-  /* Load active issuers for the select dropdown */
-  const issuers = await db
-    .select({
-      id: issuersTable.id,
-      name: issuersTable.name,
-      category: issuersTable.category,
-      industry: issuersTable.industry,
-    })
-    .from(issuersTable)
-    .where(eq(issuersTable.status, IssuerStatus.ACTIVE))
-
-  /* Wrapper to call the server action from the client component */
+  /* Wrapper to invoke server action from client component */
   const addCredentialAction = async (formData: FormData): Promise<void> => {
     'use server'
     await addCredential({}, formData)
   }
 
   return (
-    <section className='max-w-xl'>
-      <h2 className='mb-4 text-xl font-semibold'>Add Credential</h2>
-      <AddCredentialForm issuers={issuers} addCredentialAction={addCredentialAction} />
+    <section className='max-w-xl space-y-6'>
+      <h2 className='text-2xl font-bold tracking-tight'>Add Credential</h2>
+      <AddCredentialForm addCredentialAction={addCredentialAction} />
     </section>
   )
 }

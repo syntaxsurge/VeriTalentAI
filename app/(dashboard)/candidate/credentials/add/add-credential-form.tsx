@@ -5,62 +5,52 @@ import { useTransition } from 'react'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import IssuerSelect, { IssuerOption } from '@/components/issuer-select'
+import IssuerSelect from '@/components/issuer-select'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 interface Props {
-  issuers: IssuerOption[]
   addCredentialAction: (formData: FormData) => Promise<void>
 }
 
 /**
- * Credential-addition form with enhanced toast feedback.
- * Interprets the special NEXT_REDIRECT digest emitted by Next.js redirects as a success,
- * preventing the misleading “Next Redirect” error toast.
+ * Modernised credential-addition form with async issuer combobox.
  */
-export default function AddCredentialForm({ issuers, addCredentialAction }: Props) {
+export default function AddCredentialForm({ addCredentialAction }: Props) {
   const [isPending, startTransition] = useTransition()
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
-
-    // Display an updatable loading toast
     const toastId = toast.loading('Adding credential…')
 
     startTransition(async () => {
       try {
         await addCredentialAction(fd)
-        // If the server action completes without redirecting, mark success
         toast.success('Credential added.', { id: toastId })
       } catch (err: any) {
-        /**
-         * A server-side `redirect()` throws a NEXT_REDIRECT digest error;
-         * this signifies success, so convert it into a success toast.
-         */
         if (err?.digest === 'NEXT_REDIRECT' || err?.message === 'NEXT_REDIRECT') {
           toast.success('Credential added.', { id: toastId })
-          return
+        } else {
+          toast.error(err?.message ?? 'Something went wrong.', { id: toastId })
         }
-
-        // Any other error should be surfaced to the user
-        toast.error(err?.message ?? 'Something went wrong.', { id: toastId })
       }
     })
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-4'>
-      <div>
-        <Label htmlFor='title'>Title</Label>
-        <Input id='title' name='title' required placeholder='B.Sc Computer Science' />
-      </div>
+    <form onSubmit={handleSubmit} className='space-y-6'>
+      <div className='grid gap-4 sm:grid-cols-2'>
+        <div>
+          <Label htmlFor='title'>Title</Label>
+          <Input id='title' name='title' required placeholder='B.Sc Computer Science' />
+        </div>
 
-      <div>
-        <Label htmlFor='type'>Type</Label>
-        <Input id='type' name='type' required placeholder='diploma / cert / job_ref' />
+        <div>
+          <Label htmlFor='type'>Type</Label>
+          <Input id='type' name='type' required placeholder='diploma / cert / job_ref' />
+        </div>
       </div>
 
       <div>
@@ -74,9 +64,9 @@ export default function AddCredentialForm({ issuers, addCredentialAction }: Prop
         />
       </div>
 
-      <IssuerSelect issuers={issuers} />
+      <IssuerSelect />
 
-      <Button type='submit' disabled={isPending}>
+      <Button type='submit' disabled={isPending} className='w-full sm:w-max'>
         {isPending ? (
           <>
             <Loader2 className='mr-2 h-4 w-4 animate-spin' />
