@@ -1,5 +1,3 @@
-// identical file except candidate roleNav no longer includes Verify entry
-
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -18,11 +16,16 @@ import {
   Shield,
   Menu,
   Tag,
+  User
 } from 'lucide-react'
 
 import { SidebarNav, type SidebarNavItem } from '@/components/dashboard/sidebar-nav'
 import { Button } from '@/components/ui/button'
 import { useUser } from '@/lib/auth'
+
+/* -------------------------------------------------------------------------- */
+/*                         P E N D I N G   C O U N T S                        */
+/* -------------------------------------------------------------------------- */
 
 type PendingCounts = {
   invitations: number
@@ -30,10 +33,15 @@ type PendingCounts = {
   adminPendingIssuers: number
 }
 
+/* -------------------------------------------------------------------------- */
+/*                           R O L E - B A S E D  N A V                       */
+/* -------------------------------------------------------------------------- */
+
 function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
   switch (role) {
     case 'candidate':
       return [
+        { href: '/candidate/profile', icon: User, label: 'Profile' },
         { href: '/candidate/credentials', icon: BookOpen, label: 'Credentials' },
         { href: '/candidate/skill-check', icon: Award, label: 'Skill Quiz' },
         { href: '/candidate/create-did', icon: Key, label: 'Create DID' },
@@ -85,6 +93,10 @@ function roleTitle(role?: string): string {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/*                               S H E L L  U I                               */
+/* -------------------------------------------------------------------------- */
+
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const { userPromise } = useUser()
   const [user, setUser] = useState<any | null | undefined>(undefined)
@@ -94,6 +106,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     adminPendingIssuers: 0,
   })
 
+  /* Resolve user once (suspense-safe) */
   useEffect(() => {
     let mounted = true
     userPromise.then((u) => mounted && setUser(u))
@@ -102,25 +115,28 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
   }, [userPromise])
 
+  /* Fetch pending counts for sidebar badges */
   useEffect(() => {
     fetch('/api/pending-counts', { cache: 'no-store' })
       .then((r) => r.json())
-      .then((data) =>
+      .then((d) =>
         setCounts({
-          invitations: data.invitations ?? 0,
-          issuerRequests: data.issuerRequests ?? 0,
-          adminPendingIssuers: data.adminPendingIssuers ?? 0,
+          invitations: d.invitations ?? 0,
+          issuerRequests: d.issuerRequests ?? 0,
+          adminPendingIssuers: d.adminPendingIssuers ?? 0,
         }),
       )
       .catch(() => {})
   }, [])
 
+  /* Primary navigation — always visible */
   const mainNav: SidebarNavItem[] = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/invitations', icon: Mail, label: 'Invitations', badgeCount: counts.invitations },
-    { href: '/pricing', icon: Tag, label: 'Pricing' },
+    { href: '/pricing', icon: Tag, label: 'Pricing' }
   ]
 
+  /* Settings navigation */
   const settingsNav: SidebarNavItem[] = [
     { href: '/settings/general', icon: Cog, label: 'General' },
     { href: '/settings/team', icon: UsersIcon, label: 'Team' },
@@ -129,7 +145,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   ]
 
   const intrinsicNav = roleNav(user?.role, counts)
-
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   function SidebarContent() {
@@ -146,11 +161,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   return (
     <div className='mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl'>
+      {/* Desktop sidebar */}
       <aside className='bg-background ring-border/30 sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r shadow-sm ring-1 lg:block'>
         <SidebarContent />
       </aside>
 
+      {/* Main content area */}
       <div className='flex min-w-0 flex-1 flex-col'>
+        {/* Mobile header */}
         <div className='bg-background sticky top-16 z-20 flex items-center justify-between border-b p-4 lg:hidden'>
           <span className='font-medium capitalize'>{user?.role ?? 'Dashboard'}</span>
           <Button variant='ghost' size='icon' onClick={() => setSidebarOpen((p) => !p)}>
@@ -159,6 +177,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </Button>
         </div>
 
+        {/* Mobile off-canvas */}
         {sidebarOpen && (
           <aside className='bg-background ring-border/30 fixed top-16 z-40 h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r shadow-md ring-1 lg:hidden'>
             <SidebarContent />
