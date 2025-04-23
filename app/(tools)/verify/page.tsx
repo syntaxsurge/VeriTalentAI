@@ -9,6 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { verifyCredential } from '@/lib/cheqd'
 
+/**
+ * Publicly accessible credential verification tool.
+ * Paste a VC (JSON or JWT) to verify its signature and integrity.
+ */
 export default function VerifyCredentialPage() {
   const [vc, setVc] = useState('')
   const [result, setResult] = useState<'verified' | 'failed' | null>(null)
@@ -22,14 +26,24 @@ export default function VerifyCredentialPage() {
 
     startTransition(async () => {
       try {
-        const parsed = JSON.parse(vcStr)
+        /* Try parsing as JSON first; fall back to raw JWT */
+        const parsed = (() => {
+          try {
+            return JSON.parse(vcStr)
+          } catch {
+            return vcStr
+          }
+        })()
+
         const { verified } = await verifyCredential(parsed)
         setResult(verified ? 'verified' : 'failed')
-        setMessage(verified ? 'Credential is valid.' : 'Verification failed.')
-        toast.success(verified ? 'Verified ✔' : 'Verification failed')
+        const msg = verified ? 'Credential is valid.' : 'Verification failed.'
+        setMessage(msg)
+        verified ? toast.success('Verified ✔') : toast.error('Verification failed')
       } catch (err: any) {
         setResult('failed')
         setMessage('Error verifying: ' + String(err))
+        toast.error('Error verifying credential')
       }
     })
   }

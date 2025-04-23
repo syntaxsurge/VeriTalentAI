@@ -1,7 +1,8 @@
+// identical file except candidate roleNav no longer includes Verify entry
+
 'use client'
 
 import { useEffect, useState } from 'react'
-
 import {
   LayoutDashboard,
   Users,
@@ -23,19 +24,11 @@ import { SidebarNav, type SidebarNavItem } from '@/components/dashboard/sidebar-
 import { Button } from '@/components/ui/button'
 import { useUser } from '@/lib/auth'
 
-/* -------------------------------------------------------------------------- */
-/*                                T Y P E S                                   */
-/* -------------------------------------------------------------------------- */
-
 type PendingCounts = {
   invitations: number
   issuerRequests: number
   adminPendingIssuers: number
 }
-
-/* -------------------------------------------------------------------------- */
-/*                               N A V   H E L P                              */
-/* -------------------------------------------------------------------------- */
 
 function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
   switch (role) {
@@ -43,7 +36,6 @@ function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
       return [
         { href: '/candidate/credentials', icon: BookOpen, label: 'Credentials' },
         { href: '/candidate/skill-check', icon: Award, label: 'Skill Quiz' },
-        { href: '/candidate/verify', icon: ShieldCheck, label: 'Verify Credential' },
         { href: '/candidate/create-did', icon: Key, label: 'Create DID' },
       ]
     case 'recruiter':
@@ -93,13 +85,8 @@ function roleTitle(role?: string): string {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                  LAYOUT                                    */
-/* -------------------------------------------------------------------------- */
-
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const { userPromise } = useUser()
-
   const [user, setUser] = useState<any | null | undefined>(undefined)
   const [counts, setCounts] = useState<PendingCounts>({
     invitations: 0,
@@ -107,7 +94,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     adminPendingIssuers: 0,
   })
 
-  /* Resolve user client-side */
   useEffect(() => {
     let mounted = true
     userPromise.then((u) => mounted && setUser(u))
@@ -116,7 +102,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
   }, [userPromise])
 
-  /* Fetch pending counts */
   useEffect(() => {
     fetch('/api/pending-counts', { cache: 'no-store' })
       .then((r) => r.json())
@@ -130,7 +115,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       .catch(() => {})
   }, [])
 
-  /* ------------------------- Build nav arrays ------------------------- */
   const mainNav: SidebarNavItem[] = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/invitations', icon: Mail, label: 'Invitations', badgeCount: counts.invitations },
@@ -146,7 +130,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   const intrinsicNav = roleNav(user?.role, counts)
 
-  /* ------------------------- Sidebar content -------------------------- */
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   function SidebarContent() {
@@ -161,17 +144,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     )
   }
 
-  /* --------------------------- Template --------------------------- */
   return (
     <div className='mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-7xl'>
-      {/* Desktop sidebar */}
       <aside className='bg-background ring-border/30 sticky top-16 hidden h-[calc(100dvh-64px)] w-64 overflow-y-auto border-r shadow-sm ring-1 lg:block'>
         <SidebarContent />
       </aside>
 
-      {/* Mobile & content wrapper */}
       <div className='flex min-w-0 flex-1 flex-col'>
-        {/* Mobile header */}
         <div className='bg-background sticky top-16 z-20 flex items-center justify-between border-b p-4 lg:hidden'>
           <span className='font-medium capitalize'>{user?.role ?? 'Dashboard'}</span>
           <Button variant='ghost' size='icon' onClick={() => setSidebarOpen((p) => !p)}>

@@ -1,3 +1,4 @@
+// ⬇️  unchanged from previous /issuers/page.tsx – moved only for organisation
 import { asc, desc, ilike, or, and, eq } from 'drizzle-orm'
 
 import IssuerFilters from '@/components/issuer-directory/issuer-filters'
@@ -14,42 +15,23 @@ import {
 
 export const revalidate = 0
 
-/* -------------------------------------------------------------------------- */
-/*                                   Util                                     */
-/* -------------------------------------------------------------------------- */
-
 type Query = Record<string, string | string[] | undefined>
 const BASE_PATH = '/issuers'
-
-/** Safely return first value of a query param. */
-function first(params: Query, key: string): string | undefined {
-  const v = params[key]
-  return Array.isArray(v) ? v[0] : v
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                    Page                                    */
-/* -------------------------------------------------------------------------- */
+const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 export default async function IssuerDirectoryPage({
   searchParams,
 }: {
-  /** Next 15 passes searchParams as a Promise – await it first. */
   searchParams: Promise<Query> | Query
 }) {
   const params = (await searchParams) as Query
 
-  /* --------------------------- Query params ------------------------------ */
   const page = Math.max(1, Number(first(params, 'page') ?? '1'))
-
   const sizeRaw = Number(first(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
   const sort = first(params, 'sort') ?? 'name'
   const order = first(params, 'order') === 'desc' ? 'desc' : 'asc'
-
   const searchTerm = (first(params, 'q') ?? '').trim()
-
   const categoryFilter = first(params, 'category')
   const industryFilter = first(params, 'industry')
 
@@ -57,13 +39,11 @@ export default async function IssuerDirectoryPage({
     categoryFilter && (Object.values(IssuerCategory) as string[]).includes(categoryFilter)
       ? categoryFilter
       : undefined
-
   const validIndustry =
     industryFilter && (Object.values(IssuerIndustry) as string[]).includes(industryFilter)
       ? industryFilter
       : undefined
 
-  /* --------------------------- ORDER BY helper --------------------------- */
   const sortMap = {
     name: issuersTable.name,
     domain: issuersTable.domain,
@@ -76,15 +56,9 @@ export default async function IssuerDirectoryPage({
       ? asc(sortMap[sort as keyof typeof sortMap])
       : desc(sortMap[sort as keyof typeof sortMap])
 
-  /* ---------------------------- WHERE clause ---------------------------- */
   let whereExpr: any = eq(issuersTable.status, IssuerStatus.ACTIVE)
-
-  if (validCategory) {
-    whereExpr = and(whereExpr, eq(issuersTable.category, validCategory))
-  }
-  if (validIndustry) {
-    whereExpr = and(whereExpr, eq(issuersTable.industry, validIndustry))
-  }
+  if (validCategory) whereExpr = and(whereExpr, eq(issuersTable.category, validCategory))
+  if (validIndustry) whereExpr = and(whereExpr, eq(issuersTable.industry, validIndustry))
 
   if (searchTerm.length > 0) {
     const searchCond = or(
@@ -96,14 +70,13 @@ export default async function IssuerDirectoryPage({
     whereExpr = and(whereExpr, searchCond)
   }
 
-  /* ------------------------------ Data ---------------------------------- */
   const offset = (page - 1) * pageSize
   const rowsRaw = await db
     .select()
     .from(issuersTable)
     .where(whereExpr)
     .orderBy(orderExpr)
-    .limit(pageSize + 1) // grab one extra to detect "next"
+    .limit(pageSize + 1)
     .offset(offset)
 
   const hasNext = rowsRaw.length > pageSize
@@ -121,7 +94,6 @@ export default async function IssuerDirectoryPage({
     createdAt: i.createdAt?.toISOString() ?? '',
   }))
 
-  /* ------------------------ Build initialParams ------------------------- */
   const initialParams: Record<string, string> = {}
   const add = (k: string) => {
     const val = first(params, k)
@@ -134,7 +106,6 @@ export default async function IssuerDirectoryPage({
   if (validCategory) initialParams['category'] = validCategory
   if (validIndustry) initialParams['industry'] = validIndustry
 
-  /* ------------------------------ UI ------------------------------------ */
   return (
     <section className='mx-auto max-w-7xl space-y-10'>
       <header className='space-y-2'>
@@ -145,14 +116,12 @@ export default async function IssuerDirectoryPage({
         </p>
       </header>
 
-      {/* Directory card with embedded filters */}
       <Card>
         <CardHeader>
           <CardTitle>Issuer Directory</CardTitle>
         </CardHeader>
 
         <CardContent className='overflow-x-auto'>
-          {/* Category/Industry filters now live inside the card */}
           <div className='mb-4'>
             <IssuerFilters
               basePath={BASE_PATH}
