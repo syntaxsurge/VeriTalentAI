@@ -1,48 +1,122 @@
-import { db } from '@/lib/db/drizzle'
-import {
-  candidateCredentials as credT,
-  CredentialStatus,
-} from '@/lib/db/schema/viskify'
-import { issuers } from '@/lib/db/schema/issuer'
-import { eq, and, ilike, sql } from 'drizzle-orm'
+import { and, desc, eq, like, sql } from 'drizzle-orm'
 
+import { db } from '@/lib/db/drizzle'
+import { issuers } from '@/lib/db/schema/issuer'
+import {
+  candidates,
+  candidateCredentials,
+  type CandidateCredential,
+} from '@/lib/db/schema/viskify'
+
+/* -------------------------------------------------------------------------- */
+/*                                  TYPES                                     */
+/* -------------------------------------------------------------------------- */
+
+/** Columns that callers may sort by (case-insensitive). */
+export type SortKey = 'id' | 'title' | 'type' | 'status' | 'issuer'
+export type SortOrder = 'asc' | 'desc'
+
+export interface CredentialRow
+  extends Pick<CandidateCredential, 'id' | 'title' | 'type' | 'status' | 'vcJson'> {
+  /** Display name of the issuer (nullable). */
+  issuer: string | null
+}
+
+export interface CredentialsPage {
+  credentials: CredentialRow[]
+  hasNext: boolean
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 HELPERS                                    */
+/* -------------------------------------------------------------------------- */
+
+function buildOrder(sort: SortKey, order: SortOrder) {
+  const dir = order === 'asc' ? sql`ASC` : sql`DESC`
+
+  switch (sort) {
+    case 'title':
+      return sql`lower(${candidateCredentials.title}) ${dir}`
+    case 'type':
+      return sql`lower(${candidateCredentials.type}) ${dir}`
+    case 'status':
+      return sql`lower(${candidateCredentials.status}) ${dir}`
+    case 'issuer':
+      return sql`lower(${issuers.name}) ${dir}`
+    case 'id':
+    default:
+      return order === 'asc'
+        ? candidateCredentials.id
+        : desc(candidateCredentials.id) /* default desc for newest first */
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Q U E R Y                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Return one page of the signed-in user's candidate credentials.
+ *
+ * @param userId   Authenticated user id
+ * @param page     1-based page index
+ * @param pageSize Items per page (10/20/50)
+ * @param sort     Column to sort by
+ * @param order    asc | desc
+ * @param search   Case-insensitive search term against title / type / issuer
+ */
 export async function getCandidateCredentialsPage(
-  candidateId: number,
+  userId: number,
   page: number,
   pageSize: number,
-  sort: 'title' | 'type' | 'issuer' | 'status' | 'id',
-  order: 'asc' | 'desc',
-  searchTerm: string,
-) {
+  sort: SortKey = 'id',
+  order: SortOrder = 'desc',
+  search: string = '',
+): Promise<CredentialsPage> {
   const offset = (page - 1) * pageSize
+  const term = search.trim().toLowerCase()
+  const hasSearch = term.length > 0
 
-  /* Compose where clause */
-  const conditions = [eq(credT.candidateId, candidateId)]
-  if (searchTerm) {
-    conditions.push(
-      ilike(sql`lower(${credT.title})`, `%${searchTerm}%`) as any,
+  /* ------------------------------ Base query ----------------------------- */
+  const query = db
+    .select({
+      id: candidateCredentials.id,
+      title: candidateCredentials.title,
+      type: candidateCredentials.type,
+      status: candidateCredentials.status,
+      vcJson: candidateCredentials.vcJson,
+      issuer: issuers.name,
+    })
+    .from(candidateCredentials)
+    .innerJoin(candidates, eq(candidateCredentials.candidateId, candidates.id))
+    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
+    .where(eq(candidates.userId, userId))
+
+  /* ------------------------------ Search --------------------------------- */
+  if (hasSearch) {
+    query.where(
+      and(
+        eq(candidates.userId, userId),
+        sql`(
+          lower(${candidateCredentials.title})     ${like('%' + term + '%')} OR
+          lower(${candidateCredentials.type})      ${like('%' + term + '%')} OR
+          lower(${candidateCredentials.status})    ${like('%' + term + '%')} OR
+          lower(coalesce(${issuers.name}, ''))     ${like('%' + term + '%')}
+        )`,
+      ),
     )
   }
 
-  /* Main query */
-  const credentials = await db
-    .select({
-      id: credT.id,
-      title: credT.title,
-      type: credT.type,
-      issuer: issuers.name,
-      status: credT.status,
-      vcJson: credT.vcJson,
-    })
-    .from(credT)
-    .leftJoin(issuers, eq(credT.issuerId, issuers.id))
-    .where(and(...conditions))
-    .orderBy(sort === 'issuer' ? issuers.name : (credT as any)[sort], order)
-    .limit(pageSize + 1)
-    .offset(offset)
+  /* ------------------------------ Ordering ------------------------------- */
+  query.orderBy(buildOrder(sort, order))
 
-  const hasNext = credentials.length > pageSize
-  if (hasNext) credentials.pop()
+  /* ------------------------------ Paging --------------------------------- */
+  query.limit(pageSize + 1).offset(offset) // fetch one extra row to detect next page
 
-  return { credentials, hasNext }
+  const rows = await query
+
+  return {
+    credentials: rows.slice(0, pageSize),
+    hasNext: rows.length > pageSize,
+  }
 }
