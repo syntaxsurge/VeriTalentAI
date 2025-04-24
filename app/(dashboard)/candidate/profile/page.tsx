@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
 
 import { eq } from 'drizzle-orm'
+import { User } from 'lucide-react'
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { candidates } from '@/lib/db/schema/viskify'
@@ -21,9 +23,20 @@ export default async function ProfilePage() {
     .limit(1)
 
   return (
-    <section className='max-w-xl'>
-      <h2 className='mb-4 text-xl font-semibold'>My Profile</h2>
-      <ProfileForm defaultName={user.name || ''} defaultBio={candidate?.bio || ''} />
+    <section className='mx-auto max-w-xl'>
+      <Card className='shadow-md transition-shadow hover:shadow-lg'>
+        <CardHeader className='flex flex-row items-center gap-3'>
+          <User className='text-primary h-8 w-8 flex-shrink-0' />
+          <div>
+            <CardTitle className='text-2xl font-extrabold tracking-tight'>My Profile</CardTitle>
+            <p className='text-muted-foreground text-sm'>Tell recruiters who you are.</p>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          <ProfileForm defaultName={user.name || ''} defaultBio={candidate?.bio || ''} />
+        </CardContent>
+      </Card>
     </section>
   )
 }
