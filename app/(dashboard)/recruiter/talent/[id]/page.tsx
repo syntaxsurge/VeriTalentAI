@@ -1,4 +1,4 @@
-import { asc, desc, eq, and } from 'drizzle-orm'
+import { asc, desc, eq, and, inArray } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 
 import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
@@ -17,11 +17,12 @@ import {
   getCandidateCredentialsSection,
   type StatusCounts,
 } from '@/lib/db/queries/candidate-details'
-import { STAGES, type Stage } from '@/lib/constants/recruiter'
 import {
   candidateCredentials,
   CredentialCategory,
+  candidateHighlights,
 } from '@/lib/db/schema/candidate'
+import { STAGES, type Stage } from '@/lib/constants/recruiter'
 
 export const revalidate = 0
 
@@ -53,59 +54,107 @@ export default async function RecruiterCandidateProfile({
 
   if (!row) redirect('/recruiter/talent')
 
-  /* --------------------- Experience & Project credentials --------------------- */
-  const experienceRows = await db
+  /* --------------------- Experience & Project highlights --------------------- */
+  const hlRows = await db
     .select({
-      id: candidateCredentials.id,
-      title: candidateCredentials.title,
-      createdAt: candidateCredentials.createdAt,
-      issuerName: issuers.name,
-      link: candidateCredentials.fileUrl,
-      description: candidateCredentials.type,
+      credentialId: candidateHighlights.credentialId,
+      sortOrder: candidateHighlights.sortOrder,
     })
-    .from(candidateCredentials)
-    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .where(
-      and(
-        eq(candidateCredentials.candidateId, candidateId),
-        eq(candidateCredentials.category, CredentialCategory.EXPERIENCE),
-      ),
+    .from(candidateHighlights)
+    .where(eq(candidateHighlights.candidateId, candidateId))
+    .orderBy(asc(candidateHighlights.sortOrder))
+
+  const highlightedIds = hlRows.map((h) => h.credentialId)
+
+  const highlightedCreds = highlightedIds.length
+    ? await db
+        .select({
+          id: candidateCredentials.id,
+          title: candidateCredentials.title,
+          createdAt: candidateCredentials.createdAt,
+          issuerName: issuers.name,
+          link: candidateCredentials.fileUrl,
+          description: candidateCredentials.type,
+          category: candidateCredentials.category,
+        })
+        .from(candidateCredentials)
+        .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
+        .where(inArray(candidateCredentials.id, highlightedIds))
+    : []
+
+  /* maintain order */
+  highlightedCreds.sort(
+    (a, b) => highlightedIds.indexOf(a.id) - highlightedIds.indexOf(b.id),
+  )
+
+  const experiences = highlightedCreds
+    .filter((c) => c.category === CredentialCategory.EXPERIENCE)
+    .slice(0, 5)
+    .map((e) => ({
+      id: e.id,
+      title: e.title,
+      company: e.issuerName,
+      createdAt: e.createdAt,
+    }))
+
+  const projects = highlightedCreds
+    .filter((c) => c.category === CredentialCategory.PROJECT)
+    .slice(0, 5)
+    .map((p) => ({
+      id: p.id,
+      title: p.title,
+      link: p.link,
+      description: p.description,
+      createdAt: p.createdAt,
+    }))
+
+  /* fallback: if no highlights yet, pick latest 5 each */
+  async function fallback(category: CredentialCategory, limit = 5) {
+    return db
+      .select({
+        id: candidateCredentials.id,
+        title: candidateCredentials.title,
+        createdAt: candidateCredentials.createdAt,
+        issuerName: issuers.name,
+        link: candidateCredentials.fileUrl,
+        description: candidateCredentials.type,
+      })
+      .from(candidateCredentials)
+      .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
+      .where(
+        and(
+          eq(candidateCredentials.candidateId, candidateId),
+          eq(candidateCredentials.category, category),
+        ),
+      )
+      .orderBy(desc(candidateCredentials.createdAt))
+      .limit(limit)
+  }
+
+  if (experiences.length === 0) {
+    const rows = await fallback(CredentialCategory.EXPERIENCE)
+    rows.forEach((e) =>
+      experiences.push({
+        id: e.id,
+        title: e.title,
+        company: e.issuerName,
+        createdAt: e.createdAt,
+      }),
     )
-    .orderBy(desc(candidateCredentials.createdAt))
+  }
 
-  const projectRows = await db
-    .select({
-      id: candidateCredentials.id,
-      title: candidateCredentials.title,
-      createdAt: candidateCredentials.createdAt,
-      issuerName: issuers.name,
-      link: candidateCredentials.fileUrl,
-      description: candidateCredentials.type,
-    })
-    .from(candidateCredentials)
-    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .where(
-      and(
-        eq(candidateCredentials.candidateId, candidateId),
-        eq(candidateCredentials.category, CredentialCategory.PROJECT),
-      ),
+  if (projects.length === 0) {
+    const rows = await fallback(CredentialCategory.PROJECT)
+    rows.forEach((p) =>
+      projects.push({
+        id: p.id,
+        title: p.title,
+        link: p.link,
+        description: p.description,
+        createdAt: p.createdAt,
+      }),
     )
-    .orderBy(desc(candidateCredentials.createdAt))
-
-  const experiences = experienceRows.map((e) => ({
-    id: e.id,
-    title: e.title,
-    company: e.issuerName,
-    createdAt: e.createdAt,
-  }))
-
-  const projects = projectRows.map((p) => ({
-    id: p.id,
-    title: p.title,
-    link: p.link,
-    description: p.description,
-    createdAt: p.createdAt,
-  }))
+  }
 
   /* --------------------- Pipelines owned by recruiter --------------------- */
   const pipelines = await db
@@ -222,8 +271,7 @@ export default async function RecruiterCandidateProfile({
 
   /* ----------------------------- Snapshot metrics ----------------------------- */
   const issuerSet = new Set<string>()
-  experienceRows.forEach((e) => e.issuerName && issuerSet.add(e.issuerName))
-  projectRows.forEach((p) => p.issuerName && issuerSet.add(p.issuerName))
+  highlightedCreds.forEach((c) => c.issuerName && issuerSet.add(c.issuerName))
   credRows.forEach((c: any) => c.issuer && issuerSet.add(c.issuer))
 
   const scoreVals = passes.map((p) => p.score).filter((s): s is number => s !== null)
