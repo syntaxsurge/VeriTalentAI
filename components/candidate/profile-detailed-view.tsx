@@ -21,7 +21,6 @@ import {
   ChevronDown,
   ChevronUp,
   Download,
-  ExternalLink,
   Globe2,
   Twitter,
   Github,
@@ -311,7 +310,7 @@ export default function CandidateDetailedProfileView({
               </HoverCard>
             </div>
 
-            {/* Identity & actions */}
+            {/* Identity & socials */}
             <div className='col-span-12 sm:col-span-6 space-y-4 text-center sm:text-left'>
               <div>
                 <h1 className='text-3xl font-extrabold leading-snug'>{name || 'Unnamed'}</h1>
@@ -322,35 +321,8 @@ export default function CandidateDetailedProfileView({
 
               {bio && <p className='mx-auto max-w-xl whitespace-pre-line sm:mx-0'>{bio}</p>}
 
-              {/* Actions */}
+              {/* Social icons */}
               <div className='flex flex-wrap items-center justify-center gap-2 sm:justify-start'>
-                {showShare && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant='secondary' size='sm' className='backdrop-blur'>
-                        <Share2 className='mr-2 h-4 w-4' />
-                        Share
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align='end'
-                      className='rounded-lg p-1 shadow-lg backdrop-blur'
-                    >
-                      <DropdownMenuItem onClick={copyLink} className='cursor-pointer'>
-                        <Clipboard className='mr-2 h-4 w-4' />
-                        Copy&nbsp;URL
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-
-                <Button asChild variant='outline' size='sm' className='gap-1 backdrop-blur'>
-                  <Link href={profilePath} target='_blank'>
-                    <ExternalLink className='h-4 w-4' />
-                    Public View
-                  </Link>
-                </Button>
-
                 {socialIcons.map((s) => (
                   <Tooltip key={s.label}>
                     <TooltipTrigger asChild>
@@ -367,11 +339,30 @@ export default function CandidateDetailedProfileView({
               </div>
             </div>
 
-            {/* Stats */}
-            <div className='col-span-12 sm:col-span-3 flex flex-wrap justify-center gap-3 sm:justify-end'>
-              <StatChip icon={BadgeCheck} value={totalVerified} label='Verified' />
-              <StatChip icon={Award} value={passes.length} label='Skill Passes' />
-              <StatChip icon={Users2} value={pipelineSummary || '—'} label='Pipelines' />
+            {/* Stats & share */}
+            <div className='col-span-12 sm:col-span-3 flex flex-col items-center sm:items-end gap-4'>
+              <div className='flex flex-wrap justify-center gap-3 sm:justify-end'>
+                <StatChip icon={BadgeCheck} value={totalVerified} label='Verified' />
+                <StatChip icon={Award} value={passes.length} label='Skill Passes' />
+                <StatChip icon={Users2} value={pipelineSummary || '—'} label='Pipelines' />
+              </div>
+
+              {showShare && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant='secondary' size='sm' className='backdrop-blur'>
+                      <Share2 className='mr-2 h-4 w-4' />
+                      Share
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end' className='rounded-lg p-1 shadow-lg backdrop-blur'>
+                    <DropdownMenuItem onClick={copyLink} className='cursor-pointer'>
+                      <Clipboard className='mr-2 h-4 w-4' />
+                      Copy&nbsp;URL
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
         </header>
@@ -491,7 +482,7 @@ export default function CandidateDetailedProfileView({
                               className='-ml-2 text-primary'
                             >
                               <Link href={proj.link} target='_blank'>
-                                Visit&nbsp;Link <ExternalLink className='ml-1 h-3 w-3' />
+                                Visit&nbsp;Link
                               </Link>
                             </Button>
                           )}
