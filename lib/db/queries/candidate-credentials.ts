@@ -1,129 +1,173 @@
-import { and, desc, eq, like, sql } from 'drizzle-orm'
+import {
+  asc,
+  desc,
+  eq,
+  ilike,
+  sql,
+  and,
+} from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
-import { issuers } from '@/lib/db/schema/issuer'
 import {
-  candidates,
   candidateCredentials,
-  type CandidateCredential,
+  CredentialStatus,
 } from '@/lib/db/schema/viskify'
+import { issuers } from '@/lib/db/schema/issuer'
+import { candidates } from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
-/*                                  TYPES                                     */
+/*                                   TYPES                                    */
 /* -------------------------------------------------------------------------- */
 
-/** Columns that callers may sort by (case-insensitive). */
-export type SortKey = 'id' | 'title' | 'category' | 'type' | 'status' | 'issuer'
-export type SortOrder = 'asc' | 'desc'
-
-export interface CredentialRow
-  extends Pick<
-    CandidateCredential,
-    'id' | 'title' | 'category' | 'type' | 'status' | 'vcJson'
-  > {
-  /** Display name of the issuer (nullable). */
+/** Row shape consumed by recruiter & candidate credential tables */
+export interface CredentialRow {
+  id: number
+  title: string
+  category: string
   issuer: string | null
+  status: CredentialStatus
+  fileUrl: string | null
+  /** VC JSON is not required by all consumers but kept for completeness. */
+  vcJson?: string | null
 }
 
-export interface CredentialsPage {
-  credentials: CredentialRow[]
+export interface PageResult<T> {
+  rows: T[]
   hasNext: boolean
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                 HELPERS                                    */
-/* -------------------------------------------------------------------------- */
-
-function buildOrder(sort: SortKey, order: SortOrder) {
-  const dir = order === 'asc' ? sql`ASC` : sql`DESC`
-
-  switch (sort) {
-    case 'title':
-      return sql`lower(${candidateCredentials.title}) ${dir}`
-    case 'category':
-      return sql`lower(${candidateCredentials.category}) ${dir}`
-    case 'type':
-      return sql`lower(${candidateCredentials.type}) ${dir}`
-    case 'status':
-      return sql`lower(${candidateCredentials.status}) ${dir}`
-    case 'issuer':
-      return sql`lower(${issuers.name}) ${dir}`
-    case 'id':
-    default:
-      return order === 'asc'
-        ? candidateCredentials.id
-        : desc(candidateCredentials.id) /* newest first by default */
-  }
+/* Status counter object expected by profile views */
+export interface StatusCounts {
+  verified: number
+  pending: number
+  rejected: number
+  unverified: number
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Q U E R Y                                    */
+/*                          H E L P E R   F U N C T S                         */
+/* -------------------------------------------------------------------------- */
+
+function buildOrderExpr(
+  sort: 'title' | 'category' | 'status' | 'createdAt',
+  order: 'asc' | 'desc',
+) {
+  const sortMap = {
+    title: candidateCredentials.title,
+    category: candidateCredentials.category,
+    status: candidateCredentials.status,
+    createdAt: candidateCredentials.createdAt,
+  } as const
+  const col = sortMap[sort] ?? candidateCredentials.createdAt
+  return order === 'asc' ? asc(col) : desc(col)
+}
+
+/* -------------------------------------------------------------------------- */
+/*                   P U B L I C   Q U E R Y   H E L P E R S                  */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Fetch one page of credentials for the signed-in user.
- *
- * @param userId   Authenticated user id
- * @param page     1-based page index
- * @param pageSize Items per page (10/20/50)
- * @param sort     Column to sort by
- * @param order    asc | desc
- * @param search   Case-insensitive term matched against title/type/category/status/issuer
+ * Paginate the caller’s own credentials (candidate dashboard)
  */
 export async function getCandidateCredentialsPage(
   userId: number,
   page: number,
   pageSize: number,
-  sort: SortKey = 'status',
-  order: SortOrder = 'desc',
-  search: string = '',
-): Promise<CredentialsPage> {
-  const offset = (page - 1) * pageSize
-  const term = search.trim().toLowerCase()
-  const hasSearch = term.length > 0
+  sort: 'title' | 'category' | 'status' | 'createdAt',
+  order: 'asc' | 'desc',
+  searchTerm: string,
+): Promise<PageResult<CredentialRow>> {
+  /* Resolve candidate id first */
+  const [cand] = await db
+    .select({ id: candidates.id })
+    .from(candidates)
+    .where(eq(candidates.userId, userId))
+    .limit(1)
 
-  /* ------------------------------ Base query ----------------------------- */
-  const query = db
+  if (!cand) return { rows: [], hasNext: false }
+
+  return getCandidateCredentialsSection(
+    cand.id,
+    page,
+    pageSize,
+    sort,
+    order,
+    searchTerm,
+  )
+}
+
+/**
+ * Paginate credentials by candidateId (used by recruiter & public profiles)
+ */
+export async function getCandidateCredentialsSection(
+  candidateId: number,
+  page: number,
+  pageSize: number,
+  sort: 'title' | 'category' | 'status' | 'createdAt',
+  order: 'asc' | 'desc',
+  searchTerm: string,
+): Promise<
+  PageResult<CredentialRow> & { statusCounts: StatusCounts }
+> {
+  /* ----------------------------- Status counts --------------------------- */
+  const [counts] = await db
+    .select({
+      verified: sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'verified' THEN 1 ELSE 0 END)`.as(
+        'verified',
+      ),
+      pending: sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'pending' THEN 1 ELSE 0 END)`.as(
+        'pending',
+      ),
+      rejected: sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'rejected' THEN 1 ELSE 0 END)`.as(
+        'rejected',
+      ),
+      unverified: sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'unverified' THEN 1 ELSE 0 END)`.as(
+        'unverified',
+      ),
+    })
+    .from(candidateCredentials)
+    .where(eq(candidateCredentials.candidateId, candidateId))
+
+  /* ----------------------------- Base where ------------------------------ */
+  let whereExpr: any = eq(candidateCredentials.candidateId, candidateId)
+  if (searchTerm) {
+    whereExpr = and(
+      whereExpr,
+      ilike(candidateCredentials.title, `%${searchTerm}%`),
+    )
+  }
+
+  /* ----------------------------- Fetch rows ----------------------------- */
+  const offset = (page - 1) * pageSize
+  const rowsRaw = await db
     .select({
       id: candidateCredentials.id,
       title: candidateCredentials.title,
       category: candidateCredentials.category,
-      type: candidateCredentials.type,
-      status: candidateCredentials.status,
-      vcJson: candidateCredentials.vcJson,
       issuer: issuers.name,
+      status: candidateCredentials.status,
+      fileUrl: candidateCredentials.fileUrl,
+      vcJson: candidateCredentials.vcJson,
     })
     .from(candidateCredentials)
-    .innerJoin(candidates, eq(candidateCredentials.candidateId, candidates.id))
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .where(eq(candidates.userId, userId))
+    .where(whereExpr)
+    .orderBy(buildOrderExpr(sort, order))
+    .limit(pageSize + 1)
+    .offset(offset)
 
-  /* ------------------------------ Search --------------------------------- */
-  if (hasSearch) {
-    query.where(
-      and(
-        eq(candidates.userId, userId),
-        sql`(
-          lower(${candidateCredentials.title})     ${like('%' + term + '%')} OR
-          lower(${candidateCredentials.category})  ${like('%' + term + '%')} OR
-          lower(${candidateCredentials.type})      ${like('%' + term + '%')} OR
-          lower(${candidateCredentials.status})    ${like('%' + term + '%')} OR
-          lower(coalesce(${issuers.name}, ''))     ${like('%' + term + '%')}
-        )`,
-      ),
-    )
-  }
+  const hasNext = rowsRaw.length > pageSize
+  if (hasNext) rowsRaw.pop()
 
-  /* ------------------------------ Ordering ------------------------------- */
-  query.orderBy(buildOrder(sort, order))
+  const rows: CredentialRow[] = rowsRaw.map((r) => ({
+    id: r.id,
+    title: r.title,
+    category: r.category,
+    issuer: r.issuer ?? null,
+    status: r.status as CredentialStatus,
+    fileUrl: r.fileUrl ?? null,
+    vcJson: r.vcJson ?? null,
+  }))
 
-  /* ------------------------------ Paging --------------------------------- */
-  query.limit(pageSize + 1).offset(offset) // fetch one extra row to detect next page
-
-  const rows = await query
-
-  return {
-    credentials: rows.slice(0, pageSize),
-    hasNext: rows.length > pageSize,
-  }
+  return { rows, hasNext, statusCounts: counts }
 }
