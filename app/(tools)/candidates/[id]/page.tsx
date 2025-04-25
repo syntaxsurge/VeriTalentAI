@@ -1,4 +1,4 @@
-import { eq, sql, desc } from 'drizzle-orm'
+import { asc, desc, eq, sql } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
 import { db } from '@/lib/db/drizzle'
@@ -47,7 +47,17 @@ export default async function PublicCandidateProfile({
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
   const sort = getParam(q, 'sort') ?? 'createdAt'
   const order = getParam(q, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(q, 'q') ?? '').trim()
+  const searchTerm = (getParam(q, 'q') ?? '').trim() // reserved for future search support
+
+  /* Map client sort keys to actual columns                        */
+  const sortColumnMap = {
+    createdAt: candidateCredentials.createdAt,
+    title: candidateCredentials.title,
+    status: candidateCredentials.status,
+  } as const
+  const sortColumn =
+    sortColumnMap[sort as keyof typeof sortColumnMap] ?? candidateCredentials.createdAt
+  const orderExpr = order === 'asc' ? asc(sortColumn) : desc(sortColumn)
 
   const offset = (page - 1) * pageSize
   const credRowsRaw = await db
@@ -61,7 +71,7 @@ export default async function PublicCandidateProfile({
     .from(candidateCredentials)
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
     .where(eq(candidateCredentials.candidateId, candidateId))
-    .orderBy(order === 'asc' ? asc(candidateCredentials[sort]) : sql.raw(`${sort} DESC`))
+    .orderBy(orderExpr)
     .limit(pageSize + 1)
     .offset(offset)
 

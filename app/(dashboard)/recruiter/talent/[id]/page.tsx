@@ -1,6 +1,4 @@
-import { redirect } from 'next/navigation'
-
-import { asc, eq, sql } from 'drizzle-orm'
+import { asc, desc, eq, sql } from 'drizzle-orm'
 import { format } from 'date-fns'
 
 import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
@@ -92,6 +90,15 @@ export default async function RecruiterCandidateProfile({
   const order = getParam(q, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (getParam(q, 'q') ?? '').trim()
 
+  const credSortColumnMap = {
+    createdAt: candidateCredentials.createdAt,
+    title: candidateCredentials.title,
+    status: candidateCredentials.status,
+  } as const
+  const credSortColumn =
+    credSortColumnMap[sort as keyof typeof credSortColumnMap] ?? candidateCredentials.createdAt
+  const credOrderExpr = order === 'asc' ? asc(credSortColumn) : desc(credSortColumn)
+
   const offset = (page - 1) * pageSize
   const credRowsRaw = await db
     .select({
@@ -107,7 +114,7 @@ export default async function RecruiterCandidateProfile({
       eq(candidateCredentials.issuerId, recruiterPipelines.id),
     )
     .where(eq(candidateCredentials.candidateId, candidateId))
-    .orderBy(order === 'asc' ? asc(candidateCredentials[sort]) : sql.raw(`${sort} DESC`))
+    .orderBy(credOrderExpr)
     .limit(pageSize + 1)
     .offset(offset)
 
@@ -157,6 +164,15 @@ export default async function RecruiterCandidateProfile({
   const pipeOrder = getParam(q, 'pipeOrder') === 'asc' ? 'asc' : 'desc'
   const pipeSearchTerm = (getParam(q, 'pipeQ') ?? '').trim()
 
+  const pipeSortColumnMap = {
+    addedAt: pipelineCandidates.addedAt,
+    stage: pipelineCandidates.stage,
+    pipelineName: recruiterPipelines.name,
+  } as const
+  const pipeSortColumn =
+    pipeSortColumnMap[pipeSort as keyof typeof pipeSortColumnMap] ?? pipelineCandidates.addedAt
+  const pipeOrderExpr = pipeOrder === 'asc' ? asc(pipeSortColumn) : desc(pipeSortColumn)
+
   const pipeOffset = (pipePage - 1) * pipePageSize
   const pipeRowsRaw = await db
     .select({
@@ -168,11 +184,7 @@ export default async function RecruiterCandidateProfile({
     .from(pipelineCandidates)
     .innerJoin(recruiterPipelines, eq(pipelineCandidates.pipelineId, recruiterPipelines.id))
     .where(eq(pipelineCandidates.candidateId, candidateId))
-    .orderBy(
-      pipeOrder === 'asc'
-        ? asc(pipelineCandidates[pipeSort])
-        : sql.raw(`${pipeSort} DESC`),
-    )
+    .orderBy(pipeOrderExpr)
     .limit(pipePageSize + 1)
     .offset(pipeOffset)
 
@@ -201,7 +213,7 @@ export default async function RecruiterCandidateProfile({
     .select()
     .from(quizAttempts)
     .where(eq(quizAttempts.candidateId, candidateId))
-    .orderBy(sql.raw('created_at DESC'))
+    .orderBy(desc(quizAttempts.createdAt))
 
   /* --------------------------- render --------------------------- */
   return (
