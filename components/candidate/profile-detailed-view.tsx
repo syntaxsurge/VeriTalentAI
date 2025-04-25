@@ -258,10 +258,8 @@ export default function CandidateDetailedProfileView({
   /* -------------------------- Derived helpers --------------------------- */
 
   const totalVerified = statusCounts.verified
-  const profileUrl =
-    typeof window === 'undefined'
-      ? `/candidates/${candidateId}`
-      : `${window.location.origin}/candidates/${candidateId}`
+  /* Use a stable relative path for SSR/CSR consistency */
+  const profilePath = `/candidates/${candidateId}`
 
   const socialIcons = [
     { href: socials.twitterUrl, icon: Twitter, label: 'Twitter' },
@@ -271,8 +269,10 @@ export default function CandidateDetailedProfileView({
   ].filter((s) => !!s.href)
 
   function copyLink() {
+    const url =
+      typeof window !== 'undefined' ? `${window.location.origin}${profilePath}` : profilePath
     navigator.clipboard
-      .writeText(profileUrl)
+      .writeText(url)
       .then(() => toast.success('Profile link copied'))
       .catch(() => toast.error('Copy failed'))
   }
@@ -349,7 +349,7 @@ export default function CandidateDetailedProfileView({
                 )}
 
                 <Button asChild variant='outline' size='sm' className='gap-1'>
-                  <Link href={profileUrl} target='_blank'>
+                  <Link href={profilePath} target='_blank'>
                     <ExternalLink className='h-4 w-4' />
                     Public&nbsp;View
                   </Link>
