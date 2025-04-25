@@ -48,7 +48,6 @@ export default async function RecruiterCandidateProfile({
   if (!user) redirect('/sign-in')
   if (user.role !== 'recruiter') redirect('/')
 
-  /* ---------------------- core candidate row --------------------- */
   const [row] = await db
     .select({ cand: candidates, userRow: users })
     .from(candidates)
@@ -58,8 +57,7 @@ export default async function RecruiterCandidateProfile({
 
   if (!row) redirect('/recruiter/talent')
 
-  /* -------------------- experiences & projects ------------------- */
-  const credsBase = db
+  const experienceRows = await db
     .select({
       id: candidateCredentials.id,
       title: candidateCredentials.title,
@@ -70,14 +68,31 @@ export default async function RecruiterCandidateProfile({
     })
     .from(candidateCredentials)
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .where(eq(candidateCredentials.candidateId, candidateId))
-
-  const experienceRows = await credsBase
-    .where(and(eq(candidateCredentials.category, CredentialCategory.EXPERIENCE)))
+    .where(
+      and(
+        eq(candidateCredentials.candidateId, candidateId),
+        eq(candidateCredentials.category, CredentialCategory.EXPERIENCE)
+      )
+    )
     .orderBy(desc(candidateCredentials.createdAt))
 
-  const projectRows = await credsBase
-    .where(and(eq(candidateCredentials.category, CredentialCategory.PROJECT)))
+  const projectRows = await db
+    .select({
+      id: candidateCredentials.id,
+      title: candidateCredentials.title,
+      createdAt: candidateCredentials.createdAt,
+      issuerName: issuers.name,
+      link: candidateCredentials.fileUrl,
+      description: candidateCredentials.type,
+    })
+    .from(candidateCredentials)
+    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
+    .where(
+      and(
+        eq(candidateCredentials.candidateId, candidateId),
+        eq(candidateCredentials.category, CredentialCategory.PROJECT)
+      )
+    )
     .orderBy(desc(candidateCredentials.createdAt))
 
   const experiences = experienceRows.map((e) => ({
@@ -95,7 +110,6 @@ export default async function RecruiterCandidateProfile({
     createdAt: p.createdAt,
   }))
 
-  /* ---------------------- pipelines summary ---------------------- */
   const pipelines = await db
     .select({ id: recruiterPipelines.id, name: recruiterPipelines.name })
     .from(recruiterPipelines)
@@ -118,7 +132,6 @@ export default async function RecruiterCandidateProfile({
         ? `In ${pipelineEntriesAll[0].pipelineName}`
         : `In ${pipelineEntriesAll.length} Pipelines`
 
-  /* ------------------- credentials (centralized) ------------------ */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))
   const sizeRaw = Number(first(q, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
@@ -126,14 +139,11 @@ export default async function RecruiterCandidateProfile({
   const order = first(q, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(q, 'q') ?? '').trim()
 
-  const { rows: credRows, hasNext, statusCounts } = await getCandidateCredentialsSection(
-    candidateId,
-    page,
-    pageSize,
-    sort as any,
-    order as any,
-    searchTerm,
-  )
+  const {
+    rows: credRows,
+    hasNext,
+    statusCounts,
+  } = await getCandidateCredentialsSection(candidateId, page, pageSize, sort as any, order as any, searchTerm)
 
   const credInitialParams: Record<string, string> = {}
   const keep = (k: string) => {
@@ -145,7 +155,6 @@ export default async function RecruiterCandidateProfile({
   keep('order')
   if (searchTerm) credInitialParams['q'] = searchTerm
 
-  /* ------------------- pipeline entries table -------------------- */
   const pipePage = Math.max(1, Number(first(q, 'pipePage') ?? '1'))
   const pipeSizeRaw = Number(first(q, 'pipeSize') ?? '10')
   const pipePageSize = [10, 20, 50].includes(pipeSizeRaw) ? pipeSizeRaw : 10
@@ -180,11 +189,11 @@ export default async function RecruiterCandidateProfile({
   const pipeHasNext = pipeRowsRaw.length > pipePageSize
   if (pipeHasNext) pipeRowsRaw.pop()
 
-  const pipeRows = pipeRowsRaw.map((r) => ({
-    id: r.id,
-    pipelineId: r.pipelineId,
-    pipelineName: r.pipelineName,
-    stage: r.stage as Stage,
+  const pipeRows = pipeRowsRaw.map((p: any) => ({
+    id: p.id,
+    pipelineId: p.pipelineId,
+    pipelineName: p.pipelineName,
+    stage: p.stage as Stage,
   }))
 
   const pipeInitialParams: Record<string, string> = {}
@@ -197,14 +206,12 @@ export default async function RecruiterCandidateProfile({
   keepPipe('pipeOrder')
   if (pipeSearchTerm) pipeInitialParams['pipeQ'] = pipeSearchTerm
 
-  /* ------------------------ quiz passes ------------------------- */
   const passes = await db
     .select()
     .from(quizAttempts)
     .where(eq(quizAttempts.candidateId, candidateId))
     .orderBy(desc(quizAttempts.createdAt))
 
-  /* --------------------------- render --------------------------- */
   return (
     <CandidateDetailedProfileView
       candidateId={candidateId}
@@ -224,7 +231,7 @@ export default async function RecruiterCandidateProfile({
         websiteUrl: row.cand.websiteUrl,
       }}
       credentials={{
-        rows: credRows,
+        rows: credRows as any,
         sort,
         order: order as 'asc' | 'desc',
         pagination: {
