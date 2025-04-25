@@ -1,11 +1,9 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
 import { db } from '@/lib/db/drizzle'
+import { users } from '@/lib/db/schema/core'
 import {
-  users,
   candidates,
-} from '@/lib/db/schema/core'
-import {
   candidateCredentials,
   CredentialStatus,
   CredentialCategory,
@@ -126,12 +124,30 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
 
   /* Experience */
   if (data.experiences.length) {
-    y = drawSection(page, 'Experience', data.experiences.map((e) => `${e.title} – ${e.company ?? 'Unknown'}`), font, boldFont, fontSize, margin, y)
+    y = drawSection(
+      page,
+      'Experience',
+      data.experiences.map((e) => `${e.title} – ${e.company ?? 'Unknown'}`),
+      font,
+      boldFont,
+      fontSize,
+      margin,
+      y,
+    )
   }
 
   /* Projects */
   if (data.projects.length) {
-    y = drawSection(page, 'Projects', data.projects.map((p) => p.title), font, boldFont, fontSize, margin, y)
+    y = drawSection(
+      page,
+      'Projects',
+      data.projects.map((p) => p.title),
+      font,
+      boldFont,
+      fontSize,
+      margin,
+      y,
+    )
   }
 
   /* Verified Credentials */
