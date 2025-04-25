@@ -1,6 +1,8 @@
 import { desc, eq, and } from 'drizzle-orm'
+import { format } from 'date-fns'
 
 import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
+import { type RowType as CredRowType } from '@/components/dashboard/recruiter/credentials-table'
 import { db } from '@/lib/db/drizzle'
 import { candidates, users, quizAttempts, issuers } from '@/lib/db/schema'
 import {
@@ -10,13 +12,39 @@ import {
 import {
   candidateCredentials,
   CredentialCategory,
+  type CredentialStatus,
 } from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
 
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
+
 type Params = { id: string }
 type Query = Record<string, string | string[] | undefined>
+
+type Experience = {
+  id: number
+  title: string
+  company: string | null
+  createdAt: Date
+}
+
+type Project = {
+  id: number
+  title: string
+  link: string | null
+  description: string | null
+  createdAt: Date
+}
+
+/* Helpers */
 const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
+
+/* -------------------------------------------------------------------------- */
+/*                                 PAGE                                       */
+/* -------------------------------------------------------------------------- */
 
 export default async function PublicCandidateProfile({
   params,
@@ -39,42 +67,56 @@ export default async function PublicCandidateProfile({
 
   if (!row) return <div>Candidate not found.</div>
 
-  /* -------------------- experiences & projects ------------------- */
-  const credsBase = db
-    .select({
-      id: candidateCredentials.id,
-      title: candidateCredentials.title,
-      createdAt: candidateCredentials.createdAt,
-      issuerName: issuers.name,
-      link: candidateCredentials.fileUrl,
-      description: candidateCredentials.type,
-    })
-    .from(candidateCredentials)
-    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .where(eq(candidateCredentials.candidateId, candidateId))
+  /* -------------------- experiences & projects -------------------------- */
+  const baseSelect = () =>
+    db
+      .select({
+        id: candidateCredentials.id,
+        title: candidateCredentials.title,
+        createdAt: candidateCredentials.createdAt,
+        issuerName: issuers.name,
+        link: candidateCredentials.fileUrl,
+        description: candidateCredentials.type,
+      })
+      .from(candidateCredentials)
+      .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
 
-  const experienceRows = await credsBase
-    .where(and(eq(candidateCredentials.category, CredentialCategory.EXPERIENCE)))
+  const experienceRows = await baseSelect()
+    .where(
+      and(
+        eq(candidateCredentials.candidateId, candidateId),
+        eq(candidateCredentials.category, CredentialCategory.EXPERIENCE),
+      ),
+    )
     .orderBy(desc(candidateCredentials.createdAt))
 
-  const projectRows = await credsBase
-    .where(and(eq(candidateCredentials.category, CredentialCategory.PROJECT)))
+  const projectRows = await baseSelect()
+    .where(
+      and(
+        eq(candidateCredentials.candidateId, candidateId),
+        eq(candidateCredentials.category, CredentialCategory.PROJECT),
+      ),
+    )
     .orderBy(desc(candidateCredentials.createdAt))
 
-  const experiences = experienceRows.map((e) => ({
-    id: e.id,
-    title: e.title,
-    company: e.issuerName,
-    createdAt: e.createdAt,
-  }))
+  const experiences: Experience[] = experienceRows.map(
+    (e): Experience => ({
+      id: e.id,
+      title: e.title,
+      company: e.issuerName,
+      createdAt: e.createdAt,
+    }),
+  )
 
-  const projects = projectRows.map((p) => ({
-    id: p.id,
-    title: p.title,
-    link: p.link,
-    description: p.description,
-    createdAt: p.createdAt,
-  }))
+  const projects: Project[] = projectRows.map(
+    (p): Project => ({
+      id: p.id,
+      title: p.title,
+      link: p.link,
+      description: p.description,
+      createdAt: p.createdAt,
+    }),
+  )
 
   /* ----------------------- paged credentials ---------------------------- */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))
@@ -84,14 +126,30 @@ export default async function PublicCandidateProfile({
   const order = first(q, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(q, 'q') ?? '').trim()
 
-  const { rows, hasNext, statusCounts } = await getCandidateCredentialsSection(
+  const {
+    rows: rawCredRows,
+    hasNext,
+    statusCounts,
+  } = await getCandidateCredentialsSection(
     candidateId,
     page,
     pageSize,
-    sort as any,
-    order as any,
+    sort as keyof CredRowType,
+    order as 'asc' | 'desc',
     searchTerm,
   )
+
+  /* Ensure each credential row includes `category` */
+  const credRows: CredRowType[] = rawCredRows.map((c): CredRowType => ({
+    id: c.id,
+    title: c.title,
+    category: (c as any).category ?? CredentialCategory.OTHER,
+    type: (c as any).type,
+    issuer: (c as any).issuer ?? null,
+    status: (c as any).status as CredentialStatus,
+    fileUrl: (c as any).fileUrl ?? null,
+    vcJson: (c as any).vcJson ?? null,
+  }))
 
   const credInitialParams: Record<string, string> = {}
   const keep = (k: string) => {
@@ -129,7 +187,7 @@ export default async function PublicCandidateProfile({
         websiteUrl: row.cand.websiteUrl,
       }}
       credentials={{
-        rows,
+        rows: credRows,
         sort,
         order: order as 'asc' | 'desc',
         pagination: {
