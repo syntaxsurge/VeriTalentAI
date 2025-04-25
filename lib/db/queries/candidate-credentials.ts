@@ -69,8 +69,8 @@ export async function getCandidateCredentialsPage(
   userId: number,
   page: number,
   pageSize: number,
-  sort: SortKey = 'id',
-  order: SortOrder = 'desc',
+  sort: SortKey = 'status',          /* CHANGED */
+  order: SortOrder = 'desc',         /* CHANGED */
   search: string = '',
 ): Promise<CredentialsPage> {
   const offset = (page - 1) * pageSize

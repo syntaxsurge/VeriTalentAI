@@ -1,4 +1,5 @@
 import { asc, desc, eq, sql } from 'drizzle-orm'
+import { format } from 'date-fns'
 import { redirect } from 'next/navigation'
 
 import CandidateDetailedProfileView, {
@@ -89,17 +90,17 @@ export default async function RecruiterCandidateProfile({
   const page = Math.max(1, Number(getParam(q, 'page') ?? '1'))
   const sizeRaw = Number(getParam(q, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = getParam(q, 'sort') ?? 'createdAt'
+  const sort = getParam(q, 'sort') ?? 'status'           /* CHANGED */
   const order = getParam(q, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (getParam(q, 'q') ?? '').trim()
 
   const credSortColumnMap = {
-    createdAt: candidateCredentials.createdAt,
     title: candidateCredentials.title,
     status: candidateCredentials.status,
+    createdAt: candidateCredentials.createdAt,
   } as const
   const credSortColumn =
-    credSortColumnMap[sort as keyof typeof credSortColumnMap] ?? candidateCredentials.createdAt
+    credSortColumnMap[sort as keyof typeof credSortColumnMap] ?? candidateCredentials.status
   const credOrderExpr = order === 'asc' ? asc(credSortColumn) : desc(credSortColumn)
 
   const offset = (page - 1) * pageSize
@@ -128,7 +129,7 @@ export default async function RecruiterCandidateProfile({
     id: c.id,
     title: c.title,
     issuer: c.issuer,
-    status: c.status as CredentialStatus, /* FIX */
+    status: c.status as CredentialStatus,
     fileUrl: c.fileUrl,
   }))
 

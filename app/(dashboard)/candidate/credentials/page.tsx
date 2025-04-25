@@ -37,7 +37,7 @@ export default async function CredentialsPage({
   const page = Math.max(1, Number(first(params, 'page') ?? '1'))
   const sizeRaw = Number(first(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = first(params, 'sort') ?? 'id'
+  const sort = first(params, 'sort') ?? 'status'           /* CHANGED */
   const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
 
