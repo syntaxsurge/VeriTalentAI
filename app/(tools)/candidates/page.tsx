@@ -14,13 +14,22 @@ export const revalidate = 0
 
 const PAGE_SIZE = 30
 
+type Query = Record<string, string | string[] | undefined>
+
 export default async function CandidateDirectoryPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<Query> | Query
 }) {
-  const q = typeof searchParams.q === 'string' ? searchParams.q.trim().toLowerCase() : ''
-  const page = Math.max(1, Number(searchParams.page ?? '1'))
+  const params = (await searchParams) as Query
+
+  const qRaw = params.q
+  const q = typeof qRaw === 'string' ? qRaw.trim().toLowerCase() : ''
+
+  const page = Math.max(
+    1,
+    Number(Array.isArray(params.page) ? params.page[0] : params.page ?? '1'),
+  )
   const offset = (page - 1) * PAGE_SIZE
 
   /* ---------------------------- Core query ---------------------------- */
@@ -80,11 +89,7 @@ export default async function CandidateDirectoryPage({
               <Link href={`/candidates/${c.id}`} className='block h-full'>
                 <Card className='group h-full transition-shadow hover:shadow-lg'>
                   <CardContent className='flex flex-col items-center gap-4 p-6 text-center'>
-                    <UserAvatar
-                      name={c.name}
-                      email={c.email}
-                      className='size-16 text-lg'
-                    />
+                    <UserAvatar name={c.name} email={c.email} className='size-16 text-lg' />
                     <div>
                       <p className='font-medium'>{c.name || 'Unnamed'}</p>
                       <p className='text-muted-foreground text-sm'>{c.email}</p>

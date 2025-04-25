@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm'
+import { eq, sql, desc, and } from 'drizzle-orm'
 
 import CandidateProfileView, {
   Credential,
@@ -14,12 +14,20 @@ import {
 
 export const revalidate = 0
 
+/**
+ * Public-facing candidate profile.
+ *
+ * • Awaits the `params` promise per Next 15 async dynamic API.
+ * • Uses desc(candidateCredentials.createdAt) to avoid ambiguous column errors.
+ */
 export default async function PublicCandidateProfile({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }> | { id: string }
 }) {
-  const candidateId = Number(params.id)
+  /* ------------------------- Dynamic param ------------------------- */
+  const { id } = await Promise.resolve(params)
+  const candidateId = Number(id)
 
   /* ------------------------- Core profile ------------------------- */
   const [row] = await db
@@ -46,16 +54,16 @@ export default async function PublicCandidateProfile({
     .from(candidateCredentials)
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
     .where(eq(candidateCredentials.candidateId, candidateId))
-    .orderBy(sql`created_at DESC`)
+    .orderBy(desc(candidateCredentials.createdAt))
 
-  const statusCounts = {
+  const statusCounts: Record<string, number> = {
     verified: 0,
     pending: 0,
     rejected: 0,
     unverified: 0,
   }
   credRows.forEach((c) => {
-    statusCounts[c.status as keyof typeof statusCounts]++
+    statusCounts[c.status]++
   })
 
   const credentials: Credential[] = credRows.map((c) => ({
@@ -70,8 +78,12 @@ export default async function PublicCandidateProfile({
   const [{ passes } = { passes: 0 }] = await db
     .select({ passes: sql<number>`COUNT(*)` })
     .from(quizAttempts)
-    .where(eq(quizAttempts.candidateId, candidateId))
-    .andWhere(eq(quizAttempts.pass, 1))
+    .where(
+      and(
+        eq(quizAttempts.candidateId, candidateId),
+        eq(quizAttempts.pass, 1),
+      ),
+    )
 
   /* ---------------------------- View ------------------------------ */
   return (
