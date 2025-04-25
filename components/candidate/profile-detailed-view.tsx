@@ -188,17 +188,27 @@ function CollapsibleList<T>({
 }) {
   const [expanded, setExpanded] = useState(false)
   const visible = expanded ? items : items.slice(0, 4)
+
   return (
-    <div className='space-y-4'>
+    <div className='space-y-6'>
+      {/* Section header */}
       <div className='flex items-center gap-2'>
         <Icon className='h-5 w-5 text-primary' />
         <h4 className='text-lg font-semibold'>{title}</h4>
       </div>
 
-      {visible.map((it, i) => (
-        <Fragment key={i}>{renderItem(it)}</Fragment>
-      ))}
+      {/* Timeline list */}
+      <ol className='relative border-l border-muted-foreground/20'>
+        {visible.map((it, i) => (
+          <li key={i} className='mb-6 ml-4'>
+            {/* Timeline dot */}
+            <span className='absolute -left-2 top-2 h-3 w-3 rounded-full bg-primary' />
+            {renderItem(it)}
+          </li>
+        ))}
+      </ol>
 
+      {/* Expand / collapse control */}
       {items.length > 4 && (
         <Button
           variant='ghost'
@@ -431,11 +441,11 @@ export default function CandidateDetailedProfileView({
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value='experience'>
+              <TabsContent value='experience' className='space-y-4'>
                 {experiences.length === 0 ? (
                   <p className='text-muted-foreground'>No experience credentials yet.</p>
                 ) : (
-                  <ScrollArea className='h-[500px] pr-3'>
+                  <ScrollArea className='max-h-[500px] pr-3'>
                     <CollapsibleList
                       title='Professional Experience'
                       icon={Briefcase}
@@ -456,11 +466,11 @@ export default function CandidateDetailedProfileView({
                 )}
               </TabsContent>
 
-              <TabsContent value='projects'>
+              <TabsContent value='projects' className='space-y-4'>
                 {projects.length === 0 ? (
                   <p className='text-muted-foreground'>No project credentials yet.</p>
                 ) : (
-                  <ScrollArea className='h-[500px] pr-3'>
+                  <ScrollArea className='max-h-[500px] pr-3'>
                     <CollapsibleList
                       title='Highlighted Projects'
                       icon={BookOpen}
