@@ -27,6 +27,7 @@ import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/
 export interface RowType {
   id: number
   title: string
+  category: string
   type: string
   issuer: string | null
   status: string
@@ -220,6 +221,13 @@ export default function CandidateCredentialsTable({
         header: sortHeader('Title', 'title'),
         sortable: false,
         render: (v) => <span className='font-medium'>{v as string}</span>,
+      },
+      {
+        key: 'category',
+        header: sortHeader('Category', 'category'),
+        sortable: false,
+        className: 'capitalize',
+        render: (v) => v as string,
       },
       {
         key: 'type',

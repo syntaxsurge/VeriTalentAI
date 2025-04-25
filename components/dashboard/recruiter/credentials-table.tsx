@@ -17,6 +17,7 @@ import { CredentialStatus } from '@/lib/db/schema/viskify'
 export interface RowType {
   id: number
   title: string
+  category: string
   issuer: string | null
   status: CredentialStatus
   fileUrl: string | null
@@ -93,6 +94,12 @@ export default function CredentialsTable({
         header: sortableHeader('Title', 'title'),
         sortable: false,
         render: (v) => <span className='font-medium'>{v as string}</span>,
+      },
+      {
+        key: 'category',
+        header: sortableHeader('Category', 'category'),
+        sortable: false,
+        render: (v) => <span className='capitalize'>{v as string}</span>,
       },
       {
         key: 'issuer',

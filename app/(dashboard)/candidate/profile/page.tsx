@@ -34,7 +34,14 @@ export default async function ProfilePage() {
         </CardHeader>
 
         <CardContent>
-          <ProfileForm defaultName={user.name || ''} defaultBio={candidate?.bio || ''} />
+          <ProfileForm
+            defaultName={user.name || ''}
+            defaultBio={candidate?.bio || ''}
+            defaultTwitterUrl={candidate?.twitterUrl || ''}
+            defaultGithubUrl={candidate?.githubUrl || ''}
+            defaultLinkedinUrl={candidate?.linkedinUrl || ''}
+            defaultWebsiteUrl={candidate?.websiteUrl || ''}
+          />
         </CardContent>
       </Card>
     </section>

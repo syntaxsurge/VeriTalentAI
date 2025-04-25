@@ -19,6 +19,10 @@ import { updateCandidateProfile } from './actions'
 type Props = {
   defaultName: string
   defaultBio: string
+  defaultTwitterUrl: string
+  defaultGithubUrl: string
+  defaultLinkedinUrl: string
+  defaultWebsiteUrl: string
 }
 
 type ActionState = {
@@ -30,7 +34,14 @@ type ActionState = {
 /*                                    FORM                                    */
 /* -------------------------------------------------------------------------- */
 
-export default function ProfileForm({ defaultName, defaultBio }: Props) {
+export default function ProfileForm({
+  defaultName,
+  defaultBio,
+  defaultTwitterUrl,
+  defaultGithubUrl,
+  defaultLinkedinUrl,
+  defaultWebsiteUrl,
+}: Props) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
     updateCandidateProfile,
     { error: '', success: '' },
@@ -61,11 +72,26 @@ export default function ProfileForm({ defaultName, defaultBio }: Props) {
   /* ---------------------------- UI ---------------------------- */
   return (
     <form onSubmit={handleSubmit} className='space-y-6'>
-      <div className='space-y-2'>
-        <Label htmlFor='name'>Name</Label>
-        <Input id='name' name='name' defaultValue={defaultName} required />
+      {/* Basic details */}
+      <div className='grid gap-4 sm:grid-cols-2'>
+        <div className='space-y-2'>
+          <Label htmlFor='name'>Name</Label>
+          <Input id='name' name='name' defaultValue={defaultName} required />
+        </div>
+
+        <div className='space-y-2'>
+          <Label htmlFor='websiteUrl'>Website</Label>
+          <Input
+            id='websiteUrl'
+            name='websiteUrl'
+            type='url'
+            defaultValue={defaultWebsiteUrl}
+            placeholder='https://your‑site.com'
+          />
+        </div>
       </div>
 
+      {/* Bio */}
       <div className='space-y-2'>
         <Label htmlFor='bio'>Bio</Label>
         <textarea
@@ -77,6 +103,45 @@ export default function ProfileForm({ defaultName, defaultBio }: Props) {
           placeholder='Tell recruiters about yourself…'
         />
       </div>
+
+      {/* Social links */}
+      <fieldset className='space-y-4'>
+        <legend className='font-medium'>Social Links</legend>
+        <div className='grid gap-4 sm:grid-cols-2'>
+          <div className='space-y-2'>
+            <Label htmlFor='twitterUrl'>Twitter</Label>
+            <Input
+              id='twitterUrl'
+              name='twitterUrl'
+              type='url'
+              defaultValue={defaultTwitterUrl}
+              placeholder='https://twitter.com/username'
+            />
+          </div>
+
+          <div className='space-y-2'>
+            <Label htmlFor='githubUrl'>GitHub</Label>
+            <Input
+              id='githubUrl'
+              name='githubUrl'
+              type='url'
+              defaultValue={defaultGithubUrl}
+              placeholder='https://github.com/username'
+            />
+          </div>
+
+          <div className='space-y-2'>
+            <Label htmlFor='linkedinUrl'>LinkedIn</Label>
+            <Input
+              id='linkedinUrl'
+              name='linkedinUrl'
+              type='url'
+              defaultValue={defaultLinkedinUrl}
+              placeholder='https://linkedin.com/in/username'
+            />
+          </div>
+        </div>
+      </fieldset>
 
       <Button type='submit' disabled={pending} className='w-full sm:w-max'>
         {pending ? (
