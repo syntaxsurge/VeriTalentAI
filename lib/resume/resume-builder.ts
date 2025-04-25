@@ -1,4 +1,11 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import {
+  PDFDocument,
+  StandardFonts,
+  rgb,
+  type PDFFont,
+  type PDFPage,
+} from 'pdf-lib'
+import { and, eq } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
 import { users } from '@/lib/db/schema/core'
@@ -24,10 +31,45 @@ export interface ResumeData {
 }
 
 /* -------------------------------------------------------------------------- */
+/*                           U T I L I T Y   F N S                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Simple word-wrap helper since pdf-lib fonts don’t include line-splitting
+ * utilities; returns an array of lines that fit within maxWidth.
+ */
+function wrapText(
+  text: string,
+  font: PDFFont,
+  fontSize: number,
+  maxWidth: number,
+): string[] {
+  const words = text.split(/\s+/)
+  const lines: string[] = []
+  let current = ''
+
+  words.forEach((word) => {
+    const next = current ? `${current} ${word}` : word
+    const width = font.widthOfTextAtSize(next, fontSize)
+    if (width <= maxWidth) {
+      current = next
+    } else {
+      if (current) lines.push(current)
+      current = word
+    }
+  })
+
+  if (current) lines.push(current)
+  return lines
+}
+
+/* -------------------------------------------------------------------------- */
 /*                         R E S U M E   B U I L D E R                        */
 /* -------------------------------------------------------------------------- */
 
-export async function buildResumeData(candidateId: number): Promise<ResumeData | null> {
+export async function buildResumeData(
+  candidateId: number,
+): Promise<ResumeData | null> {
   /* Basic profile */
   const [profile] = await db
     .select({
@@ -36,8 +78,8 @@ export async function buildResumeData(candidateId: number): Promise<ResumeData |
       bio: candidates.bio,
     })
     .from(candidates)
-    .innerJoin(users, users.id.eq(candidates.userId))
-    .where(candidates.id.eq(candidateId))
+    .innerJoin(users, eq(users.id, candidates.userId))
+    .where(eq(candidates.id, candidateId))
     .limit(1)
 
   if (!profile) return null
@@ -52,11 +94,12 @@ export async function buildResumeData(candidateId: number): Promise<ResumeData |
       fileUrl: candidateCredentials.fileUrl,
     })
     .from(candidateCredentials)
-    .leftJoin(issuers, issuers.id.eq(candidateCredentials.issuerId))
+    .leftJoin(issuers, eq(issuers.id, candidateCredentials.issuerId))
     .where(
-      candidateCredentials.candidateId
-        .eq(candidateId)
-        .and(candidateCredentials.status.eq(CredentialStatus.VERIFIED)),
+      and(
+        eq(candidateCredentials.candidateId, candidateId),
+        eq(candidateCredentials.status, CredentialStatus.VERIFIED),
+      ),
     )
 
   const experiences = verified
@@ -86,18 +129,21 @@ export async function buildResumeData(candidateId: number): Promise<ResumeData |
 /*                       P D F   G E N E R A T I O N                          */
 /* -------------------------------------------------------------------------- */
 
-export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
+export async function generateResumePdf(
+  data: ResumeData,
+): Promise<Uint8Array> {
   const pdf = await PDFDocument.create()
-  const page = pdf.addPage()
-  const { width, height } = page.getSize()
+  let page = pdf.addPage()
+  const { width } = page.getSize()
   const margin = 50
   const fontSize = 12
   const titleFontSize = 18
+  const contentWidth = width - margin * 2
 
   const font = await pdf.embedFont(StandardFonts.Helvetica)
   const boldFont = await pdf.embedFont(StandardFonts.HelveticaBold)
 
-  let y = height - margin
+  let y = page.getSize().height - margin
 
   /* Header */
   page.drawText(data.name, {
@@ -114,71 +160,85 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
 
   /* Bio */
   if (data.bio) {
-    const lines = font.splitTextIntoLines(data.bio, 450, fontSize)
-    lines.forEach((line) => {
-      page.drawText(line, { x: margin, y, size: fontSize, font })
+    const lines = wrapText(data.bio, font, fontSize, contentWidth)
+    for (const ln of lines) {
+      page.drawText(ln, { x: margin, y, size: fontSize, font })
       y -= fontSize + 2
-    })
+      if (y < margin) {
+        page = pdf.addPage()
+        y = page.getSize().height - margin
+      }
+    }
     y -= 8
   }
 
-  /* Experience */
-  if (data.experiences.length) {
-    y = drawSection(
-      page,
-      'Experience',
-      data.experiences.map((e) => `${e.title} – ${e.company ?? 'Unknown'}`),
-      font,
-      boldFont,
-      fontSize,
-      margin,
-      y,
-    )
-  }
+  /* Sections */
+  y = drawSection(
+    pdf,
+    page,
+    'Experience',
+    data.experiences.map((e) => `${e.title} – ${e.company ?? 'Unknown'}`),
+    font,
+    boldFont,
+    fontSize,
+    margin,
+    y,
+  ).y
 
-  /* Projects */
-  if (data.projects.length) {
-    y = drawSection(
-      page,
-      'Projects',
-      data.projects.map((p) => p.title),
-      font,
-      boldFont,
-      fontSize,
-      margin,
-      y,
-    )
-  }
+  y = drawSection(
+    pdf,
+    page,
+    'Projects',
+    data.projects.map((p) => p.title),
+    font,
+    boldFont,
+    fontSize,
+    margin,
+    y,
+  ).y
 
-  /* Verified Credentials */
-  if (data.verifiedCredentials.length) {
-    y = drawSection(
-      page,
-      'Verified Credentials',
-      data.verifiedCredentials.map((c) => `${c.title}${c.issuer ? ` – ${c.issuer}` : ''}`),
-      font,
-      boldFont,
-      fontSize,
-      margin,
-      y,
-    )
-  }
+  y = drawSection(
+    pdf,
+    page,
+    'Verified Credentials',
+    data.verifiedCredentials.map((c) =>
+      c.issuer ? `${c.title} – ${c.issuer}` : c.title,
+    ),
+    font,
+    boldFont,
+    fontSize,
+    margin,
+    y,
+  ).y
 
   return await pdf.save()
 }
 
-/* Helper to render a bulleted section */
+/* -------------------------------------------------------------------------- */
+/*                              H E L P E R S                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Render a bulleted section and automatically add pages if required.
+ * Returns the last page used and the current y-position.
+ */
 function drawSection(
-  page: any,
+  pdf: PDFDocument,
+  page: PDFPage,
   heading: string,
   items: string[],
-  font: any,
-  boldFont: any,
+  font: PDFFont,
+  boldFont: PDFFont,
   fontSize: number,
   margin: number,
   startY: number,
-) {
+): { page: PDFPage; y: number } {
   let y = startY
+
+  if (items.length === 0) {
+    return { page, y }
+  }
+
   page.drawText(heading.toUpperCase(), {
     x: margin,
     y,
@@ -191,9 +251,10 @@ function drawSection(
     page.drawText('• ' + text, { x: margin + 10, y, size: fontSize, font })
     y -= fontSize + 4
     if (y < margin) {
-      page.addPage()
-      y = page.getHeight() - margin
+      page = pdf.addPage()
+      y = page.getSize().height - margin
     }
   })
-  return y - 12
+
+  return { page, y: y - 12 }
 }
