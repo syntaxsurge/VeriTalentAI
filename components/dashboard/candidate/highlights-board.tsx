@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import React, { useState, useTransition } from 'react'
 import {
   DragDropContext,
   Droppable,
@@ -19,7 +19,7 @@ import { toast } from 'sonner'
 
 import { saveHighlightsAction } from '@/app/(dashboard)/candidate/highlights/actions'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 /* -------------------------------------------------------------------------- */
@@ -40,7 +40,7 @@ interface Props {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                       Utility – move within array                          */
+/*                              Helper Utils                                  */
 /* -------------------------------------------------------------------------- */
 
 function reorder<T>(list: T[], start: number, end: number) {
@@ -51,7 +51,76 @@ function reorder<T>(list: T[], start: number, end: number) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Component                                    */
+/*                            Re-usable Card UI                               */
+/* -------------------------------------------------------------------------- */
+
+interface CredentialCardProps {
+  cred: Credential
+  showHandle?: boolean
+  onAction?: () => void
+  actionIcon?: React.ReactNode
+  /* Drag-and-drop props injected by react-beautiful-dnd */
+  dndProps?: {
+    draggableProps?: any
+    dragHandleProps?: any
+    innerRef?: (el: HTMLElement | null) => void
+  }
+}
+
+/**
+ * Forward-ref wrapper so Draggable can attach its ref properly.
+ */
+const CredentialCard = React.forwardRef<HTMLDivElement, CredentialCardProps>(
+  (
+    { cred, showHandle = false, onAction, actionIcon, dndProps = {} }: CredentialCardProps,
+    ref,
+  ) => {
+    const { draggableProps, dragHandleProps, innerRef } = dndProps
+    return (
+      <Card
+        ref={(node) => {
+          innerRef?.(node)
+          if (typeof ref === 'function') ref(node)
+          else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node
+        }}
+        {...draggableProps}
+        className='group flex items-center justify-between gap-3 rounded-xl border bg-background/90 shadow-sm transition hover:shadow-md'
+      >
+        <div
+          className='flex min-w-0 flex-1 items-center gap-3 p-3'
+          {...(showHandle ? dragHandleProps : {})}
+        >
+          {showHandle && (
+            <GripVertical className='h-4 w-4 flex-shrink-0 cursor-grab text-muted-foreground group-hover:text-foreground' />
+          )}
+          <span className='truncate text-sm font-medium'>{cred.title}</span>
+          <Badge
+            variant='secondary'
+            className='ml-auto flex-shrink-0 text-[10px] uppercase tracking-wide'
+          >
+            {cred.category.toLowerCase()}
+          </Badge>
+        </div>
+
+        {onAction && (
+          <Button
+            variant='ghost'
+            size='icon'
+            className='h-8 w-8'
+            onClick={onAction}
+            aria-label='action'
+          >
+            {actionIcon}
+          </Button>
+        )}
+      </Card>
+    )
+  },
+)
+CredentialCard.displayName = 'CredentialCard'
+
+/* -------------------------------------------------------------------------- */
+/*                              Main Component                                */
 /* -------------------------------------------------------------------------- */
 
 export default function HighlightsBoard({
@@ -64,7 +133,7 @@ export default function HighlightsBoard({
   const [avail, setAvail] = useState<Credential[]>(initialAvail)
   const [isPending, startTransition] = useTransition()
 
-  /* ----------------------------- DND handler ----------------------------- */
+  /* ----------------------------- Drag & Drop ----------------------------- */
   function onDragEnd(res: DropResult) {
     const { source, destination } = res
     if (!destination) return
@@ -74,21 +143,31 @@ export default function HighlightsBoard({
     )
       return
 
-    if (source.droppableId === 'exp' && destination.droppableId === 'exp') {
-      setExp((p) => reorder(p, source.index, destination.index))
-    } else if (
-      source.droppableId === 'proj' &&
-      destination.droppableId === 'proj'
-    ) {
-      setProj((p) => reorder(p, source.index, destination.index))
+    const listMap: Record<string, Credential[]> = { exp, proj }
+    const setListMap: Record<string, React.Dispatch<React.SetStateAction<Credential[]>>> = {
+      exp: setExp,
+      proj: setProj,
+    }
+
+    const sourceList = listMap[source.droppableId]
+    const destList = listMap[destination.droppableId]
+
+    /* move within same list */
+    if (source.droppableId === destination.droppableId) {
+      setListMap[source.droppableId](reorder(sourceList, source.index, destination.index))
+    } else {
+      /* transfer between lists (should not happen in current UI) */
+      const [moved] = sourceList.splice(source.index, 1)
+      destList.splice(destination.index, 0, moved)
+      setExp([...listMap.exp])
+      setProj([...listMap.proj])
     }
   }
 
   /* --------------------------- Add / Remove ----------------------------- */
   function addCredential(c: Credential) {
     if (c.category === 'EXPERIENCE') {
-      if (exp.length >= 5)
-        return toast.error('Maximum 5 experience highlights')
+      if (exp.length >= 5) return toast.error('Maximum 5 experience highlights')
       setExp((p) => [...p, c])
     } else {
       if (proj.length >= 5) return toast.error('Maximum 5 project highlights')
@@ -98,30 +177,16 @@ export default function HighlightsBoard({
   }
 
   function removeCredential(c: Credential) {
-    if (c.category === 'EXPERIENCE')
-      setExp((p) => p.filter((x) => x.id !== c.id))
+    if (c.category === 'EXPERIENCE') setExp((p) => p.filter((x) => x.id !== c.id))
     else setProj((p) => p.filter((x) => x.id !== c.id))
     setAvail((p) => [...p, c])
   }
 
-  /* ---------------------------- Save action ----------------------------- */
+  /* --------------------------- Persist action --------------------------- */
   function handleSave() {
     const fd = new FormData()
-    fd.append(
-      'experience',
-      exp
-        .map((c) => c.id)
-        .join(',')
-        .toString(),
-    )
-    fd.append(
-      'project',
-      proj
-        .map((c) => c.id)
-        .join(',')
-        .toString(),
-    )
-
+    fd.append('experience', exp.map((c) => c.id).join(','))
+    fd.append('project', proj.map((c) => c.id).join(','))
     startTransition(async () => {
       const tid = toast.loading('Saving highlights…')
       const res = await saveHighlightsAction({}, fd)
@@ -130,166 +195,104 @@ export default function HighlightsBoard({
     })
   }
 
-  /* --------------------------- Render helpers --------------------------- */
-  const CredentialCard = ({
-    cred,
-    dragProps,
-    isDraggable,
-    onRemove,
-    showHandle = false,
-  }: {
-    cred: Credential
-    dragProps?: any
-    isDraggable?: boolean
-    onRemove?: () => void
-    showHandle?: boolean
-  }) => (
-    <Card
-      className='flex items-center justify-between gap-3 rounded-lg border bg-background shadow-sm'
-      {...dragProps}
-    >
-      <div className='flex min-w-0 flex-1 items-center gap-3 p-3'>
-        {showHandle && (
-          <GripVertical className='h-4 w-4 flex-shrink-0 cursor-grab text-muted-foreground' />
-        )}
-        <span className='truncate text-sm font-medium'>{cred.title}</span>
-        <Badge
-          variant='secondary'
-          className='ml-auto flex-shrink-0 text-[10px] uppercase tracking-wide'
-        >
-          {cred.category.toLowerCase()}
-        </Badge>
-      </div>
-
-      {onRemove && (
-        <Button
-          variant='ghost'
-          size='icon'
-          className='h-8 w-8'
-          onClick={onRemove}
-          aria-label='Remove'
-        >
-          <Trash2 className='h-4 w-4 text-rose-500' />
-        </Button>
-      )}
-    </Card>
-  )
-
-  const SelectedList = ({
+  /* --------------------------- List Renderers --------------------------- */
+  function SelectedColumn({
     id,
-    items,
     title,
     icon: Icon,
+    items,
   }: {
     id: 'exp' | 'proj'
-    items: Credential[]
     title: string
     icon: typeof Briefcase
-  }) => (
-    <Card className='space-y-3'>
-      <CardHeader className='flex-row items-center gap-2 py-3'>
-        <Icon className='h-5 w-5 text-primary' />
-        <CardTitle className='text-sm font-semibold'>{title}</CardTitle>
-        <span className='text-muted-foreground ml-auto text-xs'>
-          {items.length}/5
-        </span>
-      </CardHeader>
+    items: Credential[]
+  }) {
+    return (
+      <Card className='space-y-3'>
+        <CardHeader className='flex-row items-center gap-2 py-3'>
+          <Icon className='h-5 w-5 text-primary' />
+          <CardTitle className='text-sm font-semibold'>{title}</CardTitle>
+          <span className='text-muted-foreground ml-auto text-xs'>{items.length}/5</span>
+        </CardHeader>
 
-      <CardContent className='space-y-2'>
-        <Droppable droppableId={id}>
-          {(prov) => (
-            <div
-              ref={prov.innerRef}
-              {...prov.droppableProps}
-              className='space-y-2'
-            >
-              {items.length === 0 ? (
-                <p className='text-muted-foreground text-xs'>
-                  Drag credentials here or use&nbsp;
-                  <span className='font-semibold'>Add</span> buttons below.
-                </p>
-              ) : (
-                items.map((c, idx) => (
-                  <Draggable
-                    key={c.id}
-                    draggableId={String(c.id)}
-                    index={idx}
-                  >
-                    {(dragProv) => (
-                      <CredentialCard
-                        cred={c}
-                        dragProps={{
-                          ref: dragProv.innerRef,
-                          ...dragProv.draggableProps,
-                          ...dragProv.dragHandleProps,
-                        }}
-                        isDraggable
-                        onRemove={() => removeCredential(c)}
-                        showHandle
-                      />
-                    )}
-                  </Draggable>
-                ))
-              )}
-              {prov.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </CardContent>
-    </Card>
-  )
+        <CardContent className='space-y-2'>
+          <Droppable droppableId={id}>
+            {(prov) => (
+              <div ref={prov.innerRef} {...prov.droppableProps} className='space-y-2'>
+                {items.length === 0 ? (
+                  <p className='text-muted-foreground text-xs'>
+                    Drag credentials here or use&nbsp;
+                    <span className='font-semibold'>Add</span> buttons below.
+                  </p>
+                ) : (
+                  items.map((c, idx) => (
+                    <Draggable key={c.id} draggableId={String(c.id)} index={idx}>
+                      {(dragProv) => (
+                        <CredentialCard
+                          cred={c}
+                          showHandle
+                          onAction={() => removeCredential(c)}
+                          actionIcon={<Trash2 className='h-4 w-4 text-rose-500' />}
+                          dndProps={{
+                            draggableProps: dragProv.draggableProps,
+                            dragHandleProps: dragProv.dragHandleProps,
+                            innerRef: dragProv.innerRef,
+                          }}
+                        />
+                      )}
+                    </Draggable>
+                  ))
+                )}
+                {prov.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </CardContent>
+      </Card>
+    )
+  }
 
-  /* ------------------------------- View --------------------------------- */
+  /* ------------------------------- View ---------------------------------- */
   return (
-    <div className='space-y-8'>
-      {/* Selected */}
+    <div className='space-y-10'>
+      {/* Selected highlights */}
       <DragDropContext onDragEnd={onDragEnd}>
         <div className='grid gap-6 md:grid-cols-2'>
-          <SelectedList
+          <SelectedColumn
             id='exp'
-            items={exp}
             title='Experience Highlights'
             icon={Briefcase}
+            items={exp}
           />
-          <SelectedList
+          <SelectedColumn
             id='proj'
-            items={proj}
             title='Project Highlights'
             icon={BookOpen}
+            items={proj}
           />
         </div>
       </DragDropContext>
 
-      {/* Available */}
+      {/* Available credentials */}
       <section className='space-y-4'>
         <h3 className='text-sm font-semibold tracking-tight'>Available Credentials</h3>
         {avail.length === 0 ? (
-          <p className='text-muted-foreground text-xs'>
-            All credentials have been highlighted.
-          </p>
+          <p className='text-muted-foreground text-xs'>All credentials have been highlighted.</p>
         ) : (
           <div className='grid gap-2 sm:grid-cols-2'>
             {avail.map((c) => (
               <CredentialCard
                 key={c.id}
                 cred={c}
-                onRemove={() => addCredential(c)}
-              >
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='h-8 w-8'
-                  aria-label='Add'
-                >
-                  <Plus className='h-4 w-4 text-primary' />
-                </Button>
-              </CredentialCard>
+                onAction={() => addCredential(c)}
+                actionIcon={<Plus className='h-4 w-4 text-primary' />}
+              />
             ))}
           </div>
         )}
       </section>
 
-      {/* Save */}
+      {/* Save button */}
       <div className='flex justify-end'>
         <Button onClick={handleSave} disabled={isPending}>
           {isPending && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
