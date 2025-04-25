@@ -1,11 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import { Share2 } from 'lucide-react'
+import { Clipboard, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StatusBadge from '@/components/ui/status-badge'
 import { UserAvatar } from '@/components/ui/user-avatar'
@@ -23,47 +29,41 @@ export interface Credential {
 }
 
 interface Props {
-  /** display name – nullable */
-  name: string | null
-  /** primary email – always present */
-  email: string
-  /** optional avatar URL */
-  avatarSrc?: string | null
-  /** free-text bio */
-  bio: string | null
-  /** high-level pipeline summary – recruiter page only */
-  pipelineSummary?: string
-  /** credential status counts */
+  name: string | null               /* display name – nullable */
+  email: string                     /* primary email – always present */
+  avatarSrc?: string | null         /* optional avatar URL */
+  bio: string | null                /* free-text bio */
+  pipelineSummary?: string          /* high-level pipeline summary – recruiter page only */
   statusCounts: {
     verified: number
     pending: number
     rejected: number
     unverified: number
   }
-  /** # of passed skill quizzes */
-  passes: number
-  /** credential rows to render */
-  credentials: Credential[]
-  /** show "Share” button (public view) */
-  showShare?: boolean
+  passes: number                    /* # of passed skill quizzes */
+  credentials: Credential[]         /* credential rows to render */
+  showShare?: boolean               /* show "Share” dropdown (public view) */
 }
 
 /* -------------------------------------------------------------------------- */
 /*                                 HELPERS                                    */
 /* -------------------------------------------------------------------------- */
 
-function handleShare() {
-  const url = window.location.href
-  if (navigator.share) {
-    navigator
-      .share({ url })
-      .catch(() => toast.error('Share cancelled or failed.'))
-  } else {
-    navigator.clipboard
-      .writeText(url)
-      .then(() => toast.success('Profile link copied.'))
-      .catch(() => toast.error('Copy failed.'))
+function copyUrl() {
+  navigator.clipboard
+    .writeText(window.location.href)
+    .then(() => toast.success('Profile link copied.'))
+    .catch(() => toast.error('Copy failed.'))
+}
+
+function shareNative() {
+  if (!navigator.share) {
+    copyUrl()
+    return
   }
+  navigator
+    .share({ url: window.location.href })
+    .catch(() => toast.error('Share cancelled or failed.'))
 }
 
 /* -------------------------------------------------------------------------- */
@@ -82,6 +82,7 @@ export default function CandidateProfileView({
   showShare = false,
 }: Props) {
   const totalVerified = statusCounts.verified
+
   return (
     <section className='space-y-10'>
       {/* Header / hero */}
@@ -133,17 +134,30 @@ export default function CandidateProfileView({
               {bio || 'No bio provided.'}
             </p>
 
-            {/* Share */}
+            {/* Share dropdown */}
             {showShare && (
-              <Button
-                variant='secondary'
-                size='sm'
-                className='mt-4'
-                onClick={handleShare}
-              >
-                <Share2 className='mr-2 h-4 w-4' />
-                Share&nbsp;Profile
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant='secondary'
+                    size='sm'
+                    className='mt-4'
+                  >
+                    <Share2 className='mr-2 h-4 w-4' />
+                    Share&nbsp;Profile
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
+                  <DropdownMenuItem onClick={copyUrl} className='cursor-pointer'>
+                    <Clipboard className='mr-2 h-4 w-4' />
+                    Copy&nbsp;URL
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={shareNative} className='cursor-pointer'>
+                    <Share2 className='mr-2 h-4 w-4' />
+                    Native&nbsp;Share
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>

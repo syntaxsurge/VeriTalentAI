@@ -2,11 +2,17 @@
 
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Share2 } from 'lucide-react'
+import { Clipboard, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StatusBadge from '@/components/ui/status-badge'
 import { UserAvatar } from '@/components/ui/user-avatar'
@@ -49,7 +55,6 @@ export interface PipelineSection {
   sort: string
   order: 'asc' | 'desc'
   pagination: Pagination
-  /** Optional — recruiter-only control */
   addToPipelineForm?: React.ReactNode
 }
 
@@ -70,9 +75,7 @@ interface Props {
   statusCounts: StatusCounts
   passes: QuizAttempt[]
   credentials: CredentialsSection
-  /** Empty → hide entire section (public profile) */
   pipeline?: PipelineSection
-  /** Allow opt-out if ever required */
   showShare?: boolean
 }
 
@@ -80,16 +83,21 @@ interface Props {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function handleShare() {
-  const url = window.location.href
-  if (navigator.share) {
-    navigator.share({ url }).catch(() => toast.error('Share cancelled or failed.'))
-  } else {
-    navigator.clipboard
-      .writeText(url)
-      .then(() => toast.success('Profile link copied.'))
-      .catch(() => toast.error('Copy failed.'))
+function copyUrl() {
+  navigator.clipboard
+    .writeText(window.location.href)
+    .then(() => toast.success('Profile link copied.'))
+    .catch(() => toast.error('Copy failed.'))
+}
+
+function shareNative() {
+  if (!navigator.share) {
+    copyUrl()
+    return
   }
+  navigator
+    .share({ url: window.location.href })
+    .catch(() => toast.error('Share cancelled or failed.'))
 }
 
 /* -------------------------------------------------------------------------- */
@@ -126,7 +134,9 @@ export default function CandidateDetailedProfileView({
 
           <div className='flex-1 space-y-4 text-center sm:text-left'>
             <div>
-              <h1 className='text-4xl font-bold tracking-tight'>{name || 'Unnamed Candidate'}</h1>
+              <h1 className='text-4xl font-bold tracking-tight'>
+                {name || 'Unnamed Candidate'}
+              </h1>
               <Link
                 href={`mailto:${email}`}
                 className='text-primary-foreground/90 underline-offset-4 hover:underline'
@@ -161,10 +171,24 @@ export default function CandidateDetailedProfileView({
             </p>
 
             {showShare && (
-              <Button onClick={handleShare} variant='secondary' size='sm' className='mt-4'>
-                <Share2 className='mr-2 h-4 w-4' />
-                Share&nbsp;Profile
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='secondary' size='sm' className='mt-4'>
+                    <Share2 className='mr-2 h-4 w-4' />
+                    Share&nbsp;Profile
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
+                  <DropdownMenuItem onClick={copyUrl} className='cursor-pointer'>
+                    <Clipboard className='mr-2 h-4 w-4' />
+                    Copy&nbsp;URL
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={shareNative} className='cursor-pointer'>
+                    <Share2 className='mr-2 h-4 w-4' />
+                    Native&nbsp;Share
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
