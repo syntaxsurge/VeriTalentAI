@@ -1,26 +1,37 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
-import { CircleIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default function NotFound() {
   return (
-    <div className='flex min-h-[100dvh] items-center justify-center'>
-      <div className='max-w-md space-y-8 p-4 text-center'>
-        <div className='flex justify-center'>
-          <CircleIcon className='size-12 text-orange-500' />
-        </div>
-        <h1 className='text-4xl font-bold tracking-tight'>Page Not Found</h1>
-        <p className='text-base text-gray-500'>
-          The page you are looking for might have been removed, had its name changed, or is
-          temporarily unavailable.
+    <main className='flex min-h-screen flex-col items-center justify-center p-6'>
+      <div className='flex flex-col items-center gap-6 text-center'>
+        {/* Brand logo */}
+        <Image
+          src='/images/viskify-logo.png'
+          alt='Viskify logo'
+          width={96}
+          height={96}
+          priority
+          className='h-16 w-auto'
+        />
+
+        {/* Headline */}
+        <h1 className='text-4xl font-extrabold tracking-tight'>
+          404&nbsp;&mdash;&nbsp;Page&nbsp;Not&nbsp;Found
+        </h1>
+
+        {/* Description */}
+        <p className='text-muted-foreground max-w-md text-sm'>
+          Oops! The page you&#39;re looking for doesn&#39;t exist or has been moved.
         </p>
-        <Link
-          href='/'
-          className='mx-auto flex max-w-48 justify-center rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none'
-        >
-          Back to Home
+
+        {/* Back home */}
+        <Link href='/' passHref>
+          <Button size='sm'>Go&nbsp;Home</Button>
         </Link>
       </div>
-    </div>
+    </main>
   )
 }
