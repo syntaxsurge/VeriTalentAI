@@ -42,7 +42,7 @@ export default async function CredentialsPage({
   const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
 
   /* ---------------------------- Credentials ------------------------------ */
-  const { credentials: credentialRows = [], hasNext } = await getCandidateCredentialsPage(
+  const { rows: credentialRows, hasNext } = await getCandidateCredentialsPage(
     user.id,
     page,
     pageSize,
