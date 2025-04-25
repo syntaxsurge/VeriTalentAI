@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
 
 import { eq } from 'drizzle-orm'
-import { User } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { candidates } from '@/lib/db/schema/viskify'
@@ -23,14 +23,32 @@ export default async function ProfilePage() {
     .limit(1)
 
   return (
-    <section className='mx-auto max-w-xl'>
+    <section className='mx-auto max-w-5xl space-y-10'>
+      {/* ------------------------------------------------------------------ */}
+      {/*                               Hero                                 */}
+      {/* ------------------------------------------------------------------ */}
+      <div className='relative isolate'>
+        {/* Banner */}
+        <div className='h-48 rounded-3xl bg-gradient-to-r from-primary/90 via-primary to-primary/80 shadow-lg' />
+
+        {/* Avatar */}
+        <div className='absolute -bottom-12 left-8'>
+          <UserAvatar
+            src={(user as any)?.image ?? undefined}
+            name={user.name ?? null}
+            email={user.email ?? null}
+            className='size-24 ring-4 ring-background'
+          />
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/*                             Profile Form                           */}
+      {/* ------------------------------------------------------------------ */}
       <Card className='shadow-md transition-shadow hover:shadow-lg'>
-        <CardHeader className='flex flex-row items-center gap-3'>
-          <User className='text-primary h-8 w-8 flex-shrink-0' />
-          <div>
-            <CardTitle className='text-2xl font-extrabold tracking-tight'>My Profile</CardTitle>
-            <p className='text-muted-foreground text-sm'>Tell recruiters who you are.</p>
-          </div>
+        <CardHeader className='pt-16'>
+          <CardTitle className='text-2xl font-extrabold tracking-tight'>Edit Profile</CardTitle>
+          <p className='text-muted-foreground text-sm'>Present yourself professionally to recruiters.</p>
         </CardHeader>
 
         <CardContent>

@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 
 import { updateCandidateProfile } from './actions'
 
@@ -47,6 +48,8 @@ export default function ProfileForm({
     { error: '', success: '' },
   )
 
+  const [bio, setBio] = React.useState<string>(defaultBio || '')
+
   /* Keep toast ID to update after server response */
   const toastId = React.useRef<string | number | undefined>()
 
@@ -71,45 +74,61 @@ export default function ProfileForm({
 
   /* ---------------------------- UI ---------------------------- */
   return (
-    <form onSubmit={handleSubmit} className='space-y-6'>
-      {/* Basic details */}
-      <div className='grid gap-4 sm:grid-cols-2'>
+    <form onSubmit={handleSubmit} className='space-y-8'>
+      {/* ------------------------ Basic Info ------------------------ */}
+      <div className='grid gap-6 md:grid-cols-2'>
         <div className='space-y-2'>
-          <Label htmlFor='name'>Name</Label>
+          <Label htmlFor='name' className='font-medium'>
+            Full&nbsp;Name
+          </Label>
           <Input id='name' name='name' defaultValue={defaultName} required />
         </div>
 
         <div className='space-y-2'>
-          <Label htmlFor='websiteUrl'>Website</Label>
+          <Label htmlFor='websiteUrl' className='font-medium'>
+            Personal&nbsp;Website
+          </Label>
           <Input
             id='websiteUrl'
             name='websiteUrl'
             type='url'
             defaultValue={defaultWebsiteUrl}
-            placeholder='https://your‑site.com'
+            placeholder='https://your-site.com'
           />
         </div>
       </div>
 
-      {/* Bio */}
+      <Separator />
+
+      {/* --------------------------- About -------------------------- */}
       <div className='space-y-2'>
-        <Label htmlFor='bio'>Bio</Label>
+        <Label htmlFor='bio' className='font-medium'>
+          About&nbsp;You
+        </Label>
         <textarea
           id='bio'
           name='bio'
-          rows={5}
-          defaultValue={defaultBio}
-          className='border-border focus-visible:ring-primary w-full rounded-md border p-2 text-sm focus-visible:ring-2'
-          placeholder='Tell recruiters about yourself…'
+          rows={6}
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          maxLength={2000}
+          className='border-border focus-visible:ring-primary w-full rounded-md border p-3 text-sm focus-visible:ring-2'
+          placeholder='Tell recruiters about your background, passions, and goals…'
         />
+        <p className='text-muted-foreground text-xs text-right'>{bio.length}/2000</p>
       </div>
 
-      {/* Social links */}
+      <Separator />
+
+      {/* ------------------------ Social Links ---------------------- */}
       <fieldset className='space-y-4'>
-        <legend className='font-medium'>Social Links</legend>
-        <div className='grid gap-4 sm:grid-cols-2'>
+        <legend className='text-base font-medium'>Social&nbsp;Links</legend>
+
+        <div className='grid gap-6 md:grid-cols-2'>
           <div className='space-y-2'>
-            <Label htmlFor='twitterUrl'>Twitter</Label>
+            <Label htmlFor='twitterUrl' className='font-medium'>
+              Twitter
+            </Label>
             <Input
               id='twitterUrl'
               name='twitterUrl'
@@ -120,7 +139,9 @@ export default function ProfileForm({
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='githubUrl'>GitHub</Label>
+            <Label htmlFor='githubUrl' className='font-medium'>
+              GitHub
+            </Label>
             <Input
               id='githubUrl'
               name='githubUrl'
@@ -131,7 +152,9 @@ export default function ProfileForm({
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='linkedinUrl'>LinkedIn</Label>
+            <Label htmlFor='linkedinUrl' className='font-medium'>
+              LinkedIn
+            </Label>
             <Input
               id='linkedinUrl'
               name='linkedinUrl'
@@ -143,7 +166,8 @@ export default function ProfileForm({
         </div>
       </fieldset>
 
-      <Button type='submit' disabled={pending} className='w-full sm:w-max'>
+      {/* ------------------------- Actions ------------------------- */}
+      <Button type='submit' disabled={pending} className='w-full md:w-max'>
         {pending ? (
           <>
             <Loader2 className='mr-2 h-4 w-4 animate-spin' />
