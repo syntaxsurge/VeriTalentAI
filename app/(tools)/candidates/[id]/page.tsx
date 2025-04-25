@@ -1,18 +1,21 @@
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, and } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
 import { db } from '@/lib/db/drizzle'
-import { candidates, users, quizAttempts } from '@/lib/db/schema'
+import { candidates, users, quizAttempts, issuers } from '@/lib/db/schema'
 import {
   getCandidateCredentialsSection,
   type StatusCounts,
 } from '@/lib/db/queries/candidate-details'
+import {
+  candidateCredentials,
+  CredentialCategory,
+} from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
 
 type Params = { id: string }
 type Query = Record<string, string | string[] | undefined>
-
 const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 export default async function PublicCandidateProfile({
@@ -35,6 +38,43 @@ export default async function PublicCandidateProfile({
     .limit(1)
 
   if (!row) return <div>Candidate not found.</div>
+
+  /* -------------------- experiences & projects ------------------- */
+  const credsBase = db
+    .select({
+      id: candidateCredentials.id,
+      title: candidateCredentials.title,
+      createdAt: candidateCredentials.createdAt,
+      issuerName: issuers.name,
+      link: candidateCredentials.fileUrl,
+      description: candidateCredentials.type,
+    })
+    .from(candidateCredentials)
+    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
+    .where(eq(candidateCredentials.candidateId, candidateId))
+
+  const experienceRows = await credsBase
+    .where(and(eq(candidateCredentials.category, CredentialCategory.EXPERIENCE)))
+    .orderBy(desc(candidateCredentials.createdAt))
+
+  const projectRows = await credsBase
+    .where(and(eq(candidateCredentials.category, CredentialCategory.PROJECT)))
+    .orderBy(desc(candidateCredentials.createdAt))
+
+  const experiences = experienceRows.map((e) => ({
+    id: e.id,
+    title: e.title,
+    company: e.issuerName,
+    createdAt: e.createdAt,
+  }))
+
+  const projects = projectRows.map((p) => ({
+    id: p.id,
+    title: p.title,
+    link: p.link,
+    description: p.description,
+    createdAt: p.createdAt,
+  }))
 
   /* ----------------------- paged credentials ---------------------------- */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))
@@ -80,6 +120,14 @@ export default async function PublicCandidateProfile({
       bio={row.cand.bio ?? null}
       statusCounts={statusCounts as StatusCounts}
       passes={passes}
+      experiences={experiences}
+      projects={projects}
+      socials={{
+        twitterUrl: row.cand.twitterUrl,
+        githubUrl: row.cand.githubUrl,
+        linkedinUrl: row.cand.linkedinUrl,
+        websiteUrl: row.cand.websiteUrl,
+      }}
       credentials={{
         rows,
         sort,

@@ -1,4 +1,4 @@
-import { asc, desc, eq } from 'drizzle-orm'
+import { asc, desc, eq, and } from 'drizzle-orm'
 import { format } from 'date-fns'
 import { redirect } from 'next/navigation'
 
@@ -12,12 +12,20 @@ import {
   recruiterPipelines,
   pipelineCandidates,
   quizAttempts,
+  issuers,
 } from '@/lib/db/schema'
 import {
   getCandidateCredentialsSection,
   type StatusCounts,
 } from '@/lib/db/queries/candidate-details'
-import { STAGES, type Stage } from '@/lib/constants/recruiter'
+import {
+  STAGES,
+  type Stage,
+} from '@/lib/constants/recruiter'
+import {
+  candidateCredentials,
+  CredentialCategory,
+} from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
 
@@ -32,7 +40,6 @@ export default async function RecruiterCandidateProfile({
   params: Params | Promise<Params>
   searchParams: Query | Promise<Query>
 }) {
-  /* ------------------------ auth & params ------------------------ */
   const { id } = await params
   const candidateId = Number(id)
   const q = (await searchParams) as Query
@@ -50,6 +57,43 @@ export default async function RecruiterCandidateProfile({
     .limit(1)
 
   if (!row) redirect('/recruiter/talent')
+
+  /* -------------------- experiences & projects ------------------- */
+  const credsBase = db
+    .select({
+      id: candidateCredentials.id,
+      title: candidateCredentials.title,
+      createdAt: candidateCredentials.createdAt,
+      issuerName: issuers.name,
+      link: candidateCredentials.fileUrl,
+      description: candidateCredentials.type,
+    })
+    .from(candidateCredentials)
+    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
+    .where(eq(candidateCredentials.candidateId, candidateId))
+
+  const experienceRows = await credsBase
+    .where(and(eq(candidateCredentials.category, CredentialCategory.EXPERIENCE)))
+    .orderBy(desc(candidateCredentials.createdAt))
+
+  const projectRows = await credsBase
+    .where(and(eq(candidateCredentials.category, CredentialCategory.PROJECT)))
+    .orderBy(desc(candidateCredentials.createdAt))
+
+  const experiences = experienceRows.map((e) => ({
+    id: e.id,
+    title: e.title,
+    company: e.issuerName,
+    createdAt: e.createdAt,
+  }))
+
+  const projects = projectRows.map((p) => ({
+    id: p.id,
+    title: p.title,
+    link: p.link,
+    description: p.description,
+    createdAt: p.createdAt,
+  }))
 
   /* ---------------------- pipelines summary ---------------------- */
   const pipelines = await db
@@ -171,6 +215,14 @@ export default async function RecruiterCandidateProfile({
       pipelineSummary={pipelineSummary}
       statusCounts={statusCounts as StatusCounts}
       passes={passes}
+      experiences={experiences}
+      projects={projects}
+      socials={{
+        twitterUrl: row.cand.twitterUrl,
+        githubUrl: row.cand.githubUrl,
+        linkedinUrl: row.cand.linkedinUrl,
+        websiteUrl: row.cand.websiteUrl,
+      }}
       credentials={{
         rows: credRows,
         sort,
@@ -194,7 +246,6 @@ export default async function RecruiterCandidateProfile({
           basePath: `/recruiter/talent/${candidateId}`,
           initialParams: pipeInitialParams,
         },
-        /* Always show the dropdown, even if the recruiter has no pipelines yet */
         addToPipelineForm: (
           <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />
         ),
