@@ -1,3 +1,4 @@
+// lib/resume/resume-builder.ts
 import {
   PDFDocument,
   StandardFonts,
@@ -5,7 +6,7 @@ import {
   type PDFFont,
   type PDFPage,
 } from 'pdf-lib'
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
@@ -93,7 +94,7 @@ export async function buildResumeData(
 }
 
 /* -------------------------------------------------------------------------- */
-/*                       P D F   G E N E R A T I O N                          */
+/*                      M O D E R N   P D F   G E N E R A T O R               */
 /* -------------------------------------------------------------------------- */
 
 export async function generateResumePdf(
@@ -102,111 +103,209 @@ export async function generateResumePdf(
   const pdf = await PDFDocument.create()
   let page = pdf.addPage()
   const { width, height } = page.getSize()
-  const margin = 50
-  const fontSize = 12
-  const titleFontSize = 18
-  const smallFontSize = 8
-  const contentWidth = width - margin * 2
 
-  const font = await pdf.embedFont(StandardFonts.Helvetica)
-  const boldFont = await pdf.embedFont(StandardFonts.HelveticaBold)
+  /* ---------------------------------------------------------------------- */
+  /*                          S T Y L E   C O N S T                         */
+  /* ---------------------------------------------------------------------- */
+  const MARGIN_X = 60
+  const MARGIN_Y = 60
+  const HEAD_FONT_SIZE = 28
+  const SUBHEAD_FONT_SIZE = 12
+  const BODY_FONT_SIZE = 10
+  const SMALL_FONT_SIZE = 8
+  const LINE_HEIGHT = BODY_FONT_SIZE + 4
 
-  /* Attempt to embed logo (optional) */
+  const ACCENT = rgb(0.14, 0.47, 0.86) // #2477DB
+
+  const fontRegular = await pdf.embedFont(StandardFonts.Helvetica)
+  const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold)
+
+  /* Optional brand logo */
   let logoImage
   try {
-    const logoPath = path.join(process.cwd(), 'public', 'images', 'viskify-logo.png')
-    const logoBytes = await fs.readFile(logoPath)
+    const logoBytes = await fs.readFile(
+      path.join(process.cwd(), 'public', 'images', 'viskify-logo.png'),
+    )
     logoImage = await pdf.embedPng(logoBytes)
   } catch {
     logoImage = undefined
   }
 
-  let y = height - margin
-
-  /* Header */
-  page.drawText(data.name, {
-    x: margin,
-    y,
-    size: titleFontSize,
-    font: boldFont,
+  /* ---------------------------------------------------------------------- */
+  /*                                BANNER                                  */
+  /* ---------------------------------------------------------------------- */
+  const bannerH = 90
+  page.drawRectangle({
+    x: 0,
+    y: height - bannerH,
+    width,
+    height: bannerH,
+    color: ACCENT,
   })
-  y -= titleFontSize + 4
-  page.drawText(data.email, { x: margin, y, size: fontSize, font })
-  y -= fontSize + 16
 
-  /* Bio */
-  if (data.bio) {
-    ({ page, y } = drawParagraph(page, data.bio, font, fontSize, contentWidth, margin, y))
-    y -= 8
+  // Name
+  page.drawText(data.name, {
+    x: MARGIN_X,
+    y: height - bannerH + (bannerH - HEAD_FONT_SIZE) / 2 + 12,
+    size: HEAD_FONT_SIZE,
+    font: fontBold,
+    color: rgb(1, 1, 1),
+  })
+
+  // Email
+  page.drawText(data.email, {
+    x: MARGIN_X,
+    y: height - bannerH + (bannerH - HEAD_FONT_SIZE) / 2 - 10,
+    size: SUBHEAD_FONT_SIZE,
+    font: fontRegular,
+    color: rgb(1, 1, 1),
+  })
+
+  // Logo (top-right)
+  if (logoImage) {
+    const logoH = 24
+    const scale = logoH / logoImage.height
+    page.drawImage(logoImage, {
+      x: width - MARGIN_X - logoImage.width * scale,
+      y: height - bannerH + (bannerH - logoH) / 2,
+      width: logoImage.width * scale,
+      height: logoH,
+    })
   }
 
-  /* Sections */
-  ;({ page, y } = drawSection(
-    pdf,
-    page,
-    'Experience',
-    data.experiences.map((e) => `${e.title} – ${e.company ?? 'Unknown'}`),
-    font,
-    boldFont,
-    fontSize,
-    margin,
-    y,
-  ))
+  /* Y cursor below banner */
+  let y = height - bannerH - MARGIN_Y
 
-  ;({ page, y } = drawSection(
-    pdf,
-    page,
-    'Projects',
-    data.projects.map((p) => p.title),
-    font,
-    boldFont,
-    fontSize,
-    margin,
-    y,
-  ))
+  /* ---------------------------------------------------------------------- */
+  /*                        H E L P E R   F U N C T I O N S                  */
+  /* ---------------------------------------------------------------------- */
 
-  const credentialsLines = data.credentials.map((c) => {
-    const issuer = c.issuer ? ` – ${c.issuer}` : ''
-    const status =
-      c.status.charAt(0).toUpperCase() + c.status.slice(1).toLowerCase()
-    return `${c.title}${issuer} (${status})`
-  })
-  ;({ page, y } = drawSection(
-    pdf,
-    page,
-    'Credentials',
-    credentialsLines,
-    font,
-    boldFont,
-    fontSize,
-    margin,
-    y,
-  ))
+  function drawSectionTitle(title: string) {
+    page.drawText(title.toUpperCase(), {
+      x: MARGIN_X,
+      y,
+      size: SUBHEAD_FONT_SIZE,
+      font: fontBold,
+      color: ACCENT,
+    })
+    y -= SUBHEAD_FONT_SIZE + 4
+    // divider line
+    page.drawLine({
+      start: { x: MARGIN_X, y },
+      end: { x: width - MARGIN_X, y },
+      thickness: 1,
+      color: ACCENT,
+    })
+    y -= 12
+  }
 
-  /* Watermark / brand footer */
-  const brandText = 'Generated with Viskify • viskify.com'
-  const brandWidth = font.widthOfTextAtSize(brandText, smallFontSize)
-  const brandX = width / 2 - brandWidth / 2
+  function ensureSpace(linesNeeded = 1) {
+    if (y - linesNeeded * LINE_HEIGHT < MARGIN_Y) {
+      page = pdf.addPage()
+      y = page.getSize().height - MARGIN_Y
+    }
+  }
 
-  pdf.getPages().forEach((p) => {
-    const { height: ph } = p.getSize()
-    p.drawText(brandText, {
-      x: brandX,
-      y: margin / 2,
-      size: smallFontSize,
-      font,
+  function drawWrapped(text: string, font: PDFFont, size: number) {
+    const maxWidth = width - MARGIN_X * 2
+    const lines = wrapText(text, font, size, maxWidth)
+    lines.forEach((ln) => {
+      ensureSpace()
+      page.drawText(ln, { x: MARGIN_X, y, size, font })
+      y -= LINE_HEIGHT
+    })
+    y -= 4
+  }
+
+  function bulletLine(text: string) {
+    ensureSpace()
+    const bullet = '• '
+    const bulletWidth = fontRegular.widthOfTextAtSize(bullet, BODY_FONT_SIZE)
+    page.drawText(bullet, {
+      x: MARGIN_X,
+      y,
+      size: BODY_FONT_SIZE,
+      font: fontRegular,
+    })
+    const contentMax = width - MARGIN_X * 2 - bulletWidth
+    const wrapped = wrapText(text, fontRegular, BODY_FONT_SIZE, contentMax)
+    let localY = y
+    wrapped.forEach((ln, idx) => {
+      page.drawText(ln, {
+        x: MARGIN_X + bulletWidth,
+        y: localY,
+        size: BODY_FONT_SIZE,
+        font: fontRegular,
+      })
+      if (idx < wrapped.length - 1) {
+        localY -= LINE_HEIGHT
+        ensureSpace()
+      }
+    })
+    y = localY - LINE_HEIGHT
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*                                 BODY                                   */
+  /* ---------------------------------------------------------------------- */
+
+  // Bio
+  if (data.bio) {
+    drawSectionTitle('About Me')
+    drawWrapped(data.bio, fontRegular, BODY_FONT_SIZE)
+  }
+
+  // Experience
+  if (data.experiences.length > 0) {
+    drawSectionTitle('Experience')
+    data.experiences.forEach((exp) =>
+      bulletLine(`${exp.title}${exp.company ? ` — ${exp.company}` : ''}`),
+    )
+  }
+
+  // Projects
+  if (data.projects.length > 0) {
+    drawSectionTitle('Projects')
+    data.projects.forEach((proj) => bulletLine(proj.title))
+  }
+
+  // Credentials
+  if (data.credentials.length > 0) {
+    drawSectionTitle('Credentials')
+    data.credentials.forEach((c) => {
+      const issuer = c.issuer ? ` — ${c.issuer}` : ''
+      const status =
+        c.status.charAt(0).toUpperCase() + c.status.slice(1).toLowerCase()
+      bulletLine(`${c.title}${issuer} (${status})`)
+    })
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*                              FOOTER                                    */
+  /* ---------------------------------------------------------------------- */
+  const footerText = 'Generated with Viskify • viskify.com'
+  const footerW = fontRegular.widthOfTextAtSize(footerText, SMALL_FONT_SIZE)
+
+  pdf.getPages().forEach((p, idx) => {
+    const { width: pw } = p.getSize()
+    // footer
+    p.drawText(footerText, {
+      x: pw / 2 - footerW / 2,
+      y: MARGIN_Y / 2,
+      size: SMALL_FONT_SIZE,
+      font: fontRegular,
       color: rgb(0.55, 0.55, 0.55),
     })
-    if (logoImage) {
-      const scale = 20 / logoImage.height
-      p.drawImage(logoImage, {
-        x: margin,
-        y: ph - margin / 2 - 10,
-        width: logoImage.width * scale,
-        height: logoImage.height * scale,
-        opacity: 0.8,
-      })
-    }
+    // page number
+    const num = `${idx + 1}/${pdf.getPageCount()}`
+    const numW = fontRegular.widthOfTextAtSize(num, SMALL_FONT_SIZE)
+    p.drawText(num, {
+      x: pw - MARGIN_X - numW,
+      y: MARGIN_Y / 2,
+      size: SMALL_FONT_SIZE,
+      font: fontRegular,
+      color: rgb(0.55, 0.55, 0.55),
+    })
   })
 
   return await pdf.save()
@@ -242,77 +341,4 @@ function wrapText(
 
   if (current) lines.push(current)
   return lines
-}
-
-/**
- * Render a paragraph with automatic line-wrapping, adding pages as needed.
- */
-function drawParagraph(
-  page: PDFPage,
-  text: string,
-  font: PDFFont,
-  fontSize: number,
-  maxWidth: number,
-  margin: number,
-  startY: number,
-): { page: PDFPage; y: number } {
-  let y = startY
-  const lines = wrapText(text, font, fontSize, maxWidth)
-  lines.forEach((ln) => {
-    page.drawText(ln, { x: margin, y, size: fontSize, font })
-    y -= fontSize + 2
-    if (y < margin) {
-      page = page.doc.addPage()
-      y = page.getSize().height - margin
-    }
-  })
-  return { page, y }
-}
-
-/**
- * Render a bulleted section and automatically add pages if required.
- */
-function drawSection(
-  pdf: PDFDocument,
-  page: PDFPage,
-  heading: string,
-  items: string[],
-  font: PDFFont,
-  boldFont: PDFFont,
-  fontSize: number,
-  margin: number,
-  startY: number,
-): { page: PDFPage; y: number } {
-  let y = startY
-
-  if (items.length === 0) {
-    return { page, y }
-  }
-
-  page.drawText(heading.toUpperCase(), {
-    x: margin,
-    y,
-    size: fontSize,
-    font: boldFont,
-  })
-  y -= fontSize + 6
-
-  items.forEach((text) => {
-    page.drawText('• ' + text, { x: margin + 10, y, size: fontSize, font })
-    y -= fontSize + 4
-    if (y < margin) {
-      page = pdf.addPage()
-      y = page.getSize().height - margin
-      /* Repeat heading on continuation page */
-      page.drawText(`${heading.toUpperCase()} (cont.)`, {
-        x: margin,
-        y,
-        size: fontSize,
-        font: boldFont,
-      })
-      y -= fontSize + 6
-    }
-  })
-
-  return { page, y: y - 12 }
 }
