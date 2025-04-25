@@ -73,6 +73,7 @@ export default async function PublicCandidateProfile({
   /* ----------------------------- view ----------------------------------- */
   return (
     <CandidateDetailedProfileView
+      candidateId={candidateId}
       name={row.userRow?.name ?? null}
       email={row.userRow?.email ?? ''}
       avatarSrc={(row.userRow as any)?.image ?? null}

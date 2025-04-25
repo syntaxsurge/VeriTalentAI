@@ -67,6 +67,8 @@ export interface QuizAttempt {
 }
 
 interface Props {
+  /** Candidate primary key used to build canonical /candidates/{id} URL */
+  candidateId: number
   name: string | null
   email: string
   avatarSrc?: string | null
@@ -76,28 +78,8 @@ interface Props {
   passes: QuizAttempt[]
   credentials: CredentialsSection
   pipeline?: PipelineSection
+  /** Show Share Profile dropdown (defaults to true) */
   showShare?: boolean
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function copyUrl() {
-  navigator.clipboard
-    .writeText(window.location.href)
-    .then(() => toast.success('Profile link copied.'))
-    .catch(() => toast.error('Copy failed.'))
-}
-
-function shareNative() {
-  if (!navigator.share) {
-    copyUrl()
-    return
-  }
-  navigator
-    .share({ url: window.location.href })
-    .catch(() => toast.error('Share cancelled or failed.'))
 }
 
 /* -------------------------------------------------------------------------- */
@@ -105,6 +87,7 @@ function shareNative() {
 /* -------------------------------------------------------------------------- */
 
 export default function CandidateDetailedProfileView({
+  candidateId,
   name,
   email,
   avatarSrc,
@@ -117,6 +100,29 @@ export default function CandidateDetailedProfileView({
   showShare = true,
 }: Props) {
   const totalVerified = statusCounts.verified
+
+  /* Canonical public profile URL (always /candidates/{id}) */
+  const profileUrl =
+    typeof window === 'undefined'
+      ? `/candidates/${candidateId}`
+      : `${window.location.origin}/candidates/${candidateId}`
+
+  function handleCopy() {
+    navigator.clipboard
+      .writeText(profileUrl)
+      .then(() => toast.success('Profile link copied.'))
+      .catch(() => toast.error('Copy failed.'))
+  }
+
+  function handleShare() {
+    if (!navigator.share) {
+      handleCopy()
+      return
+    }
+    navigator
+      .share({ url: profileUrl })
+      .catch(() => toast.error('Share cancelled or failed.'))
+  }
 
   return (
     <section className='space-y-10'>
@@ -179,11 +185,11 @@ export default function CandidateDetailedProfileView({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-                  <DropdownMenuItem onClick={copyUrl} className='cursor-pointer'>
+                  <DropdownMenuItem onClick={handleCopy} className='cursor-pointer'>
                     <Clipboard className='mr-2 h-4 w-4' />
                     Copy&nbsp;URL
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={shareNative} className='cursor-pointer'>
+                  <DropdownMenuItem onClick={handleShare} className='cursor-pointer'>
                     <Share2 className='mr-2 h-4 w-4' />
                     Native&nbsp;Share
                   </DropdownMenuItem>
