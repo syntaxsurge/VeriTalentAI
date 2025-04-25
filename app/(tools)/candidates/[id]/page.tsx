@@ -1,4 +1,4 @@
-import { desc } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
 import { db } from '@/lib/db/drizzle'
@@ -30,8 +30,8 @@ export default async function PublicCandidateProfile({
   const [row] = await db
     .select({ cand: candidates, userRow: users })
     .from(candidates)
-    .leftJoin(users, (c, u) => c.userId.eq(u.id))
-    .where(candidates.id.eq(candidateId))
+    .leftJoin(users, eq(candidates.userId, users.id))
+    .where(eq(candidates.id, candidateId))
     .limit(1)
 
   if (!row) return <div>Candidate not found.</div>
@@ -67,7 +67,7 @@ export default async function PublicCandidateProfile({
   const passes = await db
     .select()
     .from(quizAttempts)
-    .where(quizAttempts.candidateId.eq(candidateId))
+    .where(eq(quizAttempts.candidateId, candidateId))
     .orderBy(desc(quizAttempts.createdAt))
 
   /* ----------------------------- view ----------------------------------- */
