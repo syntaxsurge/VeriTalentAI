@@ -1,7 +1,10 @@
 import { asc, desc, eq, sql } from 'drizzle-orm'
 import { format } from 'date-fns'
+import { redirect } from 'next/navigation'
 
-import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
+import CandidateDetailedProfileView, {
+  type StatusCounts,
+} from '@/components/candidate/profile-detailed-view'
 import AddToPipelineForm from './add-to-pipeline-form'
 import { getUser } from '@/lib/db/queries/queries'
 import { db } from '@/lib/db/drizzle'
@@ -138,13 +141,13 @@ export default async function RecruiterCandidateProfile({
     .where(eq(candidateCredentials.candidateId, candidateId))
     .groupBy(candidateCredentials.status)
 
-  const statusCounts = {
+  const statusCounts: StatusCounts = {
     verified: 0,
     pending: 0,
     rejected: 0,
     unverified: 0,
-  } as Record<string, number>
-  statusCountsRaw.forEach((r) => (statusCounts[r.status] = Number(r.count)))
+  }
+  statusCountsRaw.forEach((r) => (statusCounts[r.status as keyof StatusCounts] = Number(r.count)))
 
   const credInitialParams: Record<string, string> = {}
   const addCred = (k: string) => {
