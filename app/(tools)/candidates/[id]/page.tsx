@@ -1,8 +1,7 @@
 import { desc, eq, and } from 'drizzle-orm'
-import { format } from 'date-fns'
 
 import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
-import { type RowType as CredRowType } from '@/components/dashboard/recruiter/credentials-table'
+import { type RowType as CredRowType } from '@/components/dashboard/candidate/credentials-table'
 import { db } from '@/lib/db/drizzle'
 import { candidates, users, quizAttempts, issuers } from '@/lib/db/schema'
 import {
@@ -99,48 +98,49 @@ export default async function PublicCandidateProfile({
     )
     .orderBy(desc(candidateCredentials.createdAt))
 
-  const experiences: Experience[] = experienceRows.map(
-    (e): Experience => ({
-      id: e.id,
-      title: e.title,
-      company: e.issuerName,
-      createdAt: e.createdAt,
-    }),
-  )
+  const experiences: Experience[] = experienceRows.map((e) => ({
+    id: e.id,
+    title: e.title,
+    company: e.issuerName,
+    createdAt: e.createdAt,
+  }))
 
-  const projects: Project[] = projectRows.map(
-    (p): Project => ({
-      id: p.id,
-      title: p.title,
-      link: p.link,
-      description: p.description,
-      createdAt: p.createdAt,
-    }),
-  )
+  const projects: Project[] = projectRows.map((p) => ({
+    id: p.id,
+    title: p.title,
+    link: p.link,
+    description: p.description,
+    createdAt: p.createdAt,
+  }))
 
   /* ----------------------- paged credentials ---------------------------- */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))
   const sizeRaw = Number(first(q, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = first(q, 'sort') ?? 'status'
+
+  /* Restrict sort key to accepted values */
+  const allowedSortKeys = ['createdAt', 'status', 'title', 'issuer'] as const
+  type SortKey = typeof allowedSortKeys[number]
+  const sortRaw = (first(q, 'sort') ?? 'status') as string
+  const sort: SortKey = allowedSortKeys.includes(sortRaw as SortKey)
+    ? (sortRaw as SortKey)
+    : 'status'
+
   const order = first(q, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(q, 'q') ?? '').trim()
 
-  const {
-    rows: rawCredRows,
-    hasNext,
-    statusCounts,
-  } = await getCandidateCredentialsSection(
-    candidateId,
-    page,
-    pageSize,
-    sort as keyof CredRowType,
-    order as 'asc' | 'desc',
-    searchTerm,
-  )
+  const { rows: rawCredRows, hasNext, statusCounts } =
+    await getCandidateCredentialsSection(
+      candidateId,
+      page,
+      pageSize,
+      sort,
+      order as 'asc' | 'desc',
+      searchTerm,
+    )
 
-  /* Ensure each credential row includes `category` */
-  const credRows: CredRowType[] = rawCredRows.map((c): CredRowType => ({
+  /* Ensure each credential row includes needed fields */
+  const credRows: CredRowType[] = rawCredRows.map((c) => ({
     id: c.id,
     title: c.title,
     category: (c as any).category ?? CredentialCategory.OTHER,
