@@ -17,11 +17,11 @@ import {
   ChevronUp,
   Download,
   Globe2,
-  Twitter,
-  Github,
-  Linkedin,
   FileText,
 } from 'lucide-react'
+import { SiGithub, SiLinkedin } from 'react-icons/si'
+import { FaTwitter } from "react-icons/fa";
+
 import { format, formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 
@@ -242,9 +242,9 @@ export default function CandidateDetailedProfileView({
   const profilePath = `/candidates/${candidateId}`
 
   const socialIcons = [
-    { href: socials.twitterUrl, icon: Twitter, label: 'Twitter' },
-    { href: socials.githubUrl, icon: Github, label: 'GitHub' },
-    { href: socials.linkedinUrl, icon: Linkedin, label: 'LinkedIn' },
+    { href: socials.twitterUrl, icon: FaTwitter, label: 'Twitter' },
+    { href: socials.githubUrl, icon: SiGithub, label: 'GitHub' },
+    { href: socials.linkedinUrl, icon: SiLinkedin, label: 'LinkedIn' },
     { href: socials.websiteUrl, icon: Globe2, label: 'Website' },
   ].filter((s) => !!s.href)
 
