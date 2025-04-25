@@ -1,5 +1,4 @@
 import { asc, desc, eq, sql } from 'drizzle-orm'
-import { format } from 'date-fns'
 import { redirect } from 'next/navigation'
 
 import CandidateDetailedProfileView, {
@@ -15,6 +14,7 @@ import {
   pipelineCandidates,
   candidateCredentials,
   quizAttempts,
+  CredentialStatus,
 } from '@/lib/db/schema'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
 
@@ -128,7 +128,7 @@ export default async function RecruiterCandidateProfile({
     id: c.id,
     title: c.title,
     issuer: c.issuer,
-    status: c.status,
+    status: c.status as CredentialStatus, /* FIX */
     fileUrl: c.fileUrl,
   }))
 
