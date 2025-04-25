@@ -5,7 +5,7 @@ import { issuers } from '@/lib/db/schema/issuer'
 import {
   candidateCredentials,
   type CredentialStatus,
-} from '@/lib/db/schema/viskify'
+} from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

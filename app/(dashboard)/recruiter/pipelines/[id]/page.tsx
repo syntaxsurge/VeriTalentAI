@@ -9,7 +9,7 @@ import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { users } from '@/lib/db/schema/core'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
-import { candidates } from '@/lib/db/schema/viskify'
+import { candidates } from '@/lib/db/schema/candidate'
 
 export const revalidate = 0
 

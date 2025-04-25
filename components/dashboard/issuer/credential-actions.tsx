@@ -13,7 +13,7 @@ import {
   unverifyCredentialAction,
 } from '@/app/(dashboard)/issuer/credentials/actions'
 import { Button } from '@/components/ui/button'
-import { CredentialStatus } from '@/lib/db/schema/viskify'
+import { CredentialStatus } from '@/lib/db/schema/candidate'
 
 type ActionState = { error?: string; success?: string }
 

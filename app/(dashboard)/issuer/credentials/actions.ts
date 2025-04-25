@@ -12,7 +12,7 @@ import {
   candidateCredentials,
   CredentialStatus,
   candidates,
-} from '@/lib/db/schema/viskify'
+} from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                               H E L P E R S                                */

@@ -21,7 +21,7 @@ import { STAGES, type Stage } from '@/lib/constants/recruiter'
 import {
   candidateCredentials,
   CredentialCategory,
-} from '@/lib/db/schema/viskify'
+} from '@/lib/db/schema/candidate'
 
 export const revalidate = 0
 

@@ -9,7 +9,7 @@ import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { createCheqdDID } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
-import { candidateCredentials, CredentialStatus } from '@/lib/db/schema/viskify'
+import { candidateCredentials, CredentialStatus } from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                               U P D A T E                                  */

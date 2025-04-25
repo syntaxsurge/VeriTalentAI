@@ -29,7 +29,7 @@ import {
   candidateCredentials,
   CredentialStatus,
   quizAttempts,
-} from '@/lib/db/schema/viskify'
+} from '@/lib/db/schema/candidate'
 
 export const revalidate = 0
 

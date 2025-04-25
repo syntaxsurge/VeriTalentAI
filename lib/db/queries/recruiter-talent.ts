@@ -2,7 +2,7 @@ import { and, asc, desc, ilike, or, sql } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { users } from '../schema/core'
-import { candidates } from '../schema/viskify'
+import { candidates } from '../schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

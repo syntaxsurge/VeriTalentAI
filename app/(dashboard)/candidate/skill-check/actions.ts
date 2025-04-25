@@ -6,7 +6,7 @@ import { issueCredential } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
-import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/viskify'
+import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/candidate'
 
 import { openAIAssess } from './openai'
 

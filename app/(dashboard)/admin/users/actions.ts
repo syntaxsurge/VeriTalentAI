@@ -14,7 +14,7 @@ import {
   candidateCredentials,
   quizAttempts,
   CredentialStatus,
-} from '@/lib/db/schema/viskify'
+} from '@/lib/db/schema/candidate'
 
 /* ------------------------------------------------------------------ */
 /*                         U P D A T E   U S E R                      */

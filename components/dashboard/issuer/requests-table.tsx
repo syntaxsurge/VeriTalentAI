@@ -10,7 +10,7 @@ import { toast } from 'sonner'
 import { rejectCredentialAction } from '@/app/(dashboard)/issuer/credentials/actions'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
-import { CredentialStatus } from '@/lib/db/schema/viskify'
+import { CredentialStatus } from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

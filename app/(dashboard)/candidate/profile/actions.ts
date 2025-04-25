@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
 import { users } from '@/lib/db/schema/core'
-import { candidates } from '@/lib/db/schema/viskify'
+import { candidates } from '@/lib/db/schema/candidate'
 
 const urlField = z
   .string()

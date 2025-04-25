@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import { candidates } from '@/lib/db/schema/viskify'
+import { candidates } from '@/lib/db/schema/candidate'
 
 import ProfileForm from './profile-form'
 

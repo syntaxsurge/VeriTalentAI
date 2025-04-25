@@ -8,7 +8,7 @@ import { ArrowUpDown, FileText } from 'lucide-react'
 
 import StatusBadge from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
-import { CredentialStatus } from '@/lib/db/schema/viskify'
+import { CredentialStatus } from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

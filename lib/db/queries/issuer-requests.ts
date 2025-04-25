@@ -2,7 +2,7 @@ import { asc, desc, eq, ilike, or, and, sql } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { users } from '../schema/core'
-import { candidateCredentials, candidates, CredentialStatus } from '../schema/viskify'
+import { candidateCredentials, candidates, CredentialStatus } from '../schema/candidate'
 
 export interface IssuerRequestRow {
   id: number

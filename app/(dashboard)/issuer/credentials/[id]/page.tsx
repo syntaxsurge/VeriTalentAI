@@ -9,7 +9,7 @@ import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
-import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/viskify'
+import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { cn } from '@/lib/utils'
 
 export const revalidate = 0

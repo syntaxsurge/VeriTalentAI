@@ -6,7 +6,7 @@ import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { invitations } from '@/lib/db/schema'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
-import { candidateCredentials, CredentialStatus } from '@/lib/db/schema/viskify'
+import { candidateCredentials, CredentialStatus } from '@/lib/db/schema/candidate'
 
 export async function GET() {
   const user = await getUser()

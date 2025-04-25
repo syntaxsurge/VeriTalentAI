@@ -7,7 +7,7 @@ import {
   candidateCredentials as credsT,
   candidates as candT,
   CredentialStatus,
-} from '../schema/viskify'
+} from '../schema/candidate'
 
 export type AdminCredentialRow = {
   id: number

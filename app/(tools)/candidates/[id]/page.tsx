@@ -14,7 +14,7 @@ import {
   candidateCredentials,
   CredentialCategory,
   CredentialStatus,
-} from '@/lib/db/schema/viskify'
+} from '@/lib/db/schema/candidate'
 
 export const revalidate = 0
 

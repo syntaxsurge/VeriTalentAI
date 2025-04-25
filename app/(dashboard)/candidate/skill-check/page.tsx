@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
-import { skillQuizzes } from '@/lib/db/schema/viskify'
+import { skillQuizzes } from '@/lib/db/schema/candidate'
 
 import StartQuizForm from './start-quiz-form'
 

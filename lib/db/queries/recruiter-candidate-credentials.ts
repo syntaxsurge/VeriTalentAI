@@ -2,7 +2,7 @@ import { eq, ilike, and, asc, desc } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { issuers as issuersT } from '../schema/issuer'
-import { candidateCredentials as credsT, CredentialStatus } from '../schema/viskify'
+import { candidateCredentials as credsT, CredentialStatus } from '../schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

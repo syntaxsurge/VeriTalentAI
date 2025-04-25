@@ -16,7 +16,7 @@ import {
   candidateCredentials,
   CredentialStatus,
   CredentialCategory,
-} from '@/lib/db/schema/viskify'
+} from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
 
 /* -------------------------------------------------------------------------- */

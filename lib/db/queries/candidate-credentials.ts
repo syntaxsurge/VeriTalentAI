@@ -4,9 +4,9 @@ import { db } from '@/lib/db/drizzle'
 import {
   candidateCredentials,
   CredentialStatus,
-} from '@/lib/db/schema/viskify'
+} from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
-import { candidates } from '@/lib/db/schema/viskify'
+import { candidates } from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
