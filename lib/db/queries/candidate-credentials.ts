@@ -1,11 +1,4 @@
-import {
-  asc,
-  desc,
-  eq,
-  ilike,
-  sql,
-  and,
-} from 'drizzle-orm'
+import { asc, desc, eq, ilike, sql, and } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
 import {
@@ -24,6 +17,8 @@ export interface CredentialRow {
   id: number
   title: string
   category: string
+  /** Fine-grained credential sub-type (e.g. 'bachelor', 'github_repo') */
+  type: string
   issuer: string | null
   status: CredentialStatus
   fileUrl: string | null
@@ -45,7 +40,7 @@ export interface StatusCounts {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                          H E L P E R   F U N C T S                         */
+/*                          H E L P E R   F U N C T I O N S                   */
 /* -------------------------------------------------------------------------- */
 
 function buildOrderExpr(
@@ -106,9 +101,7 @@ export async function getCandidateCredentialsSection(
   sort: 'title' | 'category' | 'status' | 'createdAt',
   order: 'asc' | 'desc',
   searchTerm: string,
-): Promise<
-  PageResult<CredentialRow> & { statusCounts: StatusCounts }
-> {
+): Promise<PageResult<CredentialRow> & { statusCounts: StatusCounts }> {
   /* ----------------------------- Status counts --------------------------- */
   const [counts] = await db
     .select({
@@ -144,6 +137,7 @@ export async function getCandidateCredentialsSection(
       id: candidateCredentials.id,
       title: candidateCredentials.title,
       category: candidateCredentials.category,
+      type: candidateCredentials.type,
       issuer: issuers.name,
       status: candidateCredentials.status,
       fileUrl: candidateCredentials.fileUrl,
@@ -163,6 +157,7 @@ export async function getCandidateCredentialsSection(
     id: r.id,
     title: r.title,
     category: r.category,
+    type: r.type,
     issuer: r.issuer ?? null,
     status: r.status as CredentialStatus,
     fileUrl: r.fileUrl ?? null,
