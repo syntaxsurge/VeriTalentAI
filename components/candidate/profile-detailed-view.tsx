@@ -1,14 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { Fragment, useMemo, useState } from 'react'
 import {
-  Mail,
-  BadgeCheck,
   Share2,
   Clipboard,
-  Users2,
   BookOpen,
   Briefcase,
   Award,
@@ -17,11 +13,9 @@ import {
   ChevronUp,
   Download,
   Globe2,
-  FileText,
 } from 'lucide-react'
 import { SiGithub, SiLinkedin } from 'react-icons/si'
-import { FaTwitter } from "react-icons/fa";
-
+import { FaTwitter } from 'react-icons/fa'
 import { format, formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 
@@ -42,8 +36,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
-import { Separator } from '@/components/ui/separator'
-import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
 
 /* Internal UI */
 import { UserAvatar } from '@/components/ui/user-avatar'
@@ -54,7 +47,6 @@ import CredentialsTable, {
 import PipelineEntriesTable, {
   RowType as PipeRow,
 } from '@/components/dashboard/recruiter/pipeline-entries-table'
-import { TablePagination } from '@/components/ui/tables/table-pagination'
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -117,7 +109,6 @@ export interface Socials {
   twitterUrl?: string | null
   githubUrl?: string | null
   linkedinUrl?: string | null
-  snapchatUrl?: string | null
   websiteUrl?: string | null
 }
 
@@ -155,13 +146,7 @@ function usePrettyDate(d?: Date | null) {
 /*                         R E U S A B L E   U I                              */
 /* -------------------------------------------------------------------------- */
 
-function StatBlock({
-  value,
-  label,
-}: {
-  value: React.ReactNode
-  label: string
-}) {
+function StatBlock({ value, label }: { value: React.ReactNode; label: string }) {
   return (
     <div className='flex flex-col items-center gap-1'>
       <span className='text-lg font-bold leading-none'>{value}</span>
@@ -237,8 +222,8 @@ export default function CandidateDetailedProfileView({
   showShare = true,
 }: Props) {
   /* -------------------------- Derived helpers --------------------------- */
-
-  const totalVerified = statusCounts.verified
+  const totalCredentials =
+    statusCounts.verified + statusCounts.pending + statusCounts.rejected + statusCounts.unverified
   const profilePath = `/candidates/${candidateId}`
 
   const socialIcons = [
@@ -266,7 +251,9 @@ export default function CandidateDetailedProfileView({
       <section className='space-y-10'>
         {/* ------------------------------ COVER --------------------------- */}
         <div className='overflow-hidden rounded-2xl border bg-muted/40 shadow-sm'>
+          {/* Decorative banner */}
           <div className='h-32 w-full bg-gradient-to-r from-primary/30 via-primary/10 to-transparent' />
+
           <div className='flex flex-col gap-6 p-6 sm:flex-row sm:items-end sm:justify-between'>
             {/* Avatar + identity */}
             <div className='flex flex-col items-center gap-4 sm:flex-row sm:items-end'>
@@ -274,7 +261,7 @@ export default function CandidateDetailedProfileView({
                 src={avatarSrc ?? undefined}
                 name={name}
                 email={email}
-                className='size-28 ring-4 ring-background -mt-20 sm:-mt-14'
+                className='-mt-20 size-28 ring-4 ring-background sm:-mt-14'
               />
               <div className='text-center sm:text-left'>
                 <h1 className='text-2xl font-extrabold leading-tight'>{name || 'Unnamed'}</h1>
@@ -285,40 +272,28 @@ export default function CandidateDetailedProfileView({
             </div>
 
             {/* Actions */}
-            <div className='flex flex-wrap items-center justify-center gap-3'>
-              <Button asChild size='sm' variant='secondary' className='gap-2'>
-                <a href={`/api/candidates/${candidateId}/resume`} download>
-                  <Download className='h-4 w-4' />
-                  Download&nbsp;PDF
-                </a>
-              </Button>
-
-              {showShare && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant='outline' size='sm' className='gap-2'>
-                      <Share2 className='h-4 w-4' />
-                      Share
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='end' className='rounded-lg p-1 shadow-lg'>
-                    <DropdownMenuItem onClick={copyLink} className='cursor-pointer'>
-                      <Clipboard className='mr-2 h-4 w-4' />
-                      Copy&nbsp;URL
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
+            {showShare && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='outline' size='sm' className='gap-2'>
+                    <Share2 className='h-4 w-4' />
+                    Share
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end' className='rounded-lg p-1 shadow-lg'>
+                  <DropdownMenuItem onClick={copyLink} className='cursor-pointer'>
+                    <Clipboard className='mr-2 h-4 w-4' />
+                    Copy&nbsp;URL
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
-          {/* Stats strip */}
+          {/* Stats strip – consolidated */}
           <div className='border-t bg-background/60 backdrop-blur'>
-            <div className='mx-auto grid max-w-4xl grid-cols-3 gap-6 p-4 text-center sm:grid-cols-6'>
-              <StatBlock value={totalVerified} label='Verified' />
-              <StatBlock value={statusCounts.pending} label='Pending' />
-              <StatBlock value={statusCounts.rejected} label='Rejected' />
-              <StatBlock value={statusCounts.unverified} label='Unverified' />
+            <div className='mx-auto grid max-w-3xl grid-cols-3 gap-6 p-4 text-center'>
+              <StatBlock value={totalCredentials} label='Credentials' />
               <StatBlock value={passes.length} label='Skill Passes' />
               <StatBlock value={pipelineSummary || '—'} label='Pipelines' />
             </div>
@@ -353,7 +328,29 @@ export default function CandidateDetailedProfileView({
         <div className='grid gap-8 lg:grid-cols-[280px_1fr]'>
           {/* --------------------------- SIDEBAR -------------------------- */}
           <aside className='space-y-8'>
-            {/* Snapshot card (compact) */}
+            {/* PDF Resume card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2 text-base'>
+                  <Download className='h-5 w-5' />
+                  PDF&nbsp;Resume
+                </CardTitle>
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                <p className='text-sm text-muted-foreground'>
+                  Generate and download a professionally formatted resume summarizing your profile,
+                  credentials, experiences, and projects.
+                </p>
+                <Button variant='secondary' className='w-full gap-2' asChild>
+                  <a href={`/api/candidates/${candidateId}/resume`} download>
+                    <Download className='h-4 w-4' />
+                    PDF&nbsp;Resume
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Snapshot card */}
             <Card className='sticky top-24'>
               <CardHeader>
                 <CardTitle className='flex items-center gap-2 text-base'>
@@ -462,7 +459,7 @@ export default function CandidateDetailedProfileView({
                             </Button>
                           )}
                           <p className='text-muted-foreground text-xs'>
-                            Added {usePrettyDate(proj.createdAt as Date)}
+                            Added {usePrettyDate(proj.createdAt)}
                           </p>
                         </div>
                       )}
@@ -553,7 +550,7 @@ export default function CandidateDetailedProfileView({
                           Quiz&nbsp;#{p.quizId} • Score&nbsp;{p.score ?? '—'}
                         </span>
                         <span className='text-muted-foreground text-xs'>
-                          {usePrettyDate(p.createdAt as Date)}
+                          {usePrettyDate(p.createdAt)}
                         </span>
                       </li>
                     ))}
