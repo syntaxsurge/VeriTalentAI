@@ -1,7 +1,9 @@
 import { desc, eq, and } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
-import { type RowType as CredRowType } from '@/components/dashboard/candidate/credentials-table'
+import {
+  type RowType as CredRowType,
+} from '@/components/dashboard/recruiter/credentials-table'
 import { db } from '@/lib/db/drizzle'
 import { candidates, users, quizAttempts, issuers } from '@/lib/db/schema'
 import {
@@ -11,7 +13,7 @@ import {
 import {
   candidateCredentials,
   CredentialCategory,
-  type CredentialStatus,
+  CredentialStatus,
 } from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
@@ -129,26 +131,23 @@ export default async function PublicCandidateProfile({
   const order = first(q, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(q, 'q') ?? '').trim()
 
-  const { rows: rawCredRows, hasNext, statusCounts } =
-    await getCandidateCredentialsSection(
-      candidateId,
-      page,
-      pageSize,
-      sort,
-      order as 'asc' | 'desc',
-      searchTerm,
-    )
+  const { rows: rawCredRows, hasNext, statusCounts } = await getCandidateCredentialsSection(
+    candidateId,
+    page,
+    pageSize,
+    sort,
+    order as 'asc' | 'desc',
+    searchTerm,
+  )
 
-  /* Ensure each credential row includes needed fields */
+  /* Align with recruiter RowType (no `type` or `vcJson`, status is enum) */
   const credRows: CredRowType[] = rawCredRows.map((c) => ({
     id: c.id,
     title: c.title,
     category: (c as any).category ?? CredentialCategory.OTHER,
-    type: (c as any).type,
     issuer: (c as any).issuer ?? null,
     status: (c as any).status as CredentialStatus,
     fileUrl: (c as any).fileUrl ?? null,
-    vcJson: (c as any).vcJson ?? null,
   }))
 
   const credInitialParams: Record<string, string> = {}
