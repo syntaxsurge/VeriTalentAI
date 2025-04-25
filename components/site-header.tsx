@@ -31,8 +31,9 @@ const LANDING_SECTIONS = [
   { id: 'cta', label: 'Get Started' },
 ] as const
 
-/* Tools dropdown items */
+/* Tools dropdown items – now includes Candidates */
 const TOOLS_MENU = [
+  { href: '/candidates', label: 'Candidates' },
   { href: '/issuers', label: 'Issuers' },
   { href: '/verify', label: 'Verify' },
 ] as const
@@ -117,7 +118,7 @@ export default function SiteHeader() {
           <HoverCard openDelay={100} closeDelay={100}>
             <HoverCardTrigger asChild>
               <Link
-                href='/issuers'
+                href='/candidates'
                 className='text-foreground/80 hover:text-foreground flex items-center gap-1 text-sm font-medium transition-colors'
               >
                 Tools
