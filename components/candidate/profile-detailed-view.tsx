@@ -112,6 +112,13 @@ export interface Socials {
   websiteUrl?: string | null
 }
 
+export interface SnapshotMetrics {
+  uniqueIssuers: number
+  avgScore: number | null
+  experienceCount: number
+  projectCount: number
+}
+
 interface Props {
   candidateId: number
   name: string | null
@@ -121,6 +128,7 @@ interface Props {
   pipelineSummary?: string
   statusCounts: StatusCounts
   passes: QuizAttempt[]
+  snapshot: SnapshotMetrics
   credentials: CredentialsSection
   experiences: Experience[]
   projects: Project[]
@@ -214,6 +222,7 @@ export default function CandidateDetailedProfileView({
   pipelineSummary,
   statusCounts,
   passes,
+  snapshot,
   credentials,
   experiences,
   projects,
@@ -333,18 +342,18 @@ export default function CandidateDetailedProfileView({
               <CardHeader>
                 <CardTitle className='flex items-center gap-2 text-base'>
                   <Download className='h-5 w-5' />
-                  PDF&nbsp;Resume
+                  Résumé&nbsp;PDF
                 </CardTitle>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <p className='text-sm text-muted-foreground'>
-                  Generate and download a professionally formatted resume summarizing your profile,
-                  credentials, experiences, and projects.
+                  Generate a professionally formatted résumé summarizing your profile, credentials,
+                  experiences, and projects.
                 </p>
                 <Button variant='secondary' className='w-full gap-2' asChild>
                   <a href={`/api/candidates/${candidateId}/resume`} download>
                     <Download className='h-4 w-4' />
-                    PDF&nbsp;Resume
+                    Download&nbsp;PDF
                   </a>
                 </Button>
               </CardContent>
@@ -361,20 +370,22 @@ export default function CandidateDetailedProfileView({
               <CardContent>
                 <dl className='grid grid-cols-2 gap-4 text-sm'>
                   <div>
-                    <dt className='text-muted-foreground'>Verified</dt>
-                    <dd className='text-lg font-bold'>{statusCounts.verified}</dd>
+                    <dt className='text-muted-foreground'>Issuers</dt>
+                    <dd className='text-lg font-bold'>{snapshot.uniqueIssuers}</dd>
                   </div>
                   <div>
-                    <dt className='text-muted-foreground'>Pending</dt>
-                    <dd className='text-lg font-bold'>{statusCounts.pending}</dd>
+                    <dt className='text-muted-foreground'>Avg&nbsp;Score</dt>
+                    <dd className='text-lg font-bold'>
+                      {snapshot.avgScore !== null ? `${snapshot.avgScore}%` : '—'}
+                    </dd>
                   </div>
                   <div>
-                    <dt className='text-muted-foreground'>Rejected</dt>
-                    <dd className='text-lg font-bold'>{statusCounts.rejected}</dd>
+                    <dt className='text-muted-foreground'>Experience</dt>
+                    <dd className='text-lg font-bold'>{snapshot.experienceCount}</dd>
                   </div>
                   <div>
-                    <dt className='text-muted-foreground'>Unverified</dt>
-                    <dd className='text-lg font-bold'>{statusCounts.unverified}</dd>
+                    <dt className='text-muted-foreground'>Projects</dt>
+                    <dd className='text-lg font-bold'>{snapshot.projectCount}</dd>
                   </div>
                 </dl>
               </CardContent>

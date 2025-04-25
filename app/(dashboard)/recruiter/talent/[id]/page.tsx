@@ -1,5 +1,4 @@
 import { asc, desc, eq, and } from 'drizzle-orm'
-import { format } from 'date-fns'
 import { redirect } from 'next/navigation'
 
 import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
@@ -18,10 +17,7 @@ import {
   getCandidateCredentialsSection,
   type StatusCounts,
 } from '@/lib/db/queries/candidate-details'
-import {
-  STAGES,
-  type Stage,
-} from '@/lib/constants/recruiter'
+import { STAGES, type Stage } from '@/lib/constants/recruiter'
 import {
   candidateCredentials,
   CredentialCategory,
@@ -57,6 +53,7 @@ export default async function RecruiterCandidateProfile({
 
   if (!row) redirect('/recruiter/talent')
 
+  /* --------------------- Experience & Project credentials --------------------- */
   const experienceRows = await db
     .select({
       id: candidateCredentials.id,
@@ -71,8 +68,8 @@ export default async function RecruiterCandidateProfile({
     .where(
       and(
         eq(candidateCredentials.candidateId, candidateId),
-        eq(candidateCredentials.category, CredentialCategory.EXPERIENCE)
-      )
+        eq(candidateCredentials.category, CredentialCategory.EXPERIENCE),
+      ),
     )
     .orderBy(desc(candidateCredentials.createdAt))
 
@@ -90,8 +87,8 @@ export default async function RecruiterCandidateProfile({
     .where(
       and(
         eq(candidateCredentials.candidateId, candidateId),
-        eq(candidateCredentials.category, CredentialCategory.PROJECT)
-      )
+        eq(candidateCredentials.category, CredentialCategory.PROJECT),
+      ),
     )
     .orderBy(desc(candidateCredentials.createdAt))
 
@@ -110,6 +107,7 @@ export default async function RecruiterCandidateProfile({
     createdAt: p.createdAt,
   }))
 
+  /* --------------------- Pipelines owned by recruiter --------------------- */
   const pipelines = await db
     .select({ id: recruiterPipelines.id, name: recruiterPipelines.name })
     .from(recruiterPipelines)
@@ -129,9 +127,10 @@ export default async function RecruiterCandidateProfile({
     pipelineEntriesAll.length === 0
       ? undefined
       : pipelineEntriesAll.length === 1
-        ? `In ${pipelineEntriesAll[0].pipelineName}`
-        : `In ${pipelineEntriesAll.length} Pipelines`
+      ? `In ${pipelineEntriesAll[0].pipelineName}`
+      : `In ${pipelineEntriesAll.length} Pipelines`
 
+  /* ----------------------------- Credentials section ----------------------------- */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))
   const sizeRaw = Number(first(q, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
@@ -143,7 +142,14 @@ export default async function RecruiterCandidateProfile({
     rows: credRows,
     hasNext,
     statusCounts,
-  } = await getCandidateCredentialsSection(candidateId, page, pageSize, sort as any, order as any, searchTerm)
+  } = await getCandidateCredentialsSection(
+    candidateId,
+    page,
+    pageSize,
+    sort as any,
+    order as any,
+    searchTerm,
+  )
 
   const credInitialParams: Record<string, string> = {}
   const keep = (k: string) => {
@@ -155,6 +161,7 @@ export default async function RecruiterCandidateProfile({
   keep('order')
   if (searchTerm) credInitialParams['q'] = searchTerm
 
+  /* ----------------------------- Pipeline entries section ----------------------------- */
   const pipePage = Math.max(1, Number(first(q, 'pipePage') ?? '1'))
   const pipeSizeRaw = Number(first(q, 'pipeSize') ?? '10')
   const pipePageSize = [10, 20, 50].includes(pipeSizeRaw) ? pipeSizeRaw : 10
@@ -206,12 +213,24 @@ export default async function RecruiterCandidateProfile({
   keepPipe('pipeOrder')
   if (pipeSearchTerm) pipeInitialParams['pipeQ'] = pipeSearchTerm
 
+  /* ----------------------------- Quiz passes ----------------------------- */
   const passes = await db
     .select()
     .from(quizAttempts)
     .where(eq(quizAttempts.candidateId, candidateId))
     .orderBy(desc(quizAttempts.createdAt))
 
+  /* ----------------------------- Snapshot metrics ----------------------------- */
+  const issuerSet = new Set<string>()
+  experienceRows.forEach((e) => e.issuerName && issuerSet.add(e.issuerName))
+  projectRows.forEach((p) => p.issuerName && issuerSet.add(p.issuerName))
+  credRows.forEach((c: any) => c.issuer && issuerSet.add(c.issuer))
+
+  const scoreVals = passes.map((p) => p.score).filter((s): s is number => s !== null)
+  const avgScore =
+    scoreVals.length > 0 ? Math.round(scoreVals.reduce((a, b) => a + b, 0) / scoreVals.length) : null
+
+  /* ----------------------------- Render ----------------------------- */
   return (
     <CandidateDetailedProfileView
       candidateId={candidateId}
@@ -222,6 +241,12 @@ export default async function RecruiterCandidateProfile({
       pipelineSummary={pipelineSummary}
       statusCounts={statusCounts as StatusCounts}
       passes={passes}
+      snapshot={{
+        uniqueIssuers: issuerSet.size,
+        avgScore,
+        experienceCount: experiences.length,
+        projectCount: projects.length,
+      }}
       experiences={experiences}
       projects={projects}
       socials={{
