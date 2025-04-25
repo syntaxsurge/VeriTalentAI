@@ -1,7 +1,6 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -9,21 +8,29 @@ import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
-import { candidateCredentials, candidates, CredentialStatus } from '@/lib/db/schema/viskify'
+import {
+  candidateCredentials,
+  candidates,
+  CredentialStatus,
+  CredentialCategory,
+} from '@/lib/db/schema/viskify'
 
 /* -------------------------------------------------------------------------- */
 /*                               A D D  C R E D                               */
 /* -------------------------------------------------------------------------- */
 
+const CategoryEnum = z.nativeEnum(CredentialCategory)
+
 export const addCredential = validatedActionWithUser(
   z.object({
     title: z.string().min(2).max(200),
+    category: CategoryEnum,
     type: z.string().min(1).max(50),
     fileUrl: z.string().url('Invalid URL'),
     issuerId: z.coerce.number().optional(),
   }),
-  async ({ title, type, fileUrl, issuerId }, _, user) => {
-    /* Resolve issuer (if any) */
+  async ({ title, category, type, fileUrl, issuerId }, _formData, user) => {
+    /* --------------------------- issuer lookup -------------------------- */
     let linkedIssuerId: number | undefined
     let status: CredentialStatus = CredentialStatus.UNVERIFIED
 
@@ -34,16 +41,12 @@ export const addCredential = validatedActionWithUser(
         .where(and(eq(issuers.id, issuerId), eq(issuers.status, IssuerStatus.ACTIVE)))
         .limit(1)
 
-      if (issuer) {
-        linkedIssuerId = issuer.id
-        status = CredentialStatus.PENDING
-      } else {
-        /* Invalid ID or not verified */
-        return { error: 'Issuer not found or not verified.' }
-      }
+      if (!issuer) return { error: 'Issuer not found or not verified.' }
+      linkedIssuerId = issuer.id
+      status = CredentialStatus.PENDING
     }
 
-    /* If submitting to an issuer, enforce DID requirement */
+    /* --------------------- DID required for issuer ---------------------- */
     if (linkedIssuerId) {
       const [teamRow] = await db
         .select({ did: teams.did })
@@ -57,7 +60,7 @@ export const addCredential = validatedActionWithUser(
       }
     }
 
-    /* Ensure candidate row exists */
+    /* ------------------------- candidate ensure ------------------------- */
     let [candidate] = await db
       .select()
       .from(candidates)
@@ -69,9 +72,11 @@ export const addCredential = validatedActionWithUser(
       candidate = newCand
     }
 
+    /* -------------------------- insert record --------------------------- */
     await db.insert(candidateCredentials).values({
       candidateId: candidate.id,
       title,
+      category,
       type,
       fileUrl,
       issuerId: linkedIssuerId,
@@ -79,35 +84,5 @@ export const addCredential = validatedActionWithUser(
     })
 
     redirect('/candidate/credentials')
-  },
-)
-
-/* -------------------------------------------------------------------------- */
-/*                             D E L E T E  C R E D                           */
-/* -------------------------------------------------------------------------- */
-
-export const deleteCredentialAction = validatedActionWithUser(
-  z.object({ credentialId: z.coerce.number() }),
-  async ({ credentialId }, _formData, user) => {
-    const [candidate] = await db
-      .select()
-      .from(candidates)
-      .where(eq(candidates.userId, user.id))
-      .limit(1)
-
-    if (!candidate) return { error: 'Unauthorized.' }
-
-    const deleted = await db
-      .delete(candidateCredentials)
-      .where(
-        and(
-          eq(candidateCredentials.id, credentialId),
-          eq(candidateCredentials.candidateId, candidate.id),
-        ),
-      )
-      .returning({ id: candidateCredentials.id })
-
-    if (deleted.length === 0) return { error: 'Credential not found.' }
-    return { success: 'Credential deleted.' }
   },
 )
