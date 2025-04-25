@@ -1,27 +1,19 @@
-import { asc, desc, eq, sql } from 'drizzle-orm'
+import { desc } from 'drizzle-orm'
 
-import CandidateDetailedProfileView, {
-  type StatusCounts,
-} from '@/components/candidate/profile-detailed-view'
+import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
 import { db } from '@/lib/db/drizzle'
+import { candidates, users, quizAttempts } from '@/lib/db/schema'
 import {
-  candidates,
-  candidateCredentials,
-  issuers,
-  users,
-  quizAttempts,
-} from '@/lib/db/schema'
-import { CredentialStatus } from '@/lib/db/schema/viskify'
+  getCandidateCredentialsSection,
+  type StatusCounts,
+} from '@/lib/db/queries/candidate-details'
 
 export const revalidate = 0
 
 type Params = { id: string }
 type Query = Record<string, string | string[] | undefined>
 
-function getParam(p: Query, k: string): string | undefined {
-  const v = p[k]
-  return Array.isArray(v) ? v[0] : v
-}
+const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 export default async function PublicCandidateProfile({
   params,
@@ -34,108 +26,61 @@ export default async function PublicCandidateProfile({
   const candidateId = Number(id)
   const q = (await searchParams) as Query
 
-  /* -------------------------- core profile --------------------------- */
+  /* -------------------------- candidate row ----------------------------- */
   const [row] = await db
     .select({ cand: candidates, userRow: users })
     .from(candidates)
-    .leftJoin(users, eq(candidates.userId, users.id))
-    .where(eq(candidates.id, candidateId))
+    .leftJoin(users, (c, u) => c.userId.eq(u.id))
+    .where(candidates.id.eq(candidateId))
     .limit(1)
 
   if (!row) return <div>Candidate not found.</div>
 
-  /* ----------------------- credentials (paged) ----------------------- */
-  const page = Math.max(1, Number(getParam(q, 'page') ?? '1'))
-  const sizeRaw = Number(getParam(q, 'size') ?? '10')
+  /* ----------------------- paged credentials ---------------------------- */
+  const page = Math.max(1, Number(first(q, 'page') ?? '1'))
+  const sizeRaw = Number(first(q, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = getParam(q, 'sort') ?? 'createdAt'
-  const order = getParam(q, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(q, 'q') ?? '').trim()
+  const sort = first(q, 'sort') ?? 'status'
+  const order = first(q, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (first(q, 'q') ?? '').trim()
 
-  /* Map client sort keys to actual columns */
-  const sortColumnMap = {
-    createdAt: candidateCredentials.createdAt,
-    title: candidateCredentials.title,
-    status: candidateCredentials.status,
-  } as const
-  const sortColumn =
-    sortColumnMap[sort as keyof typeof sortColumnMap] ?? candidateCredentials.createdAt
-  const orderExpr = order === 'asc' ? asc(sortColumn) : desc(sortColumn)
-
-  const offset = (page - 1) * pageSize
-  const credRowsRaw = await db
-    .select({
-      id: candidateCredentials.id,
-      title: candidateCredentials.title,
-      status: candidateCredentials.status,
-      fileUrl: candidateCredentials.fileUrl,
-      issuer: issuers.name,
-    })
-    .from(candidateCredentials)
-    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .where(eq(candidateCredentials.candidateId, candidateId))
-    .orderBy(orderExpr)
-    .limit(pageSize + 1)
-    .offset(offset)
-
-  const hasNext = credRowsRaw.length > pageSize
-  if (hasNext) credRowsRaw.pop()
-
-  const credRows = credRowsRaw.map((c) => ({
-    id: c.id,
-    title: c.title,
-    issuer: c.issuer,
-    status: c.status as CredentialStatus,
-    fileUrl: c.fileUrl,
-  }))
+  const { rows, hasNext, statusCounts } = await getCandidateCredentialsSection(
+    candidateId,
+    page,
+    pageSize,
+    sort as any,
+    order as any,
+    searchTerm,
+  )
 
   const credInitialParams: Record<string, string> = {}
-  const addCred = (k: string) => {
-    const v = getParam(q, k)
+  const keep = (k: string) => {
+    const v = first(q, k)
     if (v) credInitialParams[k] = v
   }
-  addCred('size')
-  addCred('sort')
-  addCred('order')
+  keep('size')
+  keep('sort')
+  keep('order')
   if (searchTerm) credInitialParams['q'] = searchTerm
 
-  /* ------------------ credential status breakdown --------------------- */
-  const statusCountsRaw = await db
-    .select({ status: candidateCredentials.status, count: sql<number>`COUNT(*)` })
-    .from(candidateCredentials)
-    .where(eq(candidateCredentials.candidateId, candidateId))
-    .groupBy(candidateCredentials.status)
-
-  const statusCounts: StatusCounts = {
-    verified: 0,
-    pending: 0,
-    rejected: 0,
-    unverified: 0,
-  }
-  statusCountsRaw.forEach((r) => {
-    if (r.status in statusCounts) {
-      statusCounts[r.status as keyof StatusCounts] = Number(r.count)
-    }
-  })
-
-  /* --------------------------- quiz passes ---------------------------- */
+  /* -------------------------- quiz passes ------------------------------- */
   const passes = await db
     .select()
     .from(quizAttempts)
-    .where(eq(quizAttempts.candidateId, candidateId))
+    .where(quizAttempts.candidateId.eq(candidateId))
     .orderBy(desc(quizAttempts.createdAt))
 
-  /* ------------------------------ UI ---------------------------------- */
+  /* ----------------------------- view ----------------------------------- */
   return (
     <CandidateDetailedProfileView
       name={row.userRow?.name ?? null}
       email={row.userRow?.email ?? ''}
       avatarSrc={(row.userRow as any)?.image ?? null}
       bio={row.cand.bio ?? null}
-      statusCounts={statusCounts}
+      statusCounts={statusCounts as StatusCounts}
       passes={passes}
       credentials={{
-        rows: credRows,
+        rows,
         sort,
         order: order as 'asc' | 'desc',
         pagination: {
@@ -146,7 +91,6 @@ export default async function PublicCandidateProfile({
           initialParams: credInitialParams,
         },
       }}
-      /** Public profile – no pipeline section */
       showShare
     />
   )
