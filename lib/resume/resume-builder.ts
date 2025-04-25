@@ -1,4 +1,3 @@
-// lib/resume/resume-builder.ts
 import {
   PDFDocument,
   StandardFonts,
@@ -114,6 +113,7 @@ export async function generateResumePdf(
   const BODY_FONT_SIZE = 10
   const SMALL_FONT_SIZE = 8
   const LINE_HEIGHT = BODY_FONT_SIZE + 4
+  const GAP_AFTER_DIVIDER = 12          // NEW – extra breathing room below section headers
 
   /* Use brand primary indigo (#4F46E5) instead of default blue */
   const ACCENT = rgb(79 / 255, 70 / 255, 229 / 255) // #4F46E5
@@ -144,10 +144,15 @@ export async function generateResumePdf(
     color: ACCENT,
   })
 
+  // Calculate vertical positions with explicit gaps to avoid overlap
+  const nameY =
+    height - bannerH + (bannerH + HEAD_FONT_SIZE) / 2 - HEAD_FONT_SIZE        // center name
+  const emailY = nameY - SUBHEAD_FONT_SIZE - 6                                // 6-pt gap below name
+
   // Name
   page.drawText(data.name, {
     x: MARGIN_X,
-    y: height - bannerH + (bannerH - HEAD_FONT_SIZE) / 2 + 8, // tighter top padding
+    y: nameY,
     size: HEAD_FONT_SIZE,
     font: fontBold,
     color: rgb(1, 1, 1),
@@ -156,7 +161,7 @@ export async function generateResumePdf(
   // Email
   page.drawText(data.email, {
     x: MARGIN_X,
-    y: height - bannerH + (bannerH - SUBHEAD_FONT_SIZE) / 2 - 2, // reduced gap to name
+    y: emailY,
     size: SUBHEAD_FONT_SIZE,
     font: fontRegular,
     color: rgb(1, 1, 1),
@@ -189,7 +194,7 @@ export async function generateResumePdf(
       font: fontBold,
       color: ACCENT,
     })
-    y -= SUBHEAD_FONT_SIZE + 2 // tighter gap before divider
+    y -= SUBHEAD_FONT_SIZE + 2
     // divider line
     page.drawLine({
       start: { x: MARGIN_X, y },
@@ -197,7 +202,7 @@ export async function generateResumePdf(
       thickness: 1,
       color: ACCENT,
     })
-    y -= 8 // narrower gap after divider
+    y -= GAP_AFTER_DIVIDER                                 // use larger gap for readability
   }
 
   function ensureSpace(linesNeeded = 1) {
@@ -205,6 +210,31 @@ export async function generateResumePdf(
       page = pdf.addPage()
       y = page.getSize().height - MARGIN_Y
     }
+  }
+
+  function wrapText(
+    text: string,
+    font: PDFFont,
+    fontSize: number,
+    maxWidth: number,
+  ): string[] {
+    const words = text.split(/\s+/)
+    const lines: string[] = []
+    let current = ''
+
+    words.forEach((word) => {
+      const next = current ? `${current} ${word}` : word
+      const width = font.widthOfTextAtSize(next, fontSize)
+      if (width <= maxWidth) {
+        current = next
+      } else {
+        if (current) lines.push(current)
+        current = word
+      }
+    })
+
+    if (current) lines.push(current)
+    return lines
   }
 
   function drawWrapped(text: string, font: PDFFont, size: number) {
@@ -215,7 +245,7 @@ export async function generateResumePdf(
       page.drawText(ln, { x: MARGIN_X, y, size, font })
       y -= LINE_HEIGHT
     })
-    y -= 8 // more space after paragraph
+    y -= 8 // paragraph gap
   }
 
   function bulletLine(text: string) {
@@ -310,36 +340,4 @@ export async function generateResumePdf(
   })
 
   return await pdf.save()
-}
-
-/* -------------------------------------------------------------------------- */
-/*                              H E L P E R S                                 */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Simple word-wrap helper since pdf-lib fonts don’t include line-splitting utilities.
- */
-function wrapText(
-  text: string,
-  font: PDFFont,
-  fontSize: number,
-  maxWidth: number,
-): string[] {
-  const words = text.split(/\\s+/)
-  const lines: string[] = []
-  let current = ''
-
-  words.forEach((word) => {
-    const next = current ? `${current} ${word}` : word
-    const width = font.widthOfTextAtSize(next, fontSize)
-    if (width <= maxWidth) {
-      current = next
-    } else {
-      if (current) lines.push(current)
-      current = word
-    }
-  })
-
-  if (current) lines.push(current)
-  return lines
 }
