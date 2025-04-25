@@ -1,125 +1,138 @@
-import Link from 'next/link'
-import { eq, sql } from 'drizzle-orm'
+import { asc, desc, ilike, sql } from 'drizzle-orm'
 
+import CandidatesTable, {
+  type RowType,
+} from '@/components/candidate-directory/candidates-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { UserAvatar } from '@/components/ui/user-avatar'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
-import { candidates, candidateCredentials, users } from '@/lib/db/schema'
+import { candidates as candT, candidateCredentials as credT, users as usersT } from '@/lib/db/schema'
 
 export const revalidate = 0
 
 /* -------------------------------------------------------------------------- */
-/*                               PAGE CONFIG                                  */
+/*                               P A R A M S                                  */
 /* -------------------------------------------------------------------------- */
 
-const PAGE_SIZE = 30
-
 type Query = Record<string, string | string[] | undefined>
+const BASE_PATH = '/candidates'
+
+function first(p: Query, k: string) {
+  return Array.isArray(p[k]) ? p[k]?.[0] : p[k]
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   PAGE                                     */
+/* -------------------------------------------------------------------------- */
 
 export default async function CandidateDirectoryPage({
   searchParams,
 }: {
-  searchParams: Promise<Query> | Query
+  searchParams: Query | Promise<Query>
 }) {
+  /* ----------------------------- Read params ---------------------------- */
   const params = (await searchParams) as Query
+  const page = Math.max(1, Number(first(params, 'page') ?? '1'))
+  const sizeRaw = Number(first(params, 'size') ?? '10')
+  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
+  const sort = first(params, 'sort') ?? 'name'
+  const order = first(params, 'order') === 'desc' ? 'desc' : 'asc'
+  const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
 
-  const qRaw = params.q
-  const q = typeof qRaw === 'string' ? qRaw.trim().toLowerCase() : ''
+  /* ----------------------------- Sort map ------------------------------- */
+  const sortMap = {
+    name: usersT.name,
+    email: usersT.email,
+    verified: sql<number>`verified_count`,
+  } as const
+  const orderExpr =
+    order === 'asc'
+      ? asc(sortMap[sort as keyof typeof sortMap])
+      : desc(sortMap[sort as keyof typeof sortMap])
 
-  const page = Math.max(
-    1,
-    Number(Array.isArray(params.page) ? params.page[0] : params.page ?? '1'),
-  )
-  const offset = (page - 1) * PAGE_SIZE
+  /* ----------------------------- Base where ----------------------------- */
+  let whereExpr: any = sql`TRUE`
+  if (searchTerm.length > 0) {
+    whereExpr = ilike(usersT.name, `%${searchTerm}%`)
+    whereExpr = sql`${whereExpr} OR ${ilike(usersT.email, `%${searchTerm}%`)}`
+  }
 
-  /* ---------------------------- Core query ---------------------------- */
-  const rows = await db
+  /* ----------------------------- Fetch rows ----------------------------- */
+  const offset = (page - 1) * pageSize
+  const rowsRaw = await db
     .select({
-      id: candidates.id,
-      name: users.name,
-      email: users.email,
-      verified: sql<number>`COUNT(CASE WHEN ${candidateCredentials.status} = 'verified' THEN 1 END)`,
+      id: candT.id,
+      name: usersT.name,
+      email: usersT.email,
+      verified: sql<number>`COUNT(CASE WHEN ${credT.status} = 'verified' THEN 1 END)`.as(
+        'verified_count',
+      ),
     })
-    .from(candidates)
-    .innerJoin(users, eq(candidates.userId, users.id))
-    .leftJoin(candidateCredentials, eq(candidateCredentials.candidateId, candidates.id))
-    .where(
-      q
-        ? sql`LOWER(${users.name}) LIKE ${'%' + q + '%'} OR LOWER(${users.email}) LIKE ${
-            '%' + q + '%'
-          }`
-        : sql`TRUE`,
-    )
-    .groupBy(candidates.id, users.name, users.email)
-    .orderBy(sql`LOWER(${users.name}) ASC`)
-    .limit(PAGE_SIZE + 1)
+    .from(candT)
+    .innerJoin(usersT, sql`${candT.userId} = ${usersT.id}`)
+    .leftJoin(credT, sql`${credT.candidateId} = ${candT.id}`)
+    .where(whereExpr)
+    .groupBy(candT.id, usersT.name, usersT.email)
+    .orderBy(orderExpr)
+    .limit(pageSize + 1)
     .offset(offset)
 
-  const hasNext = rows.length > PAGE_SIZE
-  if (hasNext) rows.pop()
+  const hasNext = rowsRaw.length > pageSize
+  if (hasNext) rowsRaw.pop()
 
-  /* ---------------------------- View ---------------------------- */
+  const rows: RowType[] = rowsRaw.map((r) => ({
+    id: r.id,
+    name: r.name,
+    email: r.email,
+    verified: Number(r.verified),
+  }))
+
+  /* ---------------------------- initialParams --------------------------- */
+  const initialParams: Record<string, string> = {}
+  const keep = (k: string) => {
+    const v = first(params, k)
+    if (v) initialParams[k] = v
+  }
+  keep('size')
+  keep('sort')
+  keep('order')
+  if (searchTerm) initialParams['q'] = searchTerm
+
+  /* ------------------------------- View --------------------------------- */
   return (
-    <section className='mx-auto max-w-7xl space-y-8'>
+    <section className='mx-auto max-w-7xl space-y-10'>
       <header className='space-y-2'>
         <h1 className='text-3xl font-extrabold tracking-tight'>Candidate Directory</h1>
         <p className='text-muted-foreground max-w-2xl text-sm'>
-          Discover talent — each profile is publicly shareable.
+          Browse public candidate profiles. Use the search box, sortable headers and pagination
+          controls to find talent quickly.
         </p>
       </header>
 
-      {/* Search */}
-      <form className='max-w-sm'>
-        <input
-          type='text'
-          name='q'
-          placeholder='Search candidates…'
-          defaultValue={q}
-          className='border-border w-full rounded-md border px-3 py-2 text-sm'
-        />
-      </form>
+      <Card>
+        <CardHeader>
+          <CardTitle>Candidates</CardTitle>
+        </CardHeader>
 
-      {/* Grid */}
-      {rows.length === 0 ? (
-        <p className='text-muted-foreground'>No candidates found.</p>
-      ) : (
-        <ul className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-          {rows.map((c) => (
-            <li key={c.id}>
-              <Link href={`/candidates/${c.id}`} className='block h-full'>
-                <Card className='group h-full transition-shadow hover:shadow-lg'>
-                  <CardContent className='flex flex-col items-center gap-4 p-6 text-center'>
-                    <UserAvatar name={c.name} email={c.email} className='size-16 text-lg' />
-                    <div>
-                      <p className='font-medium'>{c.name || 'Unnamed'}</p>
-                      <p className='text-muted-foreground text-sm'>{c.email}</p>
-                    </div>
-                    {c.verified > 0 && (
-                      <span className='bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs'>
-                        {c.verified} verified credential{c.verified === 1 ? '' : 's'}
-                      </span>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+        <CardContent className='overflow-x-auto'>
+          <CandidatesTable
+            rows={rows}
+            sort={sort}
+            order={order as 'asc' | 'desc'}
+            basePath={BASE_PATH}
+            initialParams={initialParams}
+            searchQuery={searchTerm}
+          />
 
-      {/* Simple pagination */}
-      <div className='flex justify-center gap-4'>
-        {page > 1 && (
-          <Link href={`/candidates?page=${page - 1}${q ? `&q=${q}` : ''}`} className='underline'>
-            Previous
-          </Link>
-        )}
-        {hasNext && (
-          <Link href={`/candidates?page=${page + 1}${q ? `&q=${q}` : ''}`} className='underline'>
-            Next
-          </Link>
-        )}
-      </div>
+          <TablePagination
+            page={page}
+            hasNext={hasNext}
+            basePath={BASE_PATH}
+            initialParams={initialParams}
+            pageSize={pageSize}
+          />
+        </CardContent>
+      </Card>
     </section>
   )
 }
