@@ -72,6 +72,7 @@ interface Props {
   credentials: CredentialsSection
   /** Empty → hide entire section (public profile) */
   pipeline?: PipelineSection
+  /** Allow opt-out if ever required */
   showShare?: boolean
 }
 
@@ -105,7 +106,7 @@ export default function CandidateDetailedProfileView({
   passes,
   credentials,
   pipeline,
-  showShare = false,
+  showShare = true,
 }: Props) {
   const totalVerified = statusCounts.verified
 
