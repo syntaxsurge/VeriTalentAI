@@ -16,7 +16,8 @@ import {
   Shield,
   Menu,
   Tag,
-  User
+  User,
+  Star,
 } from 'lucide-react'
 
 import { SidebarNav, type SidebarNavItem } from '@/components/dashboard/sidebar-nav'
@@ -42,6 +43,7 @@ function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
     case 'candidate':
       return [
         { href: '/candidate/profile', icon: User, label: 'Profile' },
+        { href: '/candidate/highlights', icon: Star, label: 'Profile Highlight' },
         { href: '/candidate/credentials', icon: BookOpen, label: 'Credentials' },
         { href: '/candidate/skill-check', icon: Award, label: 'Skill Quiz' },
         { href: '/candidate/create-did', icon: Key, label: 'Create DID' },
@@ -133,7 +135,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const mainNav: SidebarNavItem[] = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/invitations', icon: Mail, label: 'Invitations', badgeCount: counts.invitations },
-    { href: '/pricing', icon: Tag, label: 'Pricing' }
+    { href: '/pricing', icon: Tag, label: 'Pricing' },
   ]
 
   /* Settings navigation */
