@@ -115,7 +115,8 @@ export async function generateResumePdf(
   const SMALL_FONT_SIZE = 8
   const LINE_HEIGHT = BODY_FONT_SIZE + 4
 
-  const ACCENT = rgb(0.14, 0.47, 0.86) // #2477DB
+  /* Use brand primary indigo (#4F46E5) instead of default blue */
+  const ACCENT = rgb(79 / 255, 70 / 255, 229 / 255) // #4F46E5
 
   const fontRegular = await pdf.embedFont(StandardFonts.Helvetica)
   const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold)
@@ -146,7 +147,7 @@ export async function generateResumePdf(
   // Name
   page.drawText(data.name, {
     x: MARGIN_X,
-    y: height - bannerH + (bannerH - HEAD_FONT_SIZE) / 2 + 12,
+    y: height - bannerH + (bannerH - HEAD_FONT_SIZE) / 2 + 8, // tighter top padding
     size: HEAD_FONT_SIZE,
     font: fontBold,
     color: rgb(1, 1, 1),
@@ -155,7 +156,7 @@ export async function generateResumePdf(
   // Email
   page.drawText(data.email, {
     x: MARGIN_X,
-    y: height - bannerH + (bannerH - HEAD_FONT_SIZE) / 2 - 10,
+    y: height - bannerH + (bannerH - SUBHEAD_FONT_SIZE) / 2 - 2, // reduced gap to name
     size: SUBHEAD_FONT_SIZE,
     font: fontRegular,
     color: rgb(1, 1, 1),
@@ -188,7 +189,7 @@ export async function generateResumePdf(
       font: fontBold,
       color: ACCENT,
     })
-    y -= SUBHEAD_FONT_SIZE + 4
+    y -= SUBHEAD_FONT_SIZE + 2 // tighter gap before divider
     // divider line
     page.drawLine({
       start: { x: MARGIN_X, y },
@@ -196,7 +197,7 @@ export async function generateResumePdf(
       thickness: 1,
       color: ACCENT,
     })
-    y -= 12
+    y -= 8 // narrower gap after divider
   }
 
   function ensureSpace(linesNeeded = 1) {
@@ -214,7 +215,7 @@ export async function generateResumePdf(
       page.drawText(ln, { x: MARGIN_X, y, size, font })
       y -= LINE_HEIGHT
     })
-    y -= 4
+    y -= 8 // more space after paragraph
   }
 
   function bulletLine(text: string) {
@@ -324,7 +325,7 @@ function wrapText(
   fontSize: number,
   maxWidth: number,
 ): string[] {
-  const words = text.split(/\s+/)
+  const words = text.split(/\\s+/)
   const lines: string[] = []
   let current = ''
 
