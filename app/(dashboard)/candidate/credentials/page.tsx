@@ -42,7 +42,7 @@ export default async function CredentialsPage({
   const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
 
   /* ---------------------------- Credentials ------------------------------ */
-  const { credentials, hasNext } = await getCandidateCredentialsPage(
+  const { credentials: credentialRows = [], hasNext } = await getCandidateCredentialsPage(
     user.id,
     page,
     pageSize,
@@ -51,7 +51,7 @@ export default async function CredentialsPage({
     searchTerm,
   )
 
-  const rows: RowType[] = credentials.map((c) => ({
+  const rows: RowType[] = credentialRows.map((c) => ({
     id: c.id,
     title: c.title,
     category: c.category,
