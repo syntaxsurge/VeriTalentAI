@@ -1,15 +1,10 @@
 'use client'
 
-/* -------------------------------------------------------------------------- */
-/*                                I M P O R T S                               */
-/* -------------------------------------------------------------------------- */
-
 import Link from 'next/link'
 import Image from 'next/image'
 import { Fragment, useMemo, useState } from 'react'
 import {
   Mail,
-  MapPin,
   BadgeCheck,
   Share2,
   Clipboard,
@@ -122,6 +117,7 @@ export interface Socials {
   twitterUrl?: string | null
   githubUrl?: string | null
   linkedinUrl?: string | null
+  snapchatUrl?: string | null
   websiteUrl?: string | null
 }
 
@@ -159,32 +155,17 @@ function usePrettyDate(d?: Date | null) {
 /*                         R E U S A B L E   U I                              */
 /* -------------------------------------------------------------------------- */
 
-function StatChip({
-  icon: Icon,
+function StatBlock({
   value,
   label,
 }: {
-  icon: React.ElementType
   value: React.ReactNode
   label: string
 }) {
   return (
-    <div className='bg-background/70 border-border/50 flex flex-col items-center rounded-lg border p-2 shadow-sm backdrop-blur'>
-      <Icon className='h-4 w-4 text-primary' />
-      <span className='text-sm font-semibold'>{value}</span>
-      <span className='text-muted-foreground text-[10px] uppercase'>{label}</span>
-    </div>
-  )
-}
-
-function SectionDivider({ children }: { children: React.ReactNode }) {
-  return (
-    <div className='flex items-center gap-3 py-8'>
-      <Separator className='flex-1' />
-      <h3 className='text-muted-foreground text-xs font-semibold uppercase tracking-widest'>
-        {children}
-      </h3>
-      <Separator className='flex-1' />
+    <div className='flex flex-col items-center gap-1'>
+      <span className='text-lg font-bold leading-none'>{value}</span>
+      <span className='text-muted-foreground text-xs uppercase tracking-wide'>{label}</span>
     </div>
   )
 }
@@ -258,7 +239,6 @@ export default function CandidateDetailedProfileView({
   /* -------------------------- Derived helpers --------------------------- */
 
   const totalVerified = statusCounts.verified
-  /* Use a stable relative path for SSR/CSR consistency */
   const profilePath = `/candidates/${candidateId}`
 
   const socialIcons = [
@@ -284,78 +264,44 @@ export default function CandidateDetailedProfileView({
   return (
     <TooltipProvider delayDuration={150}>
       <section className='space-y-10'>
-        {/* ------------------------------ HEADER --------------------------- */}
-        <header className='relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary/80 shadow-xl'>
-          {/* decorative blur blob */}
-          <div className='pointer-events-none absolute inset-0 -z-10'>
-            <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[600px] rounded-full bg-background/10 blur-3xl' />
-          </div>
-
-          <div className='grid grid-cols-12 items-start gap-6 p-8 text-primary-foreground'>
-            {/* Avatar */}
-            <div className='col-span-12 sm:col-span-3 flex justify-center sm:justify-start'>
-              <HoverCard openDelay={100}>
-                <HoverCardTrigger asChild>
-                  <UserAvatar
-                    src={avatarSrc ?? undefined}
-                    name={name}
-                    email={email}
-                    className='size-36 ring-4 ring-white/30'
-                  />
-                </HoverCardTrigger>
-                <HoverCardContent className='w-60 text-center'>
-                  <p className='font-semibold'>{name || email}</p>
-                  <p className='text-muted-foreground truncate text-xs'>{email}</p>
-                </HoverCardContent>
-              </HoverCard>
-            </div>
-
-            {/* Identity & socials */}
-            <div className='col-span-12 sm:col-span-6 space-y-4 text-center sm:text-left'>
-              <div>
-                <h1 className='text-3xl font-extrabold leading-snug'>{name || 'Unnamed'}</h1>
+        {/* ------------------------------ COVER --------------------------- */}
+        <div className='overflow-hidden rounded-2xl border bg-muted/40 shadow-sm'>
+          <div className='h-32 w-full bg-gradient-to-r from-primary/30 via-primary/10 to-transparent' />
+          <div className='flex flex-col gap-6 p-6 sm:flex-row sm:items-end sm:justify-between'>
+            {/* Avatar + identity */}
+            <div className='flex flex-col items-center gap-4 sm:flex-row sm:items-end'>
+              <UserAvatar
+                src={avatarSrc ?? undefined}
+                name={name}
+                email={email}
+                className='size-28 ring-4 ring-background -mt-20 sm:-mt-14'
+              />
+              <div className='text-center sm:text-left'>
+                <h1 className='text-2xl font-extrabold leading-tight'>{name || 'Unnamed'}</h1>
                 <Link href={`mailto:${email}`} className='underline underline-offset-4 break-all'>
                   {email}
                 </Link>
               </div>
-
-              {bio && <p className='mx-auto max-w-xl whitespace-pre-line sm:mx-0'>{bio}</p>}
-
-              {/* Social icons */}
-              <div className='flex flex-wrap items-center justify-center gap-2 sm:justify-start'>
-                {socialIcons.map((s) => (
-                  <Tooltip key={s.label}>
-                    <TooltipTrigger asChild>
-                      <Button variant='ghost' size='icon' asChild className='backdrop-blur'>
-                        <Link href={s.href!} target='_blank' rel='noopener noreferrer'>
-                          <s.icon className='h-4 w-4' />
-                          <span className='sr-only'>{s.label}</span>
-                        </Link>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{s.label}</TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
             </div>
 
-            {/* Stats & share */}
-            <div className='col-span-12 sm:col-span-3 flex flex-col items-center sm:items-end gap-4'>
-              <div className='flex flex-wrap justify-center gap-3 sm:justify-end'>
-                <StatChip icon={BadgeCheck} value={totalVerified} label='Verified' />
-                <StatChip icon={Award} value={passes.length} label='Skill Passes' />
-                <StatChip icon={Users2} value={pipelineSummary || '—'} label='Pipelines' />
-              </div>
+            {/* Actions */}
+            <div className='flex flex-wrap items-center justify-center gap-3'>
+              <Button asChild size='sm' variant='secondary' className='gap-2'>
+                <a href={`/api/candidates/${candidateId}/resume`} download>
+                  <Download className='h-4 w-4' />
+                  Download&nbsp;PDF
+                </a>
+              </Button>
 
               {showShare && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant='secondary' size='sm' className='backdrop-blur'>
-                      <Share2 className='mr-2 h-4 w-4' />
+                    <Button variant='outline' size='sm' className='gap-2'>
+                      <Share2 className='h-4 w-4' />
                       Share
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align='end' className='rounded-lg p-1 shadow-lg backdrop-blur'>
+                  <DropdownMenuContent align='end' className='rounded-lg p-1 shadow-lg'>
                     <DropdownMenuItem onClick={copyLink} className='cursor-pointer'>
                       <Clipboard className='mr-2 h-4 w-4' />
                       Copy&nbsp;URL
@@ -365,35 +311,50 @@ export default function CandidateDetailedProfileView({
               )}
             </div>
           </div>
-        </header>
+
+          {/* Stats strip */}
+          <div className='border-t bg-background/60 backdrop-blur'>
+            <div className='mx-auto grid max-w-4xl grid-cols-3 gap-6 p-4 text-center sm:grid-cols-6'>
+              <StatBlock value={totalVerified} label='Verified' />
+              <StatBlock value={statusCounts.pending} label='Pending' />
+              <StatBlock value={statusCounts.rejected} label='Rejected' />
+              <StatBlock value={statusCounts.unverified} label='Unverified' />
+              <StatBlock value={passes.length} label='Skill Passes' />
+              <StatBlock value={pipelineSummary || '—'} label='Pipelines' />
+            </div>
+          </div>
+
+          {/* Social links */}
+          {socialIcons.length > 0 && (
+            <div className='flex flex-wrap items-center justify-center gap-2 border-t p-4'>
+              {socialIcons.map((s) => (
+                <Tooltip key={s.label}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      asChild
+                      className='bg-muted hover:bg-muted/70'
+                    >
+                      <Link href={s.href!} target='_blank' rel='noopener noreferrer'>
+                        <s.icon className='h-4 w-4' />
+                        <span className='sr-only'>{s.label}</span>
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{s.label}</TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* ---------------------------- LAYOUT --------------------------- */}
-        <div className='grid gap-8 lg:grid-cols-[300px_1fr]'>
+        <div className='grid gap-8 lg:grid-cols-[280px_1fr]'>
           {/* --------------------------- SIDEBAR -------------------------- */}
           <aside className='space-y-8'>
-            {/* Résumé */}
-            <Card className='sticky top-24 overflow-hidden'>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2 text-base'>
-                  <FileText className='h-5 w-5' />
-                  Résumé
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='flex flex-col gap-3'>
-                <p className='text-sm leading-relaxed'>
-                  Download a PDF résumé generated from verified data.
-                </p>
-                <Button asChild variant='secondary' size='sm' className='gap-2'>
-                  <a href={`/api/candidates/${candidateId}/resume`} download>
-                    <Download className='h-4 w-4' />
-                    Download&nbsp;PDF
-                  </a>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Snapshot */}
-            <Card className='sticky top-[220px]'>
+            {/* Snapshot card (compact) */}
+            <Card className='sticky top-24'>
               <CardHeader>
                 <CardTitle className='flex items-center gap-2 text-base'>
                   <BarChart4 className='h-5 w-5' />
@@ -425,6 +386,18 @@ export default function CandidateDetailedProfileView({
 
           {/* ----------------------------- MAIN --------------------------- */}
           <main className='space-y-12'>
+            {/* About */}
+            {bio && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>About</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className='whitespace-pre-line'>{bio}</p>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Experiences & Projects */}
             <Tabs defaultValue='experience' className='space-y-6'>
               <TabsList className='grid w-full grid-cols-2'>
@@ -442,7 +415,7 @@ export default function CandidateDetailedProfileView({
                 {experiences.length === 0 ? (
                   <p className='text-muted-foreground'>No experience credentials yet.</p>
                 ) : (
-                  <ScrollArea className='h-[560px] pr-3'>
+                  <ScrollArea className='h-[500px] pr-3'>
                     <CollapsibleList
                       title='Professional Experience'
                       icon={Briefcase}
@@ -467,7 +440,7 @@ export default function CandidateDetailedProfileView({
                 {projects.length === 0 ? (
                   <p className='text-muted-foreground'>No project credentials yet.</p>
                 ) : (
-                  <ScrollArea className='h-[560px] pr-3'>
+                  <ScrollArea className='h-[500px] pr-3'>
                     <CollapsibleList
                       title='Highlighted Projects'
                       icon={BookOpen}
@@ -499,8 +472,7 @@ export default function CandidateDetailedProfileView({
               </TabsContent>
             </Tabs>
 
-            <SectionDivider>Credentials</SectionDivider>
-
+            {/* Credentials */}
             <Card id='credentials'>
               <CardHeader>
                 <CardTitle className='flex flex-wrap items-center gap-2'>
@@ -532,37 +504,34 @@ export default function CandidateDetailedProfileView({
               </CardContent>
             </Card>
 
+            {/* Pipeline entries */}
             {pipeline && (
-              <>
-                <SectionDivider>Pipeline Entries</SectionDivider>
-                <Card id='pipeline-entries'>
-                  <CardHeader className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
-                    <CardTitle>Pipeline Entries</CardTitle>
-                    {pipeline.addToPipelineForm}
-                  </CardHeader>
-                  <CardContent className='space-y-4'>
-                    <PipelineEntriesTable
-                      rows={pipeline.rows}
-                      sort={pipeline.sort}
-                      order={pipeline.order}
-                      basePath={pipeline.pagination.basePath}
-                      initialParams={pipeline.pagination.initialParams}
-                      searchQuery={pipeline.pagination.initialParams['pipeQ'] ?? ''}
-                    />
-                    <TablePagination
-                      page={pipeline.pagination.page}
-                      hasNext={pipeline.pagination.hasNext}
-                      basePath={pipeline.pagination.basePath}
-                      initialParams={pipeline.pagination.initialParams}
-                      pageSize={pipeline.pagination.pageSize}
-                    />
-                  </CardContent>
-                </Card>
-              </>
+              <Card id='pipeline-entries'>
+                <CardHeader className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
+                  <CardTitle>Pipeline Entries</CardTitle>
+                  {pipeline.addToPipelineForm}
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  <PipelineEntriesTable
+                    rows={pipeline.rows}
+                    sort={pipeline.sort}
+                    order={pipeline.order}
+                    basePath={pipeline.pagination.basePath}
+                    initialParams={pipeline.pagination.initialParams}
+                    searchQuery={pipeline.pagination.initialParams['pipeQ'] ?? ''}
+                  />
+                  <TablePagination
+                    page={pipeline.pagination.page}
+                    hasNext={pipeline.pagination.hasNext}
+                    basePath={pipeline.pagination.basePath}
+                    initialParams={pipeline.pagination.initialParams}
+                    pageSize={pipeline.pagination.pageSize}
+                  />
+                </CardContent>
+              </Card>
             )}
 
-            <SectionDivider>Skill Quiz Passes</SectionDivider>
-
+            {/* Skill passes */}
             <Card id='skill-passes'>
               <CardHeader>
                 <CardTitle className='flex items-center gap-2'>
