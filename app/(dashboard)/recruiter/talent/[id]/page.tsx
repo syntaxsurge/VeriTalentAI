@@ -194,10 +194,10 @@ export default async function RecruiterCandidateProfile({
           basePath: `/recruiter/talent/${candidateId}`,
           initialParams: pipeInitialParams,
         },
-        addToPipelineForm:
-          pipelines.length > 0 ? (
-            <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />
-          ) : undefined,
+        /* Always show the dropdown, even if the recruiter has no pipelines yet */
+        addToPipelineForm: (
+          <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />
+        ),
       }}
     />
   )
