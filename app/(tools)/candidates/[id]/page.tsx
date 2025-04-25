@@ -1,6 +1,8 @@
 import { asc, desc, eq, sql } from 'drizzle-orm'
 
-import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
+import CandidateDetailedProfileView, {
+  type StatusCounts,
+} from '@/components/candidate/profile-detailed-view'
 import { db } from '@/lib/db/drizzle'
 import {
   candidates,
@@ -9,6 +11,7 @@ import {
   users,
   quizAttempts,
 } from '@/lib/db/schema'
+import { CredentialStatus } from '@/lib/db/schema/viskify'
 
 export const revalidate = 0
 
@@ -47,9 +50,9 @@ export default async function PublicCandidateProfile({
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
   const sort = getParam(q, 'sort') ?? 'createdAt'
   const order = getParam(q, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(q, 'q') ?? '').trim() // reserved for future search support
+  const searchTerm = (getParam(q, 'q') ?? '').trim()
 
-  /* Map client sort keys to actual columns                        */
+  /* Map client sort keys to actual columns */
   const sortColumnMap = {
     createdAt: candidateCredentials.createdAt,
     title: candidateCredentials.title,
@@ -82,7 +85,7 @@ export default async function PublicCandidateProfile({
     id: c.id,
     title: c.title,
     issuer: c.issuer,
-    status: c.status,
+    status: c.status as CredentialStatus,
     fileUrl: c.fileUrl,
   }))
 
@@ -103,13 +106,17 @@ export default async function PublicCandidateProfile({
     .where(eq(candidateCredentials.candidateId, candidateId))
     .groupBy(candidateCredentials.status)
 
-  const statusCounts = {
+  const statusCounts: StatusCounts = {
     verified: 0,
     pending: 0,
     rejected: 0,
     unverified: 0,
-  } as Record<string, number>
-  statusCountsRaw.forEach((r) => (statusCounts[r.status] = Number(r.count)))
+  }
+  statusCountsRaw.forEach((r) => {
+    if (r.status in statusCounts) {
+      statusCounts[r.status as keyof StatusCounts] = Number(r.count)
+    }
+  })
 
   /* --------------------------- quiz passes ---------------------------- */
   const passes = await db
