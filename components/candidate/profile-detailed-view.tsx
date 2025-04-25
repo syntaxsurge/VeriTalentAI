@@ -128,13 +128,25 @@ interface Props {
   pipelineSummary?: string
   statusCounts: StatusCounts
   passes: QuizAttempt[]
-  snapshot: SnapshotMetrics
+  /** Snapshot now optional; defaults applied when omitted */
+  snapshot?: SnapshotMetrics
   credentials: CredentialsSection
   experiences: Experience[]
   projects: Project[]
   socials: Socials
   pipeline?: PipelineSection
   showShare?: boolean
+}
+
+/* -------------------------------------------------------------------------- */
+/*                         D E F A U L T   V A L U E S                        */
+/* -------------------------------------------------------------------------- */
+
+const defaultSnapshot: SnapshotMetrics = {
+  uniqueIssuers: 0,
+  avgScore: null,
+  experienceCount: 0,
+  projectCount: 0,
 }
 
 /* -------------------------------------------------------------------------- */
@@ -222,7 +234,7 @@ export default function CandidateDetailedProfileView({
   pipelineSummary,
   statusCounts,
   passes,
-  snapshot,
+  snapshot = defaultSnapshot,
   credentials,
   experiences,
   projects,
