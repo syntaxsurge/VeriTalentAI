@@ -116,6 +116,7 @@ export interface Project {
   title: string
   link: string | null
   description: string | null
+  createdAt: Date
 }
 
 export interface Socials {
@@ -159,7 +160,7 @@ function usePrettyDate(d?: Date | null) {
 /*                         R E U S A B L E   U I                              */
 /* -------------------------------------------------------------------------- */
 
-function StatBubble({
+function StatChip({
   icon: Icon,
   value,
   label,
@@ -169,7 +170,7 @@ function StatBubble({
   label: string
 }) {
   return (
-    <div className='bg-background/50 border-border flex flex-col items-center rounded-xl border p-3 text-center shadow'>
+    <div className='bg-background/70 border-border/50 flex flex-col items-center rounded-lg border p-2 shadow-sm backdrop-blur'>
       <Icon className='h-4 w-4 text-primary' />
       <span className='text-sm font-semibold'>{value}</span>
       <span className='text-muted-foreground text-[10px] uppercase'>{label}</span>
@@ -285,61 +286,56 @@ export default function CandidateDetailedProfileView({
     <TooltipProvider delayDuration={150}>
       <section className='space-y-10'>
         {/* ------------------------------ HEADER --------------------------- */}
-        <header className='relative isolate overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/60 shadow-xl'>
+        <header className='relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary/80 shadow-xl'>
+          {/* decorative blur blob */}
           <div className='pointer-events-none absolute inset-0 -z-10'>
-            <div
-              className='absolute right-0 top-1/4 h-96 w-96 -translate-y-1/2 translate-x-1/3 rounded-full bg-background/10 blur-3xl'
-              aria-hidden='true'
-            />
+            <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[600px] rounded-full bg-background/10 blur-3xl' />
           </div>
 
-          <div className='flex flex-col items-center gap-8 p-10 text-primary-foreground md:flex-row md:items-start md:gap-14'>
+          <div className='grid grid-cols-12 items-start gap-6 p-8 text-primary-foreground'>
             {/* Avatar */}
-            <HoverCard openDelay={100}>
-              <HoverCardTrigger asChild>
-                <UserAvatar
-                  src={avatarSrc ?? undefined}
-                  name={name}
-                  email={email}
-                  className='size-40 ring-4 ring-white/30'
-                />
-              </HoverCardTrigger>
-              <HoverCardContent className='w-60 text-center'>
-                <p className='font-semibold'>{name || email}</p>
-                <p className='text-muted-foreground text-xs'>{email}</p>
-              </HoverCardContent>
-            </HoverCard>
+            <div className='col-span-12 sm:col-span-3 flex justify-center sm:justify-start'>
+              <HoverCard openDelay={100}>
+                <HoverCardTrigger asChild>
+                  <UserAvatar
+                    src={avatarSrc ?? undefined}
+                    name={name}
+                    email={email}
+                    className='size-36 ring-4 ring-white/30'
+                  />
+                </HoverCardTrigger>
+                <HoverCardContent className='w-60 text-center'>
+                  <p className='font-semibold'>{name || email}</p>
+                  <p className='text-muted-foreground truncate text-xs'>{email}</p>
+                </HoverCardContent>
+              </HoverCard>
+            </div>
 
-            {/* Identity */}
-            <div className='flex-1 space-y-6 text-center md:text-left'>
+            {/* Identity & actions */}
+            <div className='col-span-12 sm:col-span-6 space-y-4 text-center sm:text-left'>
               <div>
-                <h1 className='text-4xl font-extrabold leading-none'>{name || 'Unnamed'}</h1>
-                <Link href={`mailto:${email}`} className='underline underline-offset-4'>
+                <h1 className='text-3xl font-extrabold leading-snug'>{name || 'Unnamed'}</h1>
+                <Link href={`mailto:${email}`} className='underline underline-offset-4 break-all'>
                   {email}
                 </Link>
               </div>
 
-              {/* Stats */}
-              <div className='flex flex-wrap items-center justify-center gap-4 md:justify-start'>
-                <StatBubble icon={BadgeCheck} value={totalVerified} label='Verified Creds' />
-                <StatBubble icon={Award} value={passes.length} label='Skill Passes' />
-                <StatBubble icon={Users2} value={pipelineSummary || '—'} label='Pipelines' />
-              </div>
-
-              {/* Bio */}
-              {bio && <p className='max-w-3xl whitespace-pre-line'>{bio}</p>}
+              {bio && <p className='mx-auto max-w-xl whitespace-pre-line sm:mx-0'>{bio}</p>}
 
               {/* Actions */}
-              <div className='flex flex-wrap items-center justify-center gap-3 md:justify-start'>
+              <div className='flex flex-wrap items-center justify-center gap-2 sm:justify-start'>
                 {showShare && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant='secondary' size='sm'>
+                      <Button variant='secondary' size='sm' className='backdrop-blur'>
                         <Share2 className='mr-2 h-4 w-4' />
-                        Share&nbsp;Profile
+                        Share
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end' className='rounded-lg p-1 shadow-lg'>
+                    <DropdownMenuContent
+                      align='end'
+                      className='rounded-lg p-1 shadow-lg backdrop-blur'
+                    >
                       <DropdownMenuItem onClick={copyLink} className='cursor-pointer'>
                         <Clipboard className='mr-2 h-4 w-4' />
                         Copy&nbsp;URL
@@ -348,17 +344,17 @@ export default function CandidateDetailedProfileView({
                   </DropdownMenu>
                 )}
 
-                <Button asChild variant='outline' size='sm' className='gap-1'>
+                <Button asChild variant='outline' size='sm' className='gap-1 backdrop-blur'>
                   <Link href={profilePath} target='_blank'>
                     <ExternalLink className='h-4 w-4' />
-                    Public&nbsp;View
+                    Public View
                   </Link>
                 </Button>
 
                 {socialIcons.map((s) => (
                   <Tooltip key={s.label}>
                     <TooltipTrigger asChild>
-                      <Button variant='ghost' size='icon' asChild>
+                      <Button variant='ghost' size='icon' asChild className='backdrop-blur'>
                         <Link href={s.href!} target='_blank' rel='noopener noreferrer'>
                           <s.icon className='h-4 w-4' />
                           <span className='sr-only'>{s.label}</span>
@@ -370,18 +366,26 @@ export default function CandidateDetailedProfileView({
                 ))}
               </div>
             </div>
+
+            {/* Stats */}
+            <div className='col-span-12 sm:col-span-3 flex flex-wrap justify-center gap-3 sm:justify-end'>
+              <StatChip icon={BadgeCheck} value={totalVerified} label='Verified' />
+              <StatChip icon={Award} value={passes.length} label='Skill Passes' />
+              <StatChip icon={Users2} value={pipelineSummary || '—'} label='Pipelines' />
+            </div>
           </div>
         </header>
 
         {/* ---------------------------- LAYOUT --------------------------- */}
-        <div className='grid gap-8 lg:grid-cols-[280px_1fr]'>
+        <div className='grid gap-8 lg:grid-cols-[300px_1fr]'>
           {/* --------------------------- SIDEBAR -------------------------- */}
           <aside className='space-y-8'>
+            {/* Résumé */}
             <Card className='sticky top-24 overflow-hidden'>
               <CardHeader>
                 <CardTitle className='flex items-center gap-2 text-base'>
                   <FileText className='h-5 w-5' />
-                  Resume
+                  Résumé
                 </CardTitle>
               </CardHeader>
               <CardContent className='flex flex-col gap-3'>
@@ -395,6 +399,7 @@ export default function CandidateDetailedProfileView({
               </CardContent>
             </Card>
 
+            {/* Snapshot */}
             <Card className='sticky top-[220px]'>
               <CardHeader>
                 <CardTitle className='flex items-center gap-2 text-base'>
@@ -444,7 +449,7 @@ export default function CandidateDetailedProfileView({
                 {experiences.length === 0 ? (
                   <p className='text-muted-foreground'>No experience credentials yet.</p>
                 ) : (
-                  <ScrollArea className='h-[560px]'>
+                  <ScrollArea className='h-[560px] pr-3'>
                     <CollapsibleList
                       title='Professional Experience'
                       icon={Briefcase}
@@ -469,7 +474,7 @@ export default function CandidateDetailedProfileView({
                 {projects.length === 0 ? (
                   <p className='text-muted-foreground'>No project credentials yet.</p>
                 ) : (
-                  <ScrollArea className='h-[560px]'>
+                  <ScrollArea className='h-[560px] pr-3'>
                     <CollapsibleList
                       title='Highlighted Projects'
                       icon={BookOpen}
