@@ -8,13 +8,14 @@ import {
   uniqueIndex,
   text,
   boolean,
+  pgEnum,
 } from 'drizzle-orm/pg-core'
 
 import { users } from './core'
 import { issuers } from './issuer'
 
 /* -------------------------------------------------------------------------- */
-/*                              C A N D I D A T E S                            */
+/*                              C A N D I D A T E S                           */
 /* -------------------------------------------------------------------------- */
 
 export const candidates = pgTable(
@@ -23,6 +24,11 @@ export const candidates = pgTable(
     id: serial('id').primaryKey(),
     userId: integer('user_id').notNull(),
     bio: text('bio'),
+    /** Optional social links */
+    twitterUrl: varchar('twitter_url', { length: 255 }),
+    githubUrl: varchar('github_url', { length: 255 }),
+    linkedinUrl: varchar('linkedin_url', { length: 255 }),
+    websiteUrl: varchar('website_url', { length: 255 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -30,8 +36,27 @@ export const candidates = pgTable(
 )
 
 /* -------------------------------------------------------------------------- */
-/*                       C A N D I D A T E   C R E D E N T I A L S             */
+/*                       C A N D I D A T E   C R E D E N T I A L S            */
 /* -------------------------------------------------------------------------- */
+
+/** High-level credential categories */
+export const credentialCategoryEnum = pgEnum('credential_category', [
+  'EDUCATION',
+  'EXPERIENCE',
+  'PROJECT',
+  'AWARD',
+  'CERTIFICATION',
+  'OTHER',
+])
+
+export enum CredentialCategory {
+  EDUCATION = 'EDUCATION',
+  EXPERIENCE = 'EXPERIENCE',
+  PROJECT = 'PROJECT',
+  AWARD = 'AWARD',
+  CERTIFICATION = 'CERTIFICATION',
+  OTHER = 'OTHER',
+}
 
 export enum CredentialStatus {
   UNVERIFIED = 'unverified',
@@ -46,12 +71,15 @@ export const candidateCredentials = pgTable('candidate_credentials', {
     .notNull()
     .references(() => candidates.id),
   issuerId: integer('issuer_id').references(() => issuers.id),
+  /** New: categorise the credential for richer UI filtering */
+  category: credentialCategoryEnum('category').notNull().default(CredentialCategory.OTHER),
   title: varchar('title', { length: 200 }).notNull(),
+  /** Fine-grained type identifier (e.g. 'bachelor', 'github_repo') */
   type: varchar('type', { length: 50 }).notNull(),
   fileUrl: text('file_url'),
   status: varchar('status', { length: 20 }).notNull().default(CredentialStatus.UNVERIFIED),
   verified: boolean('verified').notNull().default(false),
-  /** Full VC JSON associated with this credential (if issued or user-provided). */
+  /** Full VC JSON (optional). */
   vcJson: text('vc_json'),
   issuedAt: timestamp('issued_at'),
   verifiedAt: timestamp('verified_at'),
@@ -60,7 +88,7 @@ export const candidateCredentials = pgTable('candidate_credentials', {
 })
 
 /* -------------------------------------------------------------------------- */
-/*                         A I   S K I L L   Q U I Z Z E S                     */
+/*                         A I   S K I L L   Q U I Z Z E S                    */
 /* -------------------------------------------------------------------------- */
 
 export const skillQuizzes = pgTable('skill_quizzes', {
