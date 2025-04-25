@@ -383,9 +383,11 @@ export default function CandidateDetailedProfileView({
                 <p className='text-sm leading-relaxed'>
                   Download a PDF résumé generated from verified data.
                 </p>
-                <Button variant='secondary' size='sm' className='gap-2'>
-                  <Download className='h-4 w-4' />
-                  Download PDF
+                <Button asChild variant='secondary' size='sm' className='gap-2'>
+                  <a href={`/api/candidates/${candidateId}/resume`} download>
+                    <Download className='h-4 w-4' />
+                    Download&nbsp;PDF
+                  </a>
                 </Button>
               </CardContent>
             </Card>
