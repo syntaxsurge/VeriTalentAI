@@ -6,10 +6,17 @@ import { useState, useTransition } from 'react'
 import { Pencil, Info, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { deletePipelineCandidateAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { updateCandidateStageAction, deletePipelineCandidateAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { type Stage } from '@/lib/constants/recruiter'
 
 import EditCandidateModal from './edit-candidate-modal'
@@ -85,18 +92,15 @@ export default function CandidateCard({ candidate }: { candidate: Candidate }) {
           <DialogHeader>
             <DialogTitle>Remove Candidate?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove this candidate from the pipeline? This action cannot be undone.
+              Are you sure you want to remove this candidate from the pipeline? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant='outline' onClick={() => setDialogOpen(false)} disabled={isPending}>
               Cancel
             </Button>
-            <Button
-              variant='destructive'
-              onClick={handleDelete}
-              disabled={isPending}
-            >
+            <Button variant='destructive' onClick={handleDelete} disabled={isPending}>
               {isPending ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : null}
               Delete
             </Button>

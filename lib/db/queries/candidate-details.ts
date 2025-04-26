@@ -1,11 +1,8 @@
 import { asc, desc, eq, ilike, sql } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
+import { candidateCredentials, type CredentialStatus } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
-import {
-  candidateCredentials,
-  type CredentialStatus,
-} from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -63,9 +60,7 @@ export async function getCandidateCredentialsSection(
   const orderExpr = order === 'asc' ? asc(sortCol) : desc(sortCol)
 
   /* --------------------------- WHERE CLAUSE ----------------------------- */
-  const whereExpr = hasSearch
-    ? ilike(candidateCredentials.title, `%${term}%`)
-    : sql`TRUE`
+  const whereExpr = hasSearch ? ilike(candidateCredentials.title, `%${term}%`) : sql`TRUE`
 
   /* ------------------------------ Rows ---------------------------------- */
   const rowsRaw = await db

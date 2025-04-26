@@ -109,10 +109,7 @@ export const candidateHighlights = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex('candidate_highlights_candidate_credential_idx').on(
-      t.candidateId,
-      t.credentialId,
-    ),
+    uniqueIndex('candidate_highlights_candidate_credential_idx').on(t.candidateId, t.credentialId),
     uniqueIndex('candidate_highlights_candidate_sort_idx').on(t.candidateId, t.sortOrder),
   ],
 )

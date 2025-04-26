@@ -35,10 +35,10 @@ export default function PageCard({
       <CardHeader className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
         {/* Icon + title + description */}
         <div className='flex items-center gap-3'>
-          <Icon className='h-10 w-10 flex-shrink-0 text-primary' />
+          <Icon className='text-primary h-10 w-10 flex-shrink-0' />
           <div>
             <CardTitle className='text-2xl font-extrabold tracking-tight'>{title}</CardTitle>
-            {description && <p className='mt-1 text-sm text-muted-foreground'>{description}</p>}
+            {description && <p className='text-muted-foreground mt-1 text-sm'>{description}</p>}
           </div>
         </div>
 

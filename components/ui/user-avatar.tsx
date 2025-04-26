@@ -6,8 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { getAvatarInitials } from '@/lib/utils/avatar'
 
-export interface UserAvatarProps
-  extends React.ComponentPropsWithoutRef<typeof Avatar> {
+export interface UserAvatarProps extends React.ComponentPropsWithoutRef<typeof Avatar> {
   /** Optional remote image URL */
   src?: string | null
   /** User’s display name */

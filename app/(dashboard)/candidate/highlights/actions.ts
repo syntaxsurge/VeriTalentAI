@@ -17,16 +17,8 @@ import {
 /* -------------------------------------------------------------------------- */
 
 const payloadSchema = z.object({
-  experience: z
-    .array(z.number())
-    .max(5, 'Maximum 5 experience highlights')
-    .optional()
-    .default([]),
-  project: z
-    .array(z.number())
-    .max(5, 'Maximum 5 project highlights')
-    .optional()
-    .default([]),
+  experience: z.array(z.number()).max(5, 'Maximum 5 experience highlights').optional().default([]),
+  project: z.array(z.number()).max(5, 'Maximum 5 project highlights').optional().default([]),
 })
 
 /* -------------------------------------------------------------------------- */

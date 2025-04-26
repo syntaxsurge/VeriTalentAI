@@ -1,22 +1,17 @@
-import {
-  PDFDocument,
-  StandardFonts,
-  rgb,
-  type PDFFont,
-  type PDFPage,
-} from 'pdf-lib'
-import { eq } from 'drizzle-orm'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
+import { eq } from 'drizzle-orm'
+import { PDFDocument, StandardFonts, rgb, type PDFFont } from 'pdf-lib'
+
 import { db } from '@/lib/db/drizzle'
-import { users } from '@/lib/db/schema/core'
 import {
   candidates,
   candidateCredentials,
   CredentialStatus,
   CredentialCategory,
 } from '@/lib/db/schema/candidate'
+import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 
 /* -------------------------------------------------------------------------- */
@@ -40,9 +35,7 @@ export interface ResumeData {
 /*                         R E S U M E   B U I L D E R                        */
 /* -------------------------------------------------------------------------- */
 
-export async function buildResumeData(
-  candidateId: number,
-): Promise<ResumeData | null> {
+export async function buildResumeData(candidateId: number): Promise<ResumeData | null> {
   /* Basic profile */
   const [profile] = await db
     .select({
@@ -96,9 +89,7 @@ export async function buildResumeData(
 /*                      M O D E R N   P D F   G E N E R A T O R               */
 /* -------------------------------------------------------------------------- */
 
-export async function generateResumePdf(
-  data: ResumeData,
-): Promise<Uint8Array> {
+export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
   const pdf = await PDFDocument.create()
   let page = pdf.addPage()
   const { width, height } = page.getSize()
@@ -113,8 +104,8 @@ export async function generateResumePdf(
   const BODY_FONT_SIZE = 10
   const SMALL_FONT_SIZE = 8
   const LINE_HEIGHT = BODY_FONT_SIZE + 4
-  const GAP_AFTER_DIVIDER = 12          // spacing below divider
-  const SECTION_TOP_GAP = 20            // NEW - spacing above each section header
+  const GAP_AFTER_DIVIDER = 12 // spacing below divider
+  const SECTION_TOP_GAP = 20 // NEW - spacing above each section header
 
   /* Use brand primary indigo (#4F46E5) instead of default blue */
   const ACCENT = rgb(79 / 255, 70 / 255, 229 / 255) // #4F46E5
@@ -146,9 +137,8 @@ export async function generateResumePdf(
   })
 
   // Calculate vertical positions with explicit gaps to avoid overlap
-  const nameY =
-    height - bannerH + (bannerH + HEAD_FONT_SIZE) / 2 - HEAD_FONT_SIZE        // center name
-  const emailY = nameY - SUBHEAD_FONT_SIZE - 6                                // 6-pt gap below name
+  const nameY = height - bannerH + (bannerH + HEAD_FONT_SIZE) / 2 - HEAD_FONT_SIZE // center name
+  const emailY = nameY - SUBHEAD_FONT_SIZE - 6 // 6-pt gap below name
 
   // Name
   page.drawText(data.name, {
@@ -217,12 +207,7 @@ export async function generateResumePdf(
     }
   }
 
-  function wrapText(
-    text: string,
-    font: PDFFont,
-    fontSize: number,
-    maxWidth: number,
-  ): string[] {
+  function wrapText(text: string, font: PDFFont, fontSize: number, maxWidth: number): string[] {
     const words = text.split(/\s+/)
     const lines: string[] = []
     let current = ''
@@ -310,8 +295,7 @@ export async function generateResumePdf(
     drawSectionTitle('Credentials')
     data.credentials.forEach((c) => {
       const issuer = c.issuer ? ` — ${c.issuer}` : ''
-      const status =
-        c.status.charAt(0).toUpperCase() + c.status.slice(1).toLowerCase()
+      const status = c.status.charAt(0).toUpperCase() + c.status.slice(1).toLowerCase()
       bulletLine(`${c.title}${issuer} (${status})`)
     })
   }

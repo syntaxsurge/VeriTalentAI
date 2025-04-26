@@ -5,14 +5,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import {
-  ArrowUpDown,
-  MoreHorizontal,
-  Copy as CopyIcon,
-  Eye,
-} from 'lucide-react'
+import { ArrowUpDown, MoreHorizontal, Copy as CopyIcon, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -20,13 +17,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 
@@ -60,11 +50,7 @@ interface Props {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -111,11 +97,7 @@ function RowActions({ row }: { row: RowType }) {
 
         <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem
-            disabled={!row.did}
-            onSelect={openDialog}
-            className='cursor-pointer'
-          >
+          <DropdownMenuItem disabled={!row.did} onSelect={openDialog} className='cursor-pointer'>
             <Eye className='mr-2 h-4 w-4' />
             View DID
           </DropdownMenuItem>
@@ -129,20 +111,13 @@ function RowActions({ row }: { row: RowType }) {
           </DialogHeader>
           {row.did ? (
             <div className='flex flex-col gap-4'>
-              <code className='break-all rounded-md bg-muted px-3 py-2 text-sm'>
-                {row.did}
-              </code>
-              <Button
-                variant='outline'
-                size='sm'
-                className='self-end'
-                onClick={copyDid}
-              >
+              <code className='bg-muted rounded-md px-3 py-2 text-sm break-all'>{row.did}</code>
+              <Button variant='outline' size='sm' className='self-end' onClick={copyDid}>
                 <CopyIcon className='mr-2 h-4 w-4' /> Copy
               </Button>
             </div>
           ) : (
-            <p className='text-sm text-muted-foreground'>No DID available.</p>
+            <p className='text-muted-foreground text-sm'>No DID available.</p>
           )}
         </DialogContent>
       </Dialog>

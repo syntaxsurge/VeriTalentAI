@@ -9,7 +9,6 @@ import { ChevronDown, LayoutDashboard, LogOut, Settings } from 'lucide-react'
 
 import { signOut } from '@/app/(auth)/actions'
 import { ModeToggle } from '@/components/theme-toggle'
-import { UserAvatar } from '@/components/ui/user-avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -19,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { useUser } from '@/lib/auth'
 
 /* Landing page anchor sections */
@@ -72,7 +72,7 @@ export default function SiteHeader() {
         {/* Brand */}
         <Link
           href='/'
-          className='text-primary flex items-center gap-2 whitespace-nowrap text-lg font-extrabold tracking-tight'
+          className='text-primary flex items-center gap-2 text-lg font-extrabold tracking-tight whitespace-nowrap'
         >
           <Image
             src='/images/viskify-logo.png'
@@ -129,10 +129,7 @@ export default function SiteHeader() {
               <ul className='space-y-1'>
                 {TOOLS_MENU.map((t) => (
                   <li key={t.href}>
-                    <Link
-                      href={t.href}
-                      className='hover:bg-muted block rounded px-2 py-1 text-sm'
-                    >
+                    <Link href={t.href} className='hover:bg-muted block rounded px-2 py-1 text-sm'>
                       {t.label}
                     </Link>
                   </li>
@@ -178,7 +175,7 @@ export default function SiteHeader() {
                 {/* User card */}
                 <DropdownMenuItem
                   asChild
-                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex select-none flex-col items-start gap-1 rounded-md px-3 py-2 text-left'
+                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex flex-col items-start gap-1 rounded-md px-3 py-2 text-left select-none'
                 >
                   <Link href='/settings/team' className='w-full'>
                     <p className='truncate text-sm font-medium'>
@@ -189,7 +186,7 @@ export default function SiteHeader() {
                         {user.email}
                       </p>
                     )}
-                    <span className='bg-muted text-muted-foreground inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider'>
+                    <span className='bg-muted text-muted-foreground inline-block rounded px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase'>
                       {user.role}
                     </span>
                   </Link>

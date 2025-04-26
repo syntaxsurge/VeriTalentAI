@@ -1,12 +1,14 @@
 import { asc, desc, ilike, sql } from 'drizzle-orm'
 
-import CandidatesTable, {
-  type RowType,
-} from '@/components/candidate-directory/candidates-table'
+import CandidatesTable, { type RowType } from '@/components/candidate-directory/candidates-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
-import { candidates as candT, candidateCredentials as credT, users as usersT } from '@/lib/db/schema'
+import {
+  candidates as candT,
+  candidateCredentials as credT,
+  users as usersT,
+} from '@/lib/db/schema'
 
 export const revalidate = 0
 

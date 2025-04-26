@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation'
+
 import { asc, eq } from 'drizzle-orm'
 import { Star } from 'lucide-react'
 
-import ProfileHeader from '@/components/dashboard/candidate/profile-header'
-import PageCard from '@/components/ui/page-card'
 import HighlightsBoard, {
   type Credential as HighlightCredential,
 } from '@/components/dashboard/candidate/highlights-board'
+import ProfileHeader from '@/components/dashboard/candidate/profile-header'
+import PageCard from '@/components/ui/page-card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import {
@@ -63,8 +64,7 @@ export default async function CandidateHighlightsSettings() {
     const obj: HighlightCredential = {
       id: cred.id,
       title: cred.title,
-      category:
-        cred.category === CredentialCategory.EXPERIENCE ? 'EXPERIENCE' : 'PROJECT',
+      category: cred.category === CredentialCategory.EXPERIENCE ? 'EXPERIENCE' : 'PROJECT',
       type: cred.type,
       issuer: cred.issuerName,
       fileUrl: cred.fileUrl,
@@ -86,8 +86,7 @@ export default async function CandidateHighlightsSettings() {
     .map((cred) => ({
       id: cred.id,
       title: cred.title,
-      category:
-        cred.category === CredentialCategory.EXPERIENCE ? 'EXPERIENCE' : 'PROJECT',
+      category: cred.category === CredentialCategory.EXPERIENCE ? 'EXPERIENCE' : 'PROJECT',
       type: cred.type,
       issuer: cred.issuerName,
       fileUrl: cred.fileUrl,

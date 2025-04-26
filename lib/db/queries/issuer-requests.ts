@@ -1,8 +1,8 @@
 import { asc, desc, eq, ilike, or, and, sql } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import { users } from '../schema/core'
 import { candidateCredentials, candidates, CredentialStatus } from '../schema/candidate'
+import { users } from '../schema/core'
 
 export interface IssuerRequestRow {
   id: number

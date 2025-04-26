@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
+
 import { Mail } from 'lucide-react'
 
-import PageCard from '@/components/ui/page-card'
 import InvitationsTable, { RowType } from '@/components/dashboard/invitations-table'
+import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getInvitationsPage } from '@/lib/db/queries/invitations'
 import { getUser } from '@/lib/db/queries/queries'
@@ -66,29 +67,29 @@ export default async function InvitationsPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-      <PageCard
-        icon={Mail}
-        title='Team Invitations'
-        description='Review and manage the invitations sent to your email.'
-      >
-        <div className='space-y-4 overflow-x-auto'>
-          <InvitationsTable
-            rows={rows}
-            sort={sort}
-            order={order as 'asc' | 'desc'}
-            basePath='/invitations'
-            initialParams={initialParams}
-            searchQuery={searchTerm}
-          />
+    <PageCard
+      icon={Mail}
+      title='Team Invitations'
+      description='Review and manage the invitations sent to your email.'
+    >
+      <div className='space-y-4 overflow-x-auto'>
+        <InvitationsTable
+          rows={rows}
+          sort={sort}
+          order={order as 'asc' | 'desc'}
+          basePath='/invitations'
+          initialParams={initialParams}
+          searchQuery={searchTerm}
+        />
 
-          <TablePagination
-            page={page}
-            hasNext={hasNext}
-            basePath='/invitations'
-            initialParams={initialParams}
-            pageSize={pageSize}
-          />
-        </div>
-      </PageCard>
+        <TablePagination
+          page={page}
+          hasNext={hasNext}
+          basePath='/invitations'
+          initialParams={initialParams}
+          pageSize={pageSize}
+        />
+      </div>
+    </PageCard>
   )
 }

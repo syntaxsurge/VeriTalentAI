@@ -1,19 +1,20 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
-import { teams, teamMembers } from '@/lib/db/schema/core'
-import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import {
   candidateCredentials,
   candidates,
   CredentialStatus,
   CredentialCategory,
 } from '@/lib/db/schema/candidate'
+import { teams, teamMembers } from '@/lib/db/schema/core'
+import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 
 /* -------------------------------------------------------------------------- */
 /*                               A D D  C R E D                               */

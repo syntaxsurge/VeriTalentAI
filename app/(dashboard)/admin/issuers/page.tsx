@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
+
 import { Building } from 'lucide-react'
 
-import PageCard from '@/components/ui/page-card'
 import AdminIssuersTable, { type RowType } from '@/components/dashboard/admin/issuers-table'
+import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
 import { getUser } from '@/lib/db/queries/queries'
@@ -74,28 +75,28 @@ export default async function AdminIssuersPage({
   /* ------------------------------ View ----------------------------------- */
   return (
     <PageCard
-        icon={Building}
-        title='Issuer Management'
-        description='Review, verify, and manage issuers.'
-      >
-        <div className='space-y-4 overflow-x-auto'>
-          <AdminIssuersTable
-            rows={rows}
-            sort={sort}
-            order={order as 'asc' | 'desc'}
-            basePath='/admin/issuers'
-            initialParams={initialParams}
-            searchQuery={searchTerm}
-          />
+      icon={Building}
+      title='Issuer Management'
+      description='Review, verify, and manage issuers.'
+    >
+      <div className='space-y-4 overflow-x-auto'>
+        <AdminIssuersTable
+          rows={rows}
+          sort={sort}
+          order={order as 'asc' | 'desc'}
+          basePath='/admin/issuers'
+          initialParams={initialParams}
+          searchQuery={searchTerm}
+        />
 
-          <TablePagination
-            page={page}
-            hasNext={hasNext}
-            basePath='/admin/issuers'
-            initialParams={initialParams}
-            pageSize={pageSize}
-          />
-        </div>
-      </PageCard>
+        <TablePagination
+          page={page}
+          hasNext={hasNext}
+          basePath='/admin/issuers'
+          initialParams={initialParams}
+          pageSize={pageSize}
+        />
+      </div>
+    </PageCard>
   )
 }

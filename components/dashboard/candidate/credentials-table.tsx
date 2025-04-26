@@ -7,6 +7,7 @@ import * as React from 'react'
 import { MoreHorizontal, Trash2, FileText, Clipboard, Loader2, ArrowUpDown } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -18,7 +19,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
-import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

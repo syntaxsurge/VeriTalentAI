@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+
 import { eq } from 'drizzle-orm'
 import { ListChecks } from 'lucide-react'
 
@@ -80,28 +81,28 @@ export default async function RequestsPage({
   /* ------------------------------ View ----------------------------------- */
   return (
     <PageCard
-        icon={ListChecks}
-        title='Verification Requests'
-        description='Review and manage credential verification requests submitted by candidates.'
-      >
-        <div className='space-y-4 overflow-x-auto'>
-          <IssuerRequestsTable
-            rows={rows}
-            sort={sort}
-            order={order as 'asc' | 'desc'}
-            basePath={BASE_PATH}
-            initialParams={initialParams}
-            searchQuery={searchTerm}
-          />
+      icon={ListChecks}
+      title='Verification Requests'
+      description='Review and manage credential verification requests submitted by candidates.'
+    >
+      <div className='space-y-4 overflow-x-auto'>
+        <IssuerRequestsTable
+          rows={rows}
+          sort={sort}
+          order={order as 'asc' | 'desc'}
+          basePath={BASE_PATH}
+          initialParams={initialParams}
+          searchQuery={searchTerm}
+        />
 
-          <TablePagination
-            page={page}
-            hasNext={hasNext}
-            basePath={BASE_PATH}
-            initialParams={initialParams}
-            pageSize={pageSize}
-          />
-        </div>
-      </PageCard>
+        <TablePagination
+          page={page}
+          hasNext={hasNext}
+          basePath={BASE_PATH}
+          initialParams={initialParams}
+          pageSize={pageSize}
+        />
+      </div>
+    </PageCard>
   )
 }

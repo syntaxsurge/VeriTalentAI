@@ -21,15 +21,15 @@ import { RoleBadge } from '@/components/dashboard/role-badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import { users, teams } from '@/lib/db/schema/core'
-import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
-import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 import {
   candidates,
   candidateCredentials,
   CredentialStatus,
   quizAttempts,
 } from '@/lib/db/schema/candidate'
+import { users, teams } from '@/lib/db/schema/core'
+import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
+import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 
 export const revalidate = 0
 

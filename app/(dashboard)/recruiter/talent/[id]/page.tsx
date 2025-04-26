@@ -1,10 +1,15 @@
-import { asc, desc, eq, and, inArray } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 
+import { asc, desc, eq, inArray } from 'drizzle-orm'
+
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
-import AddToPipelineForm from './add-to-pipeline-form'
-import { getUser } from '@/lib/db/queries/queries'
+import { type Stage } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
+import {
+  getCandidateCredentialsSection,
+  type StatusCounts,
+} from '@/lib/db/queries/candidate-details'
+import { getUser } from '@/lib/db/queries/queries'
 import {
   users,
   candidates,
@@ -14,15 +19,12 @@ import {
   issuers,
 } from '@/lib/db/schema'
 import {
-  getCandidateCredentialsSection,
-  type StatusCounts,
-} from '@/lib/db/queries/candidate-details'
-import {
   candidateCredentials,
   CredentialCategory,
   candidateHighlights,
 } from '@/lib/db/schema/candidate'
-import { STAGES, type Stage } from '@/lib/constants/recruiter'
+
+import AddToPipelineForm from './add-to-pipeline-form'
 
 export const revalidate = 0
 
@@ -84,9 +86,7 @@ export default async function RecruiterCandidateProfile({
     : []
 
   /* maintain order */
-  highlightedCreds.sort(
-    (a, b) => highlightedIds.indexOf(a.id) - highlightedIds.indexOf(b.id),
-  )
+  highlightedCreds.sort((a, b) => highlightedIds.indexOf(a.id) - highlightedIds.indexOf(b.id))
 
   const experiences = highlightedCreds
     .filter((c) => c.category === CredentialCategory.EXPERIENCE)
@@ -131,8 +131,8 @@ export default async function RecruiterCandidateProfile({
     pipelineEntriesAll.length === 0
       ? undefined
       : pipelineEntriesAll.length === 1
-      ? `In ${pipelineEntriesAll[0].pipelineName}`
-      : `In ${pipelineEntriesAll.length} Pipelines`
+        ? `In ${pipelineEntriesAll[0].pipelineName}`
+        : `In ${pipelineEntriesAll.length} Pipelines`
 
   /* ----------------------------- Credentials section ----------------------------- */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))
@@ -231,7 +231,9 @@ export default async function RecruiterCandidateProfile({
 
   const scoreVals = passes.map((p) => p.score).filter((s): s is number => s !== null)
   const avgScore =
-    scoreVals.length > 0 ? Math.round(scoreVals.reduce((a, b) => a + b, 0) / scoreVals.length) : null
+    scoreVals.length > 0
+      ? Math.round(scoreVals.reduce((a, b) => a + b, 0) / scoreVals.length)
+      : null
 
   /* ----------------------------- Render ----------------------------- */
   return (
@@ -281,9 +283,7 @@ export default async function RecruiterCandidateProfile({
           basePath: `/recruiter/talent/${candidateId}`,
           initialParams: pipeInitialParams,
         },
-        addToPipelineForm: (
-          <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />
-        ),
+        addToPipelineForm: <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />,
       }}
     />
   )

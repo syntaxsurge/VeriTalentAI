@@ -1,15 +1,17 @@
 import { redirect } from 'next/navigation'
+
 import { eq } from 'drizzle-orm'
 import { FileText } from 'lucide-react'
 
-import PageCard from '@/components/ui/page-card'
-import CandidateCredentialsTable, { RowType } from '@/components/dashboard/candidate/credentials-table'
-import { TablePagination } from '@/components/ui/tables/table-pagination'
 import AddCredentialDialog from '@/components/dashboard/candidate/add-credential-dialog'
-
+import CandidateCredentialsTable, {
+  RowType,
+} from '@/components/dashboard/candidate/credentials-table'
+import PageCard from '@/components/ui/page-card'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { db } from '@/lib/db/drizzle'
 import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credentials'
 import { getUser } from '@/lib/db/queries/queries'
-import { db } from '@/lib/db/drizzle'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 
 import { addCredential } from './actions'
@@ -40,9 +42,7 @@ export default async function CredentialsPage({
   const hasDid = !!did
 
   /* --------------------- Add Credential SA ------------------ */
-  const addCredentialAction = async (
-    formData: FormData,
-  ): Promise<{ error?: string } | void> => {
+  const addCredentialAction = async (formData: FormData): Promise<{ error?: string } | void> => {
     'use server'
     return await addCredential({}, formData)
   }
@@ -89,35 +89,30 @@ export default async function CredentialsPage({
 
   /* --------------------------- UI -------------------------- */
   return (
-      <PageCard
-        icon={FileText}
-        title='My Credentials'
-        description='Add, organise, and track all of your verifiable credentials.'
-        actions={
-          <AddCredentialDialog
-            addCredentialAction={addCredentialAction}
-            hasDid={hasDid}
-          />
-        }
-      >
-        <div className='space-y-4 overflow-x-auto'>
-          <CandidateCredentialsTable
-            rows={rows}
-            sort={sort}
-            order={order as 'asc' | 'desc'}
-            basePath='/candidate/credentials'
-            initialParams={initialParams}
-            searchQuery={searchTerm}
-          />
+    <PageCard
+      icon={FileText}
+      title='My Credentials'
+      description='Add, organise, and track all of your verifiable credentials.'
+      actions={<AddCredentialDialog addCredentialAction={addCredentialAction} hasDid={hasDid} />}
+    >
+      <div className='space-y-4 overflow-x-auto'>
+        <CandidateCredentialsTable
+          rows={rows}
+          sort={sort}
+          order={order as 'asc' | 'desc'}
+          basePath='/candidate/credentials'
+          initialParams={initialParams}
+          searchQuery={searchTerm}
+        />
 
-          <TablePagination
-            page={page}
-            hasNext={hasNext}
-            basePath='/candidate/credentials'
-            initialParams={initialParams}
-            pageSize={pageSize}
-          />
-        </div>
-      </PageCard>
+        <TablePagination
+          page={page}
+          hasNext={hasNext}
+          basePath='/candidate/credentials'
+          initialParams={initialParams}
+          pageSize={pageSize}
+        />
+      </div>
+    </PageCard>
   )
 }

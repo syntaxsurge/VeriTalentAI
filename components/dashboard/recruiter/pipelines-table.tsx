@@ -5,13 +5,7 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import { formatDistanceToNow } from 'date-fns'
-import {
-  ArrowUpDown,
-  Trash2,
-  MoreHorizontal,
-  Loader2,
-  FolderKanban,
-} from 'lucide-react'
+import { ArrowUpDown, Trash2, MoreHorizontal, Loader2, FolderKanban } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deletePipelineAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
@@ -22,7 +16,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuLabel,          /* NEW */
+  DropdownMenuLabel /* NEW */,
 } from '@/components/ui/dropdown-menu'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 
@@ -50,11 +44,7 @@ interface PipelinesTableProps {
 /*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -68,9 +58,7 @@ function buildLink(
 /*                            Bulk delete helper                              */
 /* -------------------------------------------------------------------------- */
 
-function makeBulkActions(
-  router: ReturnType<typeof useRouter>,
-): BulkAction<RowType>[] {
+function makeBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
   const [isPending, startTransition] = React.useTransition()
 
   return [
@@ -133,7 +121,7 @@ function RowActions({ row }: { row: RowType }) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>        {/* NEW */}
+        <DropdownMenuLabel>Actions</DropdownMenuLabel> {/* NEW */}
         <DropdownMenuItem asChild>
           <Link href={`/recruiter/pipelines/${row.id}`} className='cursor-pointer'>
             <FolderKanban className='mr-2 h-4 w-4' />
@@ -211,18 +199,13 @@ export default function PipelinesTable({
         key: 'description',
         header: 'Description',
         sortable: false,
-        render: (v) => (
-          <span className='line-clamp-2 max-w-[480px]'>
-            {(v as string) || '—'}
-          </span>
-        ),
+        render: (v) => <span className='line-clamp-2 max-w-[480px]'>{(v as string) || '—'}</span>,
       },
       {
         key: 'createdAt',
         header: sortableHeader('Created', 'createdAt'),
         sortable: false,
-        render: (v) =>
-          formatDistanceToNow(new Date(v as string), { addSuffix: true }),
+        render: (v) => formatDistanceToNow(new Date(v as string), { addSuffix: true }),
       },
       {
         /* use existing `id` key (valid keyof RowType) for actions column */

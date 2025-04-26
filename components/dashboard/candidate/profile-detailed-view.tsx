@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+
+import { format, formatDistanceToNow } from 'date-fns'
 import {
   BookOpen,
   Briefcase,
@@ -13,16 +15,8 @@ import {
   Globe2,
   ExternalLink,
 } from 'lucide-react'
-import { SiGithub, SiLinkedin } from 'react-icons/si'
 import { FaTwitter } from 'react-icons/fa'
-import { format, formatDistanceToNow } from 'date-fns'
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Button } from '@/components/ui/button'
-import { TablePagination } from '@/components/ui/tables/table-pagination'
-import StatusBadge from '@/components/ui/status-badge'
+import { SiGithub, SiLinkedin } from 'react-icons/si'
 
 import CredentialsTable, {
   RowType as CredRow,
@@ -30,6 +24,13 @@ import CredentialsTable, {
 import PipelineEntriesTable, {
   RowType as PipeRow,
 } from '@/components/dashboard/recruiter/pipeline-entries-table'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import StatusBadge from '@/components/ui/status-badge'
+import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+
 import ProfileHeader from './profile-header'
 
 /* -------------------------------------------------------------------------- */
@@ -171,19 +172,23 @@ function HighlightList<T>({
     <div className='space-y-6'>
       {title && (
         <div className='flex items-center gap-2'>
-          <Icon className='h-5 w-5 text-primary' />
+          <Icon className='text-primary h-5 w-5' />
           <h4 className='text-lg font-semibold'>{title}</h4>
         </div>
       )}
 
-      <div className='flex flex-col gap-4'>{visible.map((it, i) => <div key={i}>{renderItem(it)}</div>)}</div>
+      <div className='flex flex-col gap-4'>
+        {visible.map((it, i) => (
+          <div key={i}>{renderItem(it)}</div>
+        ))}
+      </div>
 
       {items.length > 5 && (
         <Button
           variant='ghost'
           size='sm'
           onClick={() => setExpanded((p) => !p)}
-          className='gap-1 text-primary'
+          className='text-primary gap-1'
         >
           {expanded ? (
             <>
@@ -259,7 +264,7 @@ export default function CandidateDetailedProfileView({
               </CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
-              <p className='text-sm text-muted-foreground'>
+              <p className='text-muted-foreground text-sm'>
                 Generate a professionally formatted résumé summarizing your profile, credentials,
                 experiences, and projects.
               </p>
@@ -339,7 +344,7 @@ export default function CandidateDetailedProfileView({
                     icon={Briefcase}
                     items={experiences}
                     renderItem={(exp) => (
-                      <div className='rounded-lg border bg-background/50 p-4'>
+                      <div className='bg-background/50 rounded-lg border p-4'>
                         <div className='flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-4'>
                           <div className='flex-1 space-y-0.5'>
                             <h5 className='flex items-center gap-2 text-base font-semibold'>
@@ -357,10 +362,10 @@ export default function CandidateDetailedProfileView({
                               )}
                             </h5>
                             {exp.company && (
-                              <p className='text-sm text-muted-foreground'>{exp.company}</p>
+                              <p className='text-muted-foreground text-sm'>{exp.company}</p>
                             )}
                             {exp.type && (
-                              <p className='text-xs uppercase tracking-wide text-muted-foreground'>
+                              <p className='text-muted-foreground text-xs tracking-wide uppercase'>
                                 {exp.type}
                               </p>
                             )}
@@ -386,7 +391,7 @@ export default function CandidateDetailedProfileView({
                     icon={BookOpen}
                     items={projects}
                     renderItem={(proj) => (
-                      <div className='rounded-lg border bg-background/50 p-4'>
+                      <div className='bg-background/50 rounded-lg border p-4'>
                         <div className='flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-4'>
                           <div className='flex-1 space-y-0.5'>
                             <h5 className='flex items-center gap-2 text-base font-semibold'>
@@ -406,7 +411,10 @@ export default function CandidateDetailedProfileView({
                             {proj.description && <p className='text-sm'>{proj.description}</p>}
                           </div>
                           <div className='flex-shrink-0 self-start sm:self-center'>
-                            <StatusBadge status={(proj.status ?? 'unverified') as string} showIcon />
+                            <StatusBadge
+                              status={(proj.status ?? 'unverified') as string}
+                              showIcon
+                            />
                           </div>
                         </div>
                       </div>
@@ -481,18 +489,18 @@ export default function CandidateDetailedProfileView({
             </CardHeader>
             <CardContent>
               {passes.length === 0 ? (
-                <p className='text-sm text-muted-foreground'>No passes yet.</p>
+                <p className='text-muted-foreground text-sm'>No passes yet.</p>
               ) : (
                 <ul className='space-y-3'>
                   {passes.map((p) => (
                     <li
                       key={p.id}
-                      className='flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2'
+                      className='bg-muted flex flex-wrap items-center justify-between gap-2 rounded-lg px-3 py-2'
                     >
                       <span className='font-medium'>
                         Quiz #{p.quizId} • Score {p.score ?? '—'}
                       </span>
-                      <span className='text-xs text-muted-foreground'>
+                      <span className='text-muted-foreground text-xs'>
                         {usePrettyDate(p.createdAt)}
                       </span>
                     </li>

@@ -6,13 +6,9 @@ import { z } from 'zod'
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { issueCredential } from '@/lib/cheqd'
 import { db } from '@/lib/db/drizzle'
+import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
-import {
-  candidateCredentials,
-  CredentialStatus,
-  candidates,
-} from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                               H E L P E R S                                */
@@ -43,12 +39,14 @@ export const approveCredentialAction = validatedActionWithUser(
       .select()
       .from(candidateCredentials)
       .where(
-        and(eq(candidateCredentials.id, credentialId), eq(candidateCredentials.issuerId, issuer.id)),
+        and(
+          eq(candidateCredentials.id, credentialId),
+          eq(candidateCredentials.issuerId, issuer.id),
+        ),
       )
       .limit(1)
     if (!cred) return buildError('Credential not found for this issuer.')
-    if (cred.status === CredentialStatus.VERIFIED)
-      return buildError('Credential already verified.')
+    if (cred.status === CredentialStatus.VERIFIED) return buildError('Credential already verified.')
 
     /* 3. subject DID */
     const [candRow] = await db
@@ -123,7 +121,10 @@ export const rejectCredentialAction = validatedActionWithUser(
         verifiedAt: new Date(),
       })
       .where(
-        and(eq(candidateCredentials.id, credentialId), eq(candidateCredentials.issuerId, issuer.id)),
+        and(
+          eq(candidateCredentials.id, credentialId),
+          eq(candidateCredentials.issuerId, issuer.id),
+        ),
       )
 
     return { success: 'Credential rejected.' }
@@ -148,7 +149,10 @@ export const unverifyCredentialAction = validatedActionWithUser(
       .select()
       .from(candidateCredentials)
       .where(
-        and(eq(candidateCredentials.id, credentialId), eq(candidateCredentials.issuerId, issuer.id)),
+        and(
+          eq(candidateCredentials.id, credentialId),
+          eq(candidateCredentials.issuerId, issuer.id),
+        ),
       )
       .limit(1)
     if (!cred) return buildError('Credential not found for this issuer.')

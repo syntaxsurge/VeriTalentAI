@@ -1,13 +1,13 @@
 import { asc, desc, eq, ilike, or } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import { users as usersT } from '../schema/core'
-import { issuers as issuersT } from '../schema/issuer'
 import {
   candidateCredentials as credsT,
   candidates as candT,
   CredentialStatus,
 } from '../schema/candidate'
+import { users as usersT } from '../schema/core'
+import { issuers as issuersT } from '../schema/issuer'
 
 export type AdminCredentialRow = {
   id: number

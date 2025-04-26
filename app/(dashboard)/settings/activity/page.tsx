@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
+
 import { Activity as ActivityIcon } from 'lucide-react'
 
-import PageCard from '@/components/ui/page-card'
 import ActivityLogsTable, { RowType } from '@/components/dashboard/settings/activity-logs-table'
+import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
 import { getUser } from '@/lib/db/queries/queries'
@@ -67,29 +68,29 @@ export default async function ActivityPage({
 
   /* ----------------------------- UI ----------------------------- */
   return (
-      <PageCard
-        icon={ActivityIcon}
-        title='Activity Log'
-        description='Review your recent account activity and sign-ins.'
-      >
-        <div className='space-y-4 overflow-x-auto'>
-          <ActivityLogsTable
-            rows={rows}
-            sort={sort}
-            order={order as 'asc' | 'desc'}
-            basePath='/settings/activity'
-            initialParams={initialParams}
-            searchQuery={searchTerm}
-          />
+    <PageCard
+      icon={ActivityIcon}
+      title='Activity Log'
+      description='Review your recent account activity and sign-ins.'
+    >
+      <div className='space-y-4 overflow-x-auto'>
+        <ActivityLogsTable
+          rows={rows}
+          sort={sort}
+          order={order as 'asc' | 'desc'}
+          basePath='/settings/activity'
+          initialParams={initialParams}
+          searchQuery={searchTerm}
+        />
 
-          <TablePagination
-            page={page}
-            hasNext={hasNext}
-            basePath='/settings/activity'
-            initialParams={initialParams}
-            pageSize={pageSize}
-          />
-        </div>
-      </PageCard>
+        <TablePagination
+          page={page}
+          hasNext={hasNext}
+          basePath='/settings/activity'
+          initialParams={initialParams}
+          pageSize={pageSize}
+        />
+      </div>
+    </PageCard>
   )
 }

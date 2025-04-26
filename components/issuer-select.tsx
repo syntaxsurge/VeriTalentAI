@@ -1,10 +1,11 @@
 'use client'
 
 import * as React from 'react'
+
 import { Loader2, Search } from 'lucide-react'
 
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
@@ -77,7 +78,7 @@ export default function IssuerSelect() {
       <div className='flex items-center gap-2'>
         {/* Visible search input */}
         <div className='relative flex-1'>
-          <Search className='text-muted-foreground absolute left-2 top-2.5 h-4 w-4' />
+          <Search className='text-muted-foreground absolute top-2.5 left-2 h-4 w-4' />
           <Input
             value={query}
             onChange={(e) => {
@@ -90,7 +91,7 @@ export default function IssuerSelect() {
             aria-autocomplete='list'
             aria-expanded={open}
           />
-          {isLoading && <Loader2 className='absolute right-2 top-2.5 h-4 w-4 animate-spin' />}
+          {isLoading && <Loader2 className='absolute top-2.5 right-2 h-4 w-4 animate-spin' />}
         </div>
 
         {/* Clear button */}
@@ -103,25 +104,25 @@ export default function IssuerSelect() {
 
       {/* Suggestion dropdown */}
       {open && options.length > 0 && (
-        <div className='absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md'>
+        <div className='bg-popover absolute z-50 mt-1 w-full rounded-md border shadow-md'>
           {options.map((opt) => (
             <button
               type='button'
               key={opt.id}
               onClick={() => handleSelect(opt)}
               className={cn(
-                'flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-muted/50',
+                'hover:bg-muted/50 flex w-full items-start gap-2 px-3 py-2 text-left text-sm',
                 selected?.id === opt.id && 'bg-muted',
               )}
             >
               <span className='font-medium'>{opt.name}</span>
-              <span className='text-muted-foreground ml-auto capitalize text-xs'>
+              <span className='text-muted-foreground ml-auto text-xs capitalize'>
                 {opt.category.toLowerCase()}
               </span>
             </button>
           ))}
           {options.length === 12 && (
-            <div className='border-t px-3 py-2 text-center text-xs text-muted-foreground'>
+            <div className='text-muted-foreground border-t px-3 py-2 text-center text-xs'>
               Scroll for more results…
             </div>
           )}

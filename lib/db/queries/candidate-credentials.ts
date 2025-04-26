@@ -1,12 +1,8 @@
 import { asc, desc, eq, ilike, sql, and } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
-import {
-  candidateCredentials,
-  CredentialStatus,
-} from '@/lib/db/schema/candidate'
+import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
-import { candidates } from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -81,14 +77,7 @@ export async function getCandidateCredentialsPage(
 
   if (!cand) return { rows: [], hasNext: false }
 
-  return getCandidateCredentialsSection(
-    cand.id,
-    page,
-    pageSize,
-    sort,
-    order,
-    searchTerm,
-  )
+  return getCandidateCredentialsSection(cand.id, page, pageSize, sort, order, searchTerm)
 }
 
 /**
@@ -105,18 +94,22 @@ export async function getCandidateCredentialsSection(
   /* ----------------------------- Status counts --------------------------- */
   const [counts] = await db
     .select({
-      verified: sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'verified' THEN 1 ELSE 0 END)`.as(
-        'verified',
-      ),
-      pending: sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'pending' THEN 1 ELSE 0 END)`.as(
-        'pending',
-      ),
-      rejected: sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'rejected' THEN 1 ELSE 0 END)`.as(
-        'rejected',
-      ),
-      unverified: sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'unverified' THEN 1 ELSE 0 END)`.as(
-        'unverified',
-      ),
+      verified:
+        sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'verified' THEN 1 ELSE 0 END)`.as(
+          'verified',
+        ),
+      pending:
+        sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'pending' THEN 1 ELSE 0 END)`.as(
+          'pending',
+        ),
+      rejected:
+        sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'rejected' THEN 1 ELSE 0 END)`.as(
+          'rejected',
+        ),
+      unverified:
+        sql<number>`SUM(CASE WHEN ${candidateCredentials.status} = 'unverified' THEN 1 ELSE 0 END)`.as(
+          'unverified',
+        ),
     })
     .from(candidateCredentials)
     .where(eq(candidateCredentials.candidateId, candidateId))
@@ -124,10 +117,7 @@ export async function getCandidateCredentialsSection(
   /* ----------------------------- Base where ------------------------------ */
   let whereExpr: any = eq(candidateCredentials.candidateId, candidateId)
   if (searchTerm) {
-    whereExpr = and(
-      whereExpr,
-      ilike(candidateCredentials.title, `%${searchTerm}%`),
-    )
+    whereExpr = and(whereExpr, ilike(candidateCredentials.title, `%${searchTerm}%`))
   }
 
   /* ----------------------------- Fetch rows ----------------------------- */

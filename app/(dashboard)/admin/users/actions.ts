@@ -6,15 +6,15 @@ import { z } from 'zod'
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
 import { activityLogs } from '@/lib/db/schema'
-import { users, teams, teamMembers } from '@/lib/db/schema/core'
-import { issuers } from '@/lib/db/schema/issuer'
-import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 import {
   candidates,
   candidateCredentials,
   quizAttempts,
   CredentialStatus,
 } from '@/lib/db/schema/candidate'
+import { users, teams, teamMembers } from '@/lib/db/schema/core'
+import { issuers } from '@/lib/db/schema/issuer'
+import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 
 /* ------------------------------------------------------------------ */
 /*                         U P D A T E   U S E R                      */

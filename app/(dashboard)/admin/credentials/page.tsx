@@ -1,10 +1,9 @@
 import { redirect } from 'next/navigation'
+
 import { FileText } from 'lucide-react'
 
+import AdminCredentialsTable, { type RowType } from '@/components/dashboard/admin/credentials-table'
 import PageCard from '@/components/ui/page-card'
-import AdminCredentialsTable, {
-  type RowType,
-} from '@/components/dashboard/admin/credentials-table'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminCredentialsPage } from '@/lib/db/queries/admin-credentials'
 import { getUser } from '@/lib/db/queries/queries'
@@ -74,28 +73,28 @@ export default async function AdminCredentialsPage({
   /* ------------------------------ View ----------------------------------- */
   return (
     <PageCard
-        icon={FileText}
-        title='All Credentials'
-        description='View and manage all candidate credentials.'
-      >
-        <div className='space-y-4 overflow-x-auto'>
-          <AdminCredentialsTable
-            rows={rows}
-            sort={sort}
-            order={order as 'asc' | 'desc'}
-            basePath='/admin/credentials'
-            initialParams={initialParams}
-            searchQuery={searchTerm}
-          />
+      icon={FileText}
+      title='All Credentials'
+      description='View and manage all candidate credentials.'
+    >
+      <div className='space-y-4 overflow-x-auto'>
+        <AdminCredentialsTable
+          rows={rows}
+          sort={sort}
+          order={order as 'asc' | 'desc'}
+          basePath='/admin/credentials'
+          initialParams={initialParams}
+          searchQuery={searchTerm}
+        />
 
-          <TablePagination
-            page={page}
-            hasNext={hasNext}
-            basePath='/admin/credentials'
-            initialParams={initialParams}
-            pageSize={pageSize}
-          />
-        </div>
-      </PageCard>
+        <TablePagination
+          page={page}
+          hasNext={hasNext}
+          basePath='/admin/credentials'
+          initialParams={initialParams}
+          pageSize={pageSize}
+        />
+      </div>
+    </PageCard>
   )
 }

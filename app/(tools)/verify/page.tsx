@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
+
 import { CheckCircle2, XCircle, Clipboard } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -77,7 +78,7 @@ export default function VerifyCredentialPage() {
               rows={10}
               required
               spellCheck={false}
-              className='font-mono border-border w-full resize-y rounded-md border p-3 text-xs leading-tight'
+              className='border-border w-full resize-y rounded-md border p-3 font-mono text-xs leading-tight'
               placeholder='Paste full VC JSON or JWT here…'
             />
 
@@ -101,9 +102,9 @@ export default function VerifyCredentialPage() {
           {result && (
             <div className='flex items-center gap-2'>
               {result === 'verified' ? (
-                <CheckCircle2 className='text-emerald-600 h-5 w-5' />
+                <CheckCircle2 className='h-5 w-5 text-emerald-600' />
               ) : (
-                <XCircle className='text-rose-600 h-5 w-5' />
+                <XCircle className='h-5 w-5 text-rose-600' />
               )}
               <StatusBadge status={result} />
               <span>{message}</span>

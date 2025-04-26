@@ -2,9 +2,9 @@ import { redirect } from 'next/navigation'
 
 import { Users } from 'lucide-react'
 
-import PageCard from '@/components/ui/page-card'
 import TalentFilters from '@/components/dashboard/recruiter/talent-filters'
 import TalentTable, { RowType } from '@/components/dashboard/recruiter/talent-table'
+import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTalentSearchPage } from '@/lib/db/queries/recruiter-talent'

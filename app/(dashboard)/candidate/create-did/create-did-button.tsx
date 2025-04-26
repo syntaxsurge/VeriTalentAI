@@ -46,11 +46,7 @@ export function CreateDidButton() {
   }, [state, pending])
 
   return (
-    <Button
-      onClick={handleClick}
-      disabled={pending}
-      className='w-full md:w-max'
-    >
+    <Button onClick={handleClick} disabled={pending} className='w-full md:w-max'>
       {pending ? (
         <>
           <Loader2 className='mr-2 h-4 w-4 animate-spin' />

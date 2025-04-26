@@ -2,23 +2,19 @@
 
 import Link from 'next/link'
 import { ReactNode } from 'react'
+
 import { Share2, Clipboard } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { UserAvatar } from '@/components/ui/user-avatar'
 import { Button } from '@/components/ui/button'
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { UserAvatar } from '@/components/ui/user-avatar'
 
 export interface Stat {
   label: string
@@ -66,9 +62,9 @@ export default function ProfileHeader({
   /* ------------------------------- view ------------------------------- */
   return (
     <TooltipProvider delayDuration={150}>
-      <div className='overflow-hidden rounded-2xl border bg-muted/40 shadow-sm'>
+      <div className='bg-muted/40 overflow-hidden rounded-2xl border shadow-sm'>
         {/* Decorative banner */}
-        <div className='h-32 w-full bg-gradient-to-r from-primary/30 via-primary/10 to-transparent' />
+        <div className='from-primary/30 via-primary/10 h-32 w-full bg-gradient-to-r to-transparent' />
 
         <div className='flex flex-col gap-6 p-6 sm:flex-row sm:items-end sm:justify-between'>
           {/* Avatar + identity */}
@@ -77,10 +73,10 @@ export default function ProfileHeader({
               src={avatarSrc ?? undefined}
               name={name}
               email={email}
-              className='-mt-20 size-28 ring-4 ring-background sm:-mt-14'
+              className='ring-background -mt-20 size-28 ring-4 sm:-mt-14'
             />
             <div className='text-center sm:text-left'>
-              <h1 className='text-2xl font-extrabold leading-tight'>{name || 'Unnamed'}</h1>
+              <h1 className='text-2xl leading-tight font-extrabold'>{name || 'Unnamed'}</h1>
               <Link href={`mailto:${email}`} className='break-all underline underline-offset-4'>
                 {email}
               </Link>
@@ -108,15 +104,15 @@ export default function ProfileHeader({
 
         {/* Stats */}
         {stats.length > 0 && (
-          <div className='border-t bg-background/60 backdrop-blur'>
+          <div className='bg-background/60 border-t backdrop-blur'>
             <div
               className='mx-auto grid max-w-3xl gap-6 p-4 text-center'
               style={{ gridTemplateColumns: `repeat(${stats.length},minmax(0,1fr))` }}
             >
               {stats.map((s) => (
                 <div key={s.label} className='flex flex-col items-center gap-1'>
-                  <span className='text-lg font-bold leading-none'>{s.value}</span>
-                  <span className='text-muted-foreground text-xs uppercase tracking-wide'>
+                  <span className='text-lg leading-none font-bold'>{s.value}</span>
+                  <span className='text-muted-foreground text-xs tracking-wide uppercase'>
                     {s.label}
                   </span>
                 </div>

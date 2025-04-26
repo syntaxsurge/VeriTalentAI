@@ -2,15 +2,10 @@
 
 import * as React from 'react'
 
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { DidRequiredModal } from '@/components/dashboard/candidate/did-required-modal'
 import AddCredentialForm from '@/app/(dashboard)/candidate/credentials/add/add-credential-form'
+import { DidRequiredModal } from '@/components/dashboard/candidate/did-required-modal'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface Props {
   /** Server action wrapper passed from the parent server component */

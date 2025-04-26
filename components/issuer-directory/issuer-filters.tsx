@@ -16,11 +16,7 @@ interface Props {
 /*                                Helpers                                     */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => {
     if (v === '' || v == null) {
@@ -58,7 +54,7 @@ export default function IssuerFilters({
     <div className='flex flex-wrap items-center gap-4'>
       {/* Category */}
       <div className='flex flex-col gap-1'>
-        <label htmlFor='category' className='text-xs font-medium uppercase text-muted-foreground'>
+        <label htmlFor='category' className='text-muted-foreground text-xs font-medium uppercase'>
           Category
         </label>
         <select
@@ -78,7 +74,7 @@ export default function IssuerFilters({
 
       {/* Industry */}
       <div className='flex flex-col gap-1'>
-        <label htmlFor='industry' className='text-xs font-medium uppercase text-muted-foreground'>
+        <label htmlFor='industry' className='text-muted-foreground text-xs font-medium uppercase'>
           Industry
         </label>
         <select

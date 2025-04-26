@@ -3,11 +3,11 @@ import { asc, desc, eq, and } from 'drizzle-orm'
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import { type RowType as CredRowType } from '@/components/dashboard/recruiter/credentials-table'
 import { db } from '@/lib/db/drizzle'
-import { candidates, users, quizAttempts, issuers } from '@/lib/db/schema'
 import {
   getCandidateCredentialsSection,
   type StatusCounts,
 } from '@/lib/db/queries/candidate-details'
+import { candidates, users, quizAttempts, issuers } from '@/lib/db/schema'
 import {
   candidateCredentials,
   candidateHighlights,
@@ -127,24 +127,28 @@ export default async function PublicCandidateProfile({
   const experienceRows: HighlightRow[] = experienceRowsRaw as HighlightRow[]
   const projectRows: HighlightRow[] = projectRowsRaw as HighlightRow[]
 
-  const experiences: Experience[] = experienceRows.map((e): Experience => ({
-    id: e.id,
-    title: e.title,
-    company: e.issuerName,
-    type: e.description,
-    link: e.link,
-    createdAt: e.createdAt,
-    status: e.status,
-  }))
+  const experiences: Experience[] = experienceRows.map(
+    (e): Experience => ({
+      id: e.id,
+      title: e.title,
+      company: e.issuerName,
+      type: e.description,
+      link: e.link,
+      createdAt: e.createdAt,
+      status: e.status,
+    }),
+  )
 
-  const projects: Project[] = projectRows.map((p): Project => ({
-    id: p.id,
-    title: p.title,
-    link: p.link,
-    description: p.description,
-    createdAt: p.createdAt,
-    status: p.status,
-  }))
+  const projects: Project[] = projectRows.map(
+    (p): Project => ({
+      id: p.id,
+      title: p.title,
+      link: p.link,
+      description: p.description,
+      createdAt: p.createdAt,
+      status: p.status,
+    }),
+  )
 
   /* ---------------------- Paged credentials ---------------------------- */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))
@@ -152,7 +156,7 @@ export default async function PublicCandidateProfile({
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
   const allowedSortKeys = ['createdAt', 'status', 'title', 'issuer'] as const
-  type SortKey = typeof allowedSortKeys[number]
+  type SortKey = (typeof allowedSortKeys)[number]
   const sortRaw = (first(q, 'sort') ?? 'status') as string
   const sort: SortKey = allowedSortKeys.includes(sortRaw as SortKey)
     ? (sortRaw as SortKey)
@@ -161,7 +165,11 @@ export default async function PublicCandidateProfile({
   const order = first(q, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(q, 'q') ?? '').trim()
 
-  const { rows: rawCredRows, hasNext, statusCounts } = await getCandidateCredentialsSection(
+  const {
+    rows: rawCredRows,
+    hasNext,
+    statusCounts,
+  } = await getCandidateCredentialsSection(
     candidateId,
     page,
     pageSize,
@@ -170,14 +178,16 @@ export default async function PublicCandidateProfile({
     searchTerm,
   )
 
-  const credRows: CredRowType[] = rawCredRows.map((c): CredRowType => ({
-    id: c.id,
-    title: c.title,
-    category: (c as any).category ?? CredentialCategory.OTHER,
-    issuer: (c as any).issuer ?? null,
-    status: (c as any).status as CredentialStatus,
-    fileUrl: (c as any).fileUrl ?? null,
-  }))
+  const credRows: CredRowType[] = rawCredRows.map(
+    (c): CredRowType => ({
+      id: c.id,
+      title: c.title,
+      category: (c as any).category ?? CredentialCategory.OTHER,
+      issuer: (c as any).issuer ?? null,
+      status: (c as any).status as CredentialStatus,
+      fileUrl: (c as any).fileUrl ?? null,
+    }),
+  )
 
   const credInitialParams: Record<string, string> = {}
   const keep = (k: string) => {

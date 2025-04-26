@@ -1,23 +1,15 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import {
-  GripVertical,
-  Loader2,
-  ExternalLink,
-} from 'lucide-react'
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  type DropResult,
-} from '@hello-pangea/dnd'
+
+import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
+import { GripVertical, Loader2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { saveHighlightsAction } from '@/app/(dashboard)/candidate/highlights/actions'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -53,11 +45,7 @@ function reorder<T>(list: T[], startIdx: number, endIdx: number) {
 /*                                 Component                                  */
 /* -------------------------------------------------------------------------- */
 
-export default function HighlightsBoard({
-  selectedExperience,
-  selectedProject,
-  available,
-}: Props) {
+export default function HighlightsBoard({ selectedExperience, selectedProject, available }: Props) {
   const [exp, setExp] = useState<Credential[]>(selectedExperience)
   const [proj, setProj] = useState<Credential[]>(selectedProject)
   const [pool, setPool] = useState<Credential[]>(available)
@@ -70,21 +58,12 @@ export default function HighlightsBoard({
   function onDragEnd(result: DropResult) {
     const { source, destination } = result
     if (!destination) return
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    )
-      return
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return
 
     /* Helpers to get state & setter by droppableId */
-    const getList = (id: string) =>
-      id === 'experience' ? exp : id === 'project' ? proj : pool
+    const getList = (id: string) => (id === 'experience' ? exp : id === 'project' ? proj : pool)
     const setList = (id: string) =>
-      id === 'experience'
-        ? setExp
-        : id === 'project'
-        ? setProj
-        : setPool
+      id === 'experience' ? setExp : id === 'project' ? setProj : setPool
 
     const srcList = getList(source.droppableId)
     const destList = getList(destination.droppableId)
@@ -100,9 +79,7 @@ export default function HighlightsBoard({
 
     if (categoryMismatch) {
       toast.error(
-        `Only ${
-          destIsExperience ? 'Experience' : 'Project'
-        } credentials can be placed here.`,
+        `Only ${destIsExperience ? 'Experience' : 'Project'} credentials can be placed here.`,
       )
       return // keep original lists so the item snaps back
     }
@@ -163,7 +140,7 @@ export default function HighlightsBoard({
     const isPool = id === 'pool'
     return (
       <div className='space-y-3'>
-        <h3 className='flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground'>
+        <h3 className='text-muted-foreground flex items-center gap-2 text-sm font-semibold uppercase'>
           {title}
           {!isPool && (
             <Badge variant='secondary' className='px-1.5 py-0.5'>
@@ -178,13 +155,11 @@ export default function HighlightsBoard({
               ref={prov.innerRef}
               {...prov.droppableProps}
               className={`flex min-h-[120px] flex-col gap-2 rounded-lg border p-3 ${
-                snapshot.isDraggingOver
-                  ? 'bg-primary/10 ring-2 ring-primary'
-                  : 'bg-muted/40'
+                snapshot.isDraggingOver ? 'bg-primary/10 ring-primary ring-2' : 'bg-muted/40'
               }`}
             >
               {items.length === 0 && (
-                <p className='text-center text-xs text-muted-foreground'>
+                <p className='text-muted-foreground text-center text-xs'>
                   {isPool ? 'No more credentials.' : 'Drag items here.'}
                 </p>
               )}
@@ -201,12 +176,12 @@ export default function HighlightsBoard({
                       ref={dragProv.innerRef}
                       {...dragProv.draggableProps}
                       {...dragProv.dragHandleProps}
-                      className={`flex gap-3 rounded-md border bg-background px-3 py-2 shadow-sm ${
+                      className={`bg-background flex gap-3 rounded-md border px-3 py-2 shadow-sm ${
                         dragSnap.isDragging ? 'opacity-80' : ''
                       }`}
                     >
                       {/* Drag handle */}
-                      <GripVertical className='h-4 w-4 flex-shrink-0 text-muted-foreground' />
+                      <GripVertical className='text-muted-foreground h-4 w-4 flex-shrink-0' />
 
                       {/* Content */}
                       <div className='min-w-0 flex-1 space-y-1'>
@@ -222,7 +197,7 @@ export default function HighlightsBoard({
                               rel='noopener noreferrer'
                               className='flex-shrink-0'
                             >
-                              <ExternalLink className='h-4 w-4 text-muted-foreground hover:text-primary' />
+                              <ExternalLink className='text-muted-foreground hover:text-primary h-4 w-4' />
                             </a>
                           )}
                         </div>
@@ -235,7 +210,7 @@ export default function HighlightsBoard({
                           >
                             {cred.category.toLowerCase()}
                           </Badge>
-                          <span className='truncate text-xs text-muted-foreground capitalize'>
+                          <span className='text-muted-foreground truncate text-xs capitalize'>
                             {cred.type}
                           </span>
                         </div>
@@ -243,10 +218,7 @@ export default function HighlightsBoard({
 
                       {/* "Extra” badge if over max items in selected column */}
                       {!isPool && idx >= max && (
-                        <Badge
-                          variant='destructive'
-                          className='ml-2 h-4 flex-shrink-0 text-[10px]'
-                        >
+                        <Badge variant='destructive' className='ml-2 h-4 flex-shrink-0 text-[10px]'>
                           Extra
                         </Badge>
                       )}
@@ -274,11 +246,7 @@ export default function HighlightsBoard({
       </DragDropContext>
 
       <div className='flex justify-start'>
-        <Button
-          onClick={handleSave}
-          disabled={isPending}
-          className='w-full md:w-max'
-        >
+        <Button onClick={handleSave} disabled={isPending} className='w-full md:w-max'>
           {isPending ? (
             <>
               <Loader2 className='mr-2 h-4 w-4 animate-spin' />

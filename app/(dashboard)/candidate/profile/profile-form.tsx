@@ -115,7 +115,7 @@ export default function ProfileForm({
           className='border-border focus-visible:ring-primary w-full rounded-md border p-3 text-sm focus-visible:ring-2'
           placeholder='Tell recruiters about your background, passions, and goals…'
         />
-        <p className='text-muted-foreground text-xs text-right'>{bio.length}/2000</p>
+        <p className='text-muted-foreground text-right text-xs'>{bio.length}/2000</p>
       </div>
 
       <Separator />

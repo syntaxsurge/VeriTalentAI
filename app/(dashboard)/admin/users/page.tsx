@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
+
 import { Users } from 'lucide-react'
 
-import PageCard from '@/components/ui/page-card'
 import AdminUsersTable, { type RowType } from '@/components/dashboard/admin/users-table'
+import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminUsersPage } from '@/lib/db/queries/admin-users'
 import { getUser } from '@/lib/db/queries/queries'
@@ -77,28 +78,28 @@ export default async function AdminUsersPage({
   /* ------------------------------ View ----------------------------------- */
   return (
     <PageCard
-        icon={Users}
-        title='All Users'
-        description='Manage all user accounts across the platform.'
-      >
-        <div className='space-y-4 overflow-x-auto'>
-          <AdminUsersTable
-            rows={rows}
-            sort={sort}
-            order={order as 'asc' | 'desc'}
-            basePath='/admin/users'
-            initialParams={initialParams}
-            searchQuery={searchTerm}
-          />
+      icon={Users}
+      title='All Users'
+      description='Manage all user accounts across the platform.'
+    >
+      <div className='space-y-4 overflow-x-auto'>
+        <AdminUsersTable
+          rows={rows}
+          sort={sort}
+          order={order as 'asc' | 'desc'}
+          basePath='/admin/users'
+          initialParams={initialParams}
+          searchQuery={searchTerm}
+        />
 
-          <TablePagination
-            page={page}
-            hasNext={hasNext}
-            basePath='/admin/users'
-            initialParams={initialParams}
-            pageSize={pageSize}
-          />
-        </div>
-      </PageCard>
+        <TablePagination
+          page={page}
+          hasNext={hasNext}
+          basePath='/admin/users'
+          initialParams={initialParams}
+          pageSize={pageSize}
+        />
+      </div>
+    </PageCard>
   )
 }

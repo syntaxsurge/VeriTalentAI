@@ -6,9 +6,9 @@ import * as React from 'react'
 
 import { ArrowUpDown } from 'lucide-react'
 
-import { UserAvatar } from '@/components/ui/user-avatar'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import { UserAvatar } from '@/components/ui/user-avatar'
 
 /* -------------------------------------------------------------------------- */
 /*                                 T Y P E S                                  */
@@ -34,11 +34,7 @@ interface Props {
 /*                               H E L P E R S                                */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(
-  base: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
+function buildLink(base: string, init: Record<string, string>, overrides: Record<string, any>) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => !v && sp.delete(k))
@@ -89,43 +85,46 @@ export default function CandidatesTable({
   }
 
   /* ------------------------------- Columns ------------------------------ */
-  const columns = React.useMemo<Column<RowType>[]>(() => [
-    {
-      key: 'name',
-      header: sortableHeader('Name', 'name'),
-      sortable: false,
-      render: (v, row) => (
-        <div className='flex items-center gap-2'>
-          <UserAvatar name={row.name} email={row.email} className='size-7' />
-          <span className='font-medium'>{v || 'Unnamed'}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'email',
-      header: sortableHeader('Email', 'email'),
-      sortable: false,
-      render: (v) => v as string,
-      className: 'break-all',
-    },
-    {
-      key: 'verified',
-      header: sortableHeader('Verified', 'verified'),
-      sortable: false,
-      render: (v) => ((v as number) > 0 ? v : '—'),
-    },
-    {
-      key: 'id',
-      header: '',
-      enableHiding: false,
-      sortable: false,
-      render: (_v, row) => (
-        <Button asChild variant='link' size='sm' className='text-primary'>
-          <Link href={`/candidates/${row.id}`}>View Profile</Link>
-        </Button>
-      ),
-    },
-  ], [sort, order, basePath, initialParams, search])
+  const columns = React.useMemo<Column<RowType>[]>(
+    () => [
+      {
+        key: 'name',
+        header: sortableHeader('Name', 'name'),
+        sortable: false,
+        render: (v, row) => (
+          <div className='flex items-center gap-2'>
+            <UserAvatar name={row.name} email={row.email} className='size-7' />
+            <span className='font-medium'>{v || 'Unnamed'}</span>
+          </div>
+        ),
+      },
+      {
+        key: 'email',
+        header: sortableHeader('Email', 'email'),
+        sortable: false,
+        render: (v) => v as string,
+        className: 'break-all',
+      },
+      {
+        key: 'verified',
+        header: sortableHeader('Verified', 'verified'),
+        sortable: false,
+        render: (v) => ((v as number) > 0 ? v : '—'),
+      },
+      {
+        key: 'id',
+        header: '',
+        enableHiding: false,
+        sortable: false,
+        render: (_v, row) => (
+          <Button asChild variant='link' size='sm' className='text-primary'>
+            <Link href={`/candidates/${row.id}`}>View Profile</Link>
+          </Button>
+        ),
+      },
+    ],
+    [sort, order, basePath, initialParams, search],
+  )
 
   /* ------------------------------- View --------------------------------- */
   return (

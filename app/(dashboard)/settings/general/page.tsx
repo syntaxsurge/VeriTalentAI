@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+
 import { Settings as SettingsIcon } from 'lucide-react'
 
 import PageCard from '@/components/ui/page-card'
@@ -13,12 +14,12 @@ export default async function GeneralSettingsPage() {
   if (!user) redirect('/sign-in')
 
   return (
-      <PageCard
-        icon={SettingsIcon}
-        title='Account Information'
-        description='Update your name and email address.'
-      >
-        <GeneralForm defaultName={user.name || ''} defaultEmail={user.email} />
-      </PageCard>
+    <PageCard
+      icon={SettingsIcon}
+      title='Account Information'
+      description='Update your name and email address.'
+    >
+      <GeneralForm defaultName={user.name || ''} defaultEmail={user.email} />
+    </PageCard>
   )
 }
