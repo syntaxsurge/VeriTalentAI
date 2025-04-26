@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
-
 import { eq } from 'drizzle-orm'
+import { ListChecks } from 'lucide-react'
 
 import IssuerRequestsTable, { type RowType } from '@/components/dashboard/issuer/requests-table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import { getIssuerRequestsPage } from '@/lib/db/queries/issuer-requests'
@@ -41,7 +41,6 @@ export default async function RequestsPage({
 
   /* --------------------- Validate issuer ownership ----------------------- */
   const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
-
   if (!issuer) redirect('/issuer/onboard')
 
   /* --------------------------- Query params ------------------------------ */
@@ -80,14 +79,13 @@ export default async function RequestsPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className='flex-1 space-y-6'>
-      <h2 className='text-xl font-semibold'>Verification Requests</h2>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Requests Overview</CardTitle>
-        </CardHeader>
-        <CardContent className='overflow-x-auto'>
+    <section className='mx-auto max-w-5xl py-10'>
+      <PageCard
+        icon={ListChecks}
+        title='Verification Requests'
+        description='Review and manage credential verification requests submitted by candidates.'
+      >
+        <div className='space-y-4 overflow-x-auto'>
           <IssuerRequestsTable
             rows={rows}
             sort={sort}
@@ -104,8 +102,8 @@ export default async function RequestsPage({
             initialParams={initialParams}
             pageSize={pageSize}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </PageCard>
     </section>
   )
 }
