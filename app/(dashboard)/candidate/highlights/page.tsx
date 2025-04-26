@@ -15,6 +15,7 @@ import {
   candidateHighlights,
   candidates,
 } from '@/lib/db/schema/candidate'
+import { issuers } from '@/lib/db/schema/issuer'
 
 export const revalidate = 0
 
@@ -37,8 +38,12 @@ export default async function CandidateHighlightsSettings() {
       id: candidateCredentials.id,
       title: candidateCredentials.title,
       category: candidateCredentials.category,
+      type: candidateCredentials.type,
+      fileUrl: candidateCredentials.fileUrl,
+      issuerName: issuers.name,
     })
     .from(candidateCredentials)
+    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
     .where(eq(candidateCredentials.candidateId, candRow.id))
     .orderBy(asc(candidateCredentials.createdAt))
 
@@ -55,10 +60,19 @@ export default async function CandidateHighlightsSettings() {
   hlRows.forEach((h) => {
     const cred = creds.find((c) => c.id === h.credentialId)
     if (!cred) return
+    const obj: HighlightCredential = {
+      id: cred.id,
+      title: cred.title,
+      category:
+        cred.category === CredentialCategory.EXPERIENCE ? 'EXPERIENCE' : 'PROJECT',
+      type: cred.type,
+      issuer: cred.issuerName,
+      fileUrl: cred.fileUrl,
+    }
     if (cred.category === CredentialCategory.EXPERIENCE) {
-      selectedExperience.push({ id: cred.id, title: cred.title, category: 'EXPERIENCE' })
+      selectedExperience.push(obj)
     } else if (cred.category === CredentialCategory.PROJECT) {
-      selectedProject.push({ id: cred.id, title: cred.title, category: 'PROJECT' })
+      selectedProject.push(obj)
     }
   })
 
@@ -69,10 +83,14 @@ export default async function CandidateHighlightsSettings() {
           c.category === CredentialCategory.PROJECT) &&
         !selectedIds.has(c.id),
     )
-    .map((c) => ({
-      id: c.id,
-      title: c.title,
-      category: c.category as 'EXPERIENCE' | 'PROJECT',
+    .map((cred) => ({
+      id: cred.id,
+      title: cred.title,
+      category:
+        cred.category === CredentialCategory.EXPERIENCE ? 'EXPERIENCE' : 'PROJECT',
+      type: cred.type,
+      issuer: cred.issuerName,
+      fileUrl: cred.fileUrl,
     }))
 
   /* -------------------------- UI ------------------------- */

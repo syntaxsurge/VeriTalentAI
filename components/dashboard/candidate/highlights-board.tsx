@@ -1,7 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { GripVertical, Loader2 } from 'lucide-react'
+import {
+  GripVertical,
+  Loader2,
+  ExternalLink,
+} from 'lucide-react'
 import {
   DragDropContext,
   Droppable,
@@ -23,6 +27,9 @@ export interface Credential {
   id: number
   title: string
   category: 'EXPERIENCE' | 'PROJECT'
+  type: string
+  issuer: string | null
+  fileUrl: string | null
 }
 
 interface Props {
@@ -70,31 +77,51 @@ export default function HighlightsBoard({
       return
 
     /* Helpers to get state & setter by droppableId */
-    const get = (id: string) =>
+    const getList = (id: string) =>
       id === 'experience' ? exp : id === 'project' ? proj : pool
-    const set = (id: string) =>
+    const setList = (id: string) =>
       id === 'experience'
         ? setExp
         : id === 'project'
         ? setProj
         : setPool
 
-    const srcList = get(source.droppableId)
-    const destList = get(destination.droppableId)
+    const srcList = getList(source.droppableId)
+    const destList = getList(destination.droppableId)
+    const moved = srcList[source.index]
 
-    if (source.droppableId === destination.droppableId) {
-      /* Reordering within the same column */
-      const reordered = reorder(srcList, source.index, destination.index)
-      set(source.droppableId)(reordered)
-    } else {
-      /* Moving item between columns */
-      const removedList = Array.from(srcList)
-      const [moved] = removedList.splice(source.index, 1)
-      const insertedList = Array.from(destList)
-      insertedList.splice(destination.index, 0, moved)
-      set(source.droppableId)(removedList)
-      set(destination.droppableId)(insertedList)
+    /* ------------------ Category validation ------------------- */
+    const destIsExperience = destination.droppableId === 'experience'
+    const destIsProject = destination.droppableId === 'project'
+
+    const categoryMismatch =
+      (destIsExperience && moved.category !== 'EXPERIENCE') ||
+      (destIsProject && moved.category !== 'PROJECT')
+
+    if (categoryMismatch) {
+      toast.error(
+        `Only ${
+          destIsExperience ? 'Experience' : 'Project'
+        } credentials can be placed here.`,
+      )
+      return // keep original lists so the item snaps back
     }
+
+    /* ------------------- Same column reorder ------------------ */
+    if (source.droppableId === destination.droppableId) {
+      const reordered = reorder(srcList, source.index, destination.index)
+      setList(source.droppableId)(reordered)
+      return
+    }
+
+    /* -------------------- Cross-column move -------------------- */
+    const nextSrc = Array.from(srcList)
+    const [removed] = nextSrc.splice(source.index, 1)
+    const nextDest = Array.from(destList)
+    nextDest.splice(destination.index, 0, removed)
+
+    setList(source.droppableId)(nextSrc)
+    setList(destination.droppableId)(nextDest)
   }
 
   /* ---------------------------------------------------------------------- */
@@ -118,11 +145,8 @@ export default function HighlightsBoard({
           .join(','),
       )
       const res = await saveHighlightsAction({}, fd)
-      if (res?.error) {
-        toast.error(res.error)
-      } else {
-        toast.success(res?.success ?? 'Highlights saved.')
-      }
+      if (res?.error) toast.error(res.error)
+      else toast.success(res?.success ?? 'Highlights saved.')
     })
   }
 
@@ -177,18 +201,34 @@ export default function HighlightsBoard({
                       ref={dragProv.innerRef}
                       {...dragProv.draggableProps}
                       {...dragProv.dragHandleProps}
-                      className={`flex items-center gap-3 rounded-md border bg-background px-3 py-2 shadow-sm ${
+                      className={`flex items-start gap-3 rounded-md border bg-background px-3 py-2 shadow-sm ${
                         dragSnap.isDragging ? 'opacity-80' : ''
                       }`}
                     >
-                      <GripVertical className='h-4 w-4 flex-shrink-0 text-muted-foreground' />
-                      <span className='truncate text-sm font-medium'>
-                        {cred.title}
-                      </span>
+                      <GripVertical className='h-4 w-4 flex-shrink-0 text-muted-foreground mt-[2px]' />
+                      <div className='min-w-0 flex-1 space-y-0.5'>
+                        <span className='block truncate font-medium'>
+                          {cred.title}
+                        </span>
+                        <span className='block truncate text-xs text-muted-foreground'>
+                          {cred.type}
+                          {cred.issuer ? ` • ${cred.issuer}` : ''}
+                        </span>
+                      </div>
+                      {cred.fileUrl && (
+                        <a
+                          href={cred.fileUrl}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='flex-shrink-0'
+                        >
+                          <ExternalLink className='h-4 w-4 text-muted-foreground hover:text-primary' />
+                        </a>
+                      )}
                       {!isPool && idx >= max && (
                         <Badge
                           variant='destructive'
-                          className='ml-auto h-4 text-[10px]'
+                          className='ml-2 h-4 flex-shrink-0 text-[10px]'
                         >
                           Extra
                         </Badge>
