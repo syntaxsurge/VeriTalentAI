@@ -201,20 +201,25 @@ export default function HighlightsBoard({
                       ref={dragProv.innerRef}
                       {...dragProv.draggableProps}
                       {...dragProv.dragHandleProps}
-                      className={`flex items-start gap-3 rounded-md border bg-background px-3 py-2 shadow-sm ${
+                      className={`flex items-center gap-3 rounded-md border bg-background px-3 py-2 shadow-sm ${
                         dragSnap.isDragging ? 'opacity-80' : ''
                       }`}
                     >
-                      <GripVertical className='h-4 w-4 flex-shrink-0 text-muted-foreground mt-[2px]' />
-                      <div className='min-w-0 flex-1 space-y-0.5'>
-                        <span className='block truncate font-medium'>
-                          {cred.title}
-                        </span>
-                        <span className='block truncate text-xs text-muted-foreground'>
-                          {cred.type}
-                          {cred.issuer ? ` • ${cred.issuer}` : ''}
-                        </span>
+                      {/* Drag handle */}
+                      <GripVertical className='h-4 w-4 flex-shrink-0 text-muted-foreground' />
+
+                      {/* Main text + category */}
+                      <div className='flex min-w-0 flex-1 items-center gap-2 truncate'>
+                        <span className='truncate font-medium'>{cred.title}</span>
+                        <Badge
+                          variant='secondary'
+                          className='flex-shrink-0 text-[10px] capitalize'
+                        >
+                          {cred.category.toLowerCase()}
+                        </Badge>
                       </div>
+
+                      {/* File link icon */}
                       {cred.fileUrl && (
                         <a
                           href={cred.fileUrl}
@@ -225,6 +230,8 @@ export default function HighlightsBoard({
                           <ExternalLink className='h-4 w-4 text-muted-foreground hover:text-primary' />
                         </a>
                       )}
+
+                      {/* "Extra” badge if over max items in selected column */}
                       {!isPool && idx >= max && (
                         <Badge
                           variant='destructive'
