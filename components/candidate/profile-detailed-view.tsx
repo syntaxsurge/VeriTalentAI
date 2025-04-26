@@ -21,9 +21,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import StatusBadge from '@/components/ui/status-badge'
 
 import ProfileHeader from './profile-header'
-import StatusBadge from '@/components/ui/status-badge'
 import CredentialsTable, {
   RowType as CredRow,
 } from '@/components/dashboard/recruiter/credentials-table'
@@ -77,6 +77,7 @@ export interface Experience {
   id: number
   title: string
   company: string | null
+  status: string
   createdAt: Date
 }
 
@@ -85,6 +86,7 @@ export interface Project {
   title: string
   link: string | null
   description: string | null
+  status: string
   createdAt: Date
 }
 
@@ -356,13 +358,13 @@ export default function CandidateDetailedProfileView({
                     items={experiences}
                     renderItem={(exp) => (
                       <div className='space-y-1'>
-                        <h5 className='font-semibold'>{exp.title}</h5>
+                        <h5 className='flex items-center gap-2 font-semibold'>
+                          {exp.title}
+                          <StatusBadge status={exp.status} showIcon />
+                        </h5>
                         {exp.company && (
                           <p className='text-muted-foreground text-sm'>{exp.company}</p>
                         )}
-                        <p className='text-muted-foreground text-xs'>
-                          Added {usePrettyDate(exp.createdAt)}
-                        </p>
                       </div>
                     )}
                   />
@@ -381,18 +383,23 @@ export default function CandidateDetailedProfileView({
                     items={projects}
                     renderItem={(proj) => (
                       <div className='space-y-1'>
-                        <h5 className='font-semibold'>{proj.title}</h5>
+                        <h5 className='flex items-center gap-2 font-semibold'>
+                          {proj.title}
+                          <StatusBadge status={proj.status} showIcon />
+                        </h5>
                         {proj.description && <p className='text-sm'>{proj.description}</p>}
                         {proj.link && (
-                          <Button asChild variant='link' size='sm' className='-ml-2 text-primary'>
+                          <Button
+                            asChild
+                            variant='link'
+                            size='sm'
+                            className='-ml-2 text-primary'
+                          >
                             <Link href={proj.link} target='_blank'>
                               Visit&nbsp;Link
                             </Link>
                           </Button>
                         )}
-                        <p className='text-muted-foreground text-xs'>
-                          Added {usePrettyDate(proj.createdAt)}
-                        </p>
                       </div>
                     )}
                   />

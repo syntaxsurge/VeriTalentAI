@@ -76,6 +76,7 @@ export default async function RecruiterCandidateProfile({
           link: candidateCredentials.fileUrl,
           description: candidateCredentials.type,
           category: candidateCredentials.category,
+          status: candidateCredentials.status,
         })
         .from(candidateCredentials)
         .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
@@ -95,6 +96,7 @@ export default async function RecruiterCandidateProfile({
       title: e.title,
       company: e.issuerName,
       createdAt: e.createdAt,
+      status: e.status,
     }))
 
   const projects = highlightedCreds
@@ -106,6 +108,7 @@ export default async function RecruiterCandidateProfile({
       link: p.link,
       description: p.description,
       createdAt: p.createdAt,
+      status: p.status,
     }))
 
   /* fallback: if no highlights yet, pick latest 5 each */
@@ -118,6 +121,7 @@ export default async function RecruiterCandidateProfile({
         issuerName: issuers.name,
         link: candidateCredentials.fileUrl,
         description: candidateCredentials.type,
+        status: candidateCredentials.status,
       })
       .from(candidateCredentials)
       .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
@@ -139,6 +143,7 @@ export default async function RecruiterCandidateProfile({
         title: e.title,
         company: e.issuerName,
         createdAt: e.createdAt,
+        status: e.status,
       }),
     )
   }
@@ -152,6 +157,7 @@ export default async function RecruiterCandidateProfile({
         link: p.link,
         description: p.description,
         createdAt: p.createdAt,
+        status: p.status,
       }),
     )
   }
