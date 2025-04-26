@@ -64,7 +64,7 @@ const _updateIssuerStatus = validatedActionWithUser(
       .update(issuers)
       .set({
         status,
-        rejectionReason: status === IssuerStatus.REJECTED ? (rejectionReason ?? null) : null,
+        rejectionReason: status === IssuerStatus.REJECTED ? rejectionReason ?? null : null,
         ...(didToPersist ? { did: didToPersist } : {}),
       })
       .where(eq(issuers.id, issuerId))
@@ -103,7 +103,6 @@ const _deleteIssuer = validatedActionWithUser(
           status: CredentialStatus.UNVERIFIED,
           verified: false,
           verifiedAt: null,
-          vcIssuedId: null,
         })
         .where(eq(candidateCredentials.issuerId, issuerId))
 

@@ -101,7 +101,6 @@ export const deleteUserAction = validatedActionWithUser(
             status: CredentialStatus.UNVERIFIED,
             verified: false,
             verifiedAt: null,
-            vcIssuedId: null,
           })
           .where(eq(candidateCredentials.issuerId, issuerId))
         await tx.delete(issuers).where(eq(issuers.id, issuerId))
