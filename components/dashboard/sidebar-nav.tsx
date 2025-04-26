@@ -15,7 +15,7 @@ export interface SidebarNavItem {
   href: string
   icon: LucideIcon
   label: string
-  /** Optional numeric badge – hidden when zero/undefined */
+  /** Optional numeric badge - hidden when zero/undefined */
   badgeCount?: number
 }
 

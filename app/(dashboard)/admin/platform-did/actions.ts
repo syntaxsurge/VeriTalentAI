@@ -21,7 +21,7 @@ async function upsertEnv(key: string, value: string) {
   try {
     contents = await fs.readFile(ENV_PATH, 'utf8')
   } catch {
-    /* .env may not exist yet – will create */
+    /* .env may not exist yet - will create */
   }
 
   const lines = contents.split('\n')
@@ -46,7 +46,7 @@ async function upsertEnv(key: string, value: string) {
 /* -------------------------------------------------------------------------- */
 
 const schema = z.object({
-  /** Optional DID – when absent we auto-generate */
+  /** Optional DID - when absent we auto-generate */
   did: z
     .string()
     .trim()

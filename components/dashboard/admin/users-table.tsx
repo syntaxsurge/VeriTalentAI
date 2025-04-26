@@ -265,7 +265,7 @@ export default function AdminUsersTable({
     ]
   }, [sort, order, basePath, initialParams, search])
 
-  /* All rows fit on one client page – paging handled server‑side */
+  /* All rows fit on one client page - paging handled server‑side */
   return (
     <DataTable
       columns={columns}

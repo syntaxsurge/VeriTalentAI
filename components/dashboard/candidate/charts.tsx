@@ -42,7 +42,7 @@ export default function CandidateCharts({ scoreData, statusData }: CandidateChar
 
   return (
     <div className='grid gap-6 md:grid-cols-2'>
-      {/* Line chart – quiz scores */}
+      {/* Line chart - quiz scores */}
       <Card>
         <CardHeader>
           <CardTitle className='text-lg font-medium'>Quiz Scores (last 10)</CardTitle>
@@ -63,7 +63,7 @@ export default function CandidateCharts({ scoreData, statusData }: CandidateChar
         </CardContent>
       </Card>
 
-      {/* Pie chart – credential status */}
+      {/* Pie chart - credential status */}
       <Card>
         <CardHeader>
           <CardTitle className='text-lg font-medium'>Credential Status Mix</CardTitle>

@@ -53,7 +53,7 @@ export default function ProfileForm({
   /* Keep toast ID to update after server response */
   const toastId = React.useRef<string | number | undefined>()
 
-  /* Submit handler – show loading toast then trigger server action */
+  /* Submit handler - show loading toast then trigger server action */
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)

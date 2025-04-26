@@ -36,7 +36,7 @@ export default function RecruiterCharts({ stageData, uniqueCandidates }: Recruit
   /* --------------------------- view --------------------------- */
   return (
     <div className='grid gap-6 md:grid-cols-2'>
-      {/* Bar chart – stage distribution */}
+      {/* Bar chart - stage distribution */}
       <Card>
         <CardHeader>
           <CardTitle className='text-lg font-medium'>Candidates per Stage</CardTitle>
@@ -50,7 +50,7 @@ export default function RecruiterCharts({ stageData, uniqueCandidates }: Recruit
         </CardContent>
       </Card>
 
-      {/* Pie chart – unique vs total */}
+      {/* Pie chart - unique vs total */}
       <Card>
         <CardHeader>
           <CardTitle className='text-lg font-medium'>Unique vs Total Entries</CardTitle>

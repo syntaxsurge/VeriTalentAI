@@ -47,7 +47,7 @@ export default async function CreateDIDPage() {
   let teamSize = 1 // at least the current user
 
   if (membership?.teamId) {
-    /* Total members – cheap aggregate for overflow */
+    /* Total members - cheap aggregate for overflow */
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(teamMembers)

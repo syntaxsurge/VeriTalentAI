@@ -32,7 +32,7 @@ interface Props {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                         Utility – reorder helper                           */
+/*                         Utility - reorder helper                           */
 /* -------------------------------------------------------------------------- */
 
 function reorder<T>(list: T[], startIdx: number, endIdx: number) {

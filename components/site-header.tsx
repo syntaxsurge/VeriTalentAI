@@ -31,7 +31,7 @@ const LANDING_SECTIONS = [
   { id: 'cta', label: 'Get Started' },
 ] as const
 
-/* Tools dropdown items – now includes Candidates */
+/* Tools dropdown items - now includes Candidates */
 const TOOLS_MENU = [
   { href: '/candidates', label: 'Candidates' },
   { href: '/issuers', label: 'Issuers' },

@@ -78,9 +78,9 @@ interface DataTableProps<T extends Record<string, any>> {
   onFilterChange?: (value: string) => void
   /** Bulk‑selection actions (optional). */
   bulkActions?: BulkAction<T>[]
-  /** Initial page size – defaults to 10. */
+  /** Initial page size - defaults to 10. */
   pageSize?: number
-  /** Page‑size options shown in selector – defaults to [10, 20, 50]. */
+  /** Page‑size options shown in selector - defaults to [10, 20, 50]. */
   pageSizeOptions?: number[]
   /** Hide the intrinsic pagination/footer row (useful when the parent supplies its own). */
   hidePagination?: boolean
@@ -124,7 +124,7 @@ function buildColumnDefs<T extends Record<string, any>>(cols: Column<T>[]): Colu
   })
 }
 
-/* Page‑numbers helper – returns an array of page indexes; -1 represents an ellipsis. */
+/* Page‑numbers helper - returns an array of page indexes; -1 represents an ellipsis. */
 function getPageNumbers(current: number, total: number): number[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i)
 

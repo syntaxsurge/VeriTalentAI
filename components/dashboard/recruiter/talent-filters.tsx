@@ -63,7 +63,7 @@ export default function TalentFilters({
       {/* Skill‑score range */}
       <div className='flex flex-col'>
         <label htmlFor='skillRange' className='mb-2 text-sm font-medium'>
-          Skill Score ({range[0]}–{range[1]})
+          Skill Score ({range[0]}-{range[1]})
         </label>
         <Slider
           id='skillRange'

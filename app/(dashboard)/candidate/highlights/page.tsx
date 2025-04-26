@@ -120,7 +120,7 @@ export default async function CandidateHighlightsSettings() {
             <Badge variant='secondary' className='mx-1'>
               Projects
             </Badge>{' '}
-            – just like the featured section on LinkedIn.
+            - just like the featured section on LinkedIn.
           </p>
         </CardHeader>
 

@@ -114,7 +114,7 @@ export async function generateResumePdf(
   const SMALL_FONT_SIZE = 8
   const LINE_HEIGHT = BODY_FONT_SIZE + 4
   const GAP_AFTER_DIVIDER = 12          // spacing below divider
-  const SECTION_TOP_GAP = 20            // NEW – spacing above each section header
+  const SECTION_TOP_GAP = 20            // NEW - spacing above each section header
 
   /* Use brand primary indigo (#4F46E5) instead of default blue */
   const ACCENT = rgb(79 / 255, 70 / 255, 229 / 255) // #4F46E5

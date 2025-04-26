@@ -22,12 +22,12 @@ Candidates create a **single verifiable profile for free**, recruiters instantly
 
 ## 🗺️ High-Level Workflow
 
-1. **Account & Team Setup** – email sign-up, auto-team creation, optional invites.
-2. **Profile & Credential Vault** – candidates upload credentials (default **Unverified**).
-3. **Verification Request** – select issuer from directory → issuer notified.
-4. **Issuer Review** – approve → VC signed on cheqd, reject → status updated.
-5. **AI Skill-Check** – pass quiz ≥ threshold → SkillPass VC minted.
-6. **Talent Discovery** – recruiters filter/search, add to pipelines, invite.
+1. **Account & Team Setup** - email sign-up, auto-team creation, optional invites.
+2. **Profile & Credential Vault** - candidates upload credentials (default **Unverified**).
+3. **Verification Request** - select issuer from directory → issuer notified.
+4. **Issuer Review** - approve → VC signed on cheqd, reject → status updated.
+5. **AI Skill-Check** - pass quiz ≥ threshold → SkillPass VC minted.
+6. **Talent Discovery** - recruiters filter/search, add to pipelines, invite.
 
 ---
 
@@ -41,7 +41,7 @@ Candidates create a **single verifiable profile for free**, recruiters instantly
 | **Auth**     | Signed HttpOnly cookie sessions; bcrypt hashes                                         |
 | **VC Layer** | cheqd Studio API for DID & VC issuance / verification                                  |
 | **Payments** | Stripe SDK & Webhooks                                                                  |
-| **CI / CD**  | (omitted – DevOps out-of-scope for this doc)                                           |
+| **CI / CD**  | (omitted - DevOps out-of-scope for this doc)                                           |
 
 > **Stateless server actions** + **typed drizzle queries** keep business logic close to the data while preserving React’s streaming benefits.
 
@@ -72,17 +72,17 @@ pnpm db:seed     # seeds users, quizzes, stripe products
 pnpm dev
 ```
 
-Navigate to http://localhost:3000 – sign up and explore for free.
+Navigate to http://localhost:3000 - sign up and explore for free.
 
 ⸻
 
 🛠️ Engineering Notes
 
-- Type Safety – End-to-end zod validation on every mutation, plus drizzle-orm type inference.
-- UI Guidelines – All components use Tailwind, shadcn/ui, 2xl rounded corners, XL headings, soft shadows.
-- Accessibility – Focus rings, semantic HTML tags, aria-hidden handled where necessary.
-- Caching – revalidate directives keep the landing static while dynamic sections (pricing) are server rendered every hour.
-- Security – VC issuance keys & Stripe secrets never leak to the client; server actions enforce role-based guards.
+- Type Safety - End-to-end zod validation on every mutation, plus drizzle-orm type inference.
+- UI Guidelines - All components use Tailwind, shadcn/ui, 2xl rounded corners, XL headings, soft shadows.
+- Accessibility - Focus rings, semantic HTML tags, aria-hidden handled where necessary.
+- Caching - revalidate directives keep the landing static while dynamic sections (pricing) are server rendered every hour.
+- Security - VC issuance keys & Stripe secrets never leak to the client; server actions enforce role-based guards.
 
 ⸻
 

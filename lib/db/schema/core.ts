@@ -105,7 +105,7 @@ export const teamsRelations = relations(teams, ({ many, one }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
   teamMembers: many(teamMembers),
   invitationsSent: many(invitations),
-  /** reverse lookup – personal teams the user originally created */
+  /** reverse lookup - personal teams the user originally created */
   createdTeams: many(teams, {
     relationName: 'creator',
   }),

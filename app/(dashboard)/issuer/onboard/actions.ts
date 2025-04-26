@@ -136,6 +136,6 @@ export const updateIssuerDetailsAction = validatedActionWithUser(
       .where(eq(issuers.id, issuer.id))
 
     refresh()
-    return { success: 'Details updated – issuer resubmitted for review.' }
+    return { success: 'Details updated - issuer resubmitted for review.' }
   },
 )

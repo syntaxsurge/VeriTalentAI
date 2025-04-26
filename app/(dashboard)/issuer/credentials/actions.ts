@@ -66,7 +66,7 @@ export const approveCredentialAction = validatedActionWithUser(
       .where(eq(teamMembers.userId, candRow.candUser.id))
       .limit(1)
     if (!teamRow?.did)
-      return buildError('Candidate has no DID – ask them to create one before verification.')
+      return buildError('Candidate has no DID - ask them to create one before verification.')
 
     /* 4. Issue VC if not yet issued */
     let vcJson: any = null

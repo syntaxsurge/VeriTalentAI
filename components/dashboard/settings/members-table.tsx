@@ -316,7 +316,7 @@ export default function MembersTable({
     return base
   }, [isOwner, sort, order, basePath, initialParams, search])
 
-  /* All rows fit on one page – paging handled server‑side */
+  /* All rows fit on one page - paging handled server‑side */
   return (
     <DataTable
       columns={columns}

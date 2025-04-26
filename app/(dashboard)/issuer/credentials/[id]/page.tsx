@@ -50,7 +50,7 @@ function StatusIcon({ status }: { status: CredentialStatus }) {
 export default async function CredentialDetailPage({
   params,
 }: {
-  /** Next 15 passes <code>params</code> as a Promise – await it first. */
+  /** Next 15 passes <code>params</code> as a Promise - await it first. */
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
