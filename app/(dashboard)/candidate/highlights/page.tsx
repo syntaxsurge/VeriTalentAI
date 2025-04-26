@@ -7,6 +7,7 @@ import HighlightsBoard, {
   type Credential as HighlightCredential,
 } from '@/components/dashboard/candidate/highlights-board'
 import ProfileHeader from '@/components/dashboard/candidate/profile-header'
+import { ProfileRequiredModal } from '@/components/dashboard/candidate/profile-required-modal'
 import PageCard from '@/components/ui/page-card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
@@ -31,7 +32,8 @@ export default async function CandidateHighlightsSettings() {
     .where(eq(candidates.userId, user.id))
     .limit(1)
 
-  if (!candRow) redirect('/candidate/profile')
+  /* ------------------ Require profile setup ---------------- */
+  if (!candRow) return <ProfileRequiredModal />
 
   /* --------------- Credentials + highlights -------------- */
   const creds = await db
