@@ -116,7 +116,7 @@ export default async function IssuerOnboardPage() {
   /* ----------------------- First-time creation ----------------------- */
   if (!issuer) {
     return (
-      <section className='mx-auto max-w-lg py-10'>
+      <section className='mx-auto max-w-5xl py-10'>
         <PageCard
           icon={Building2}
           title='Create Your Organisation'
@@ -131,7 +131,7 @@ export default async function IssuerOnboardPage() {
   /* --------------------------- Rejected flow ------------------------- */
   if (issuer.status === IssuerStatus.REJECTED) {
     return (
-      <section className='mx-auto max-w-xl py-10'>
+      <section className='mx-auto max-w-5xl py-10'>
         <PageCard
           icon={Wrench}
           title='Fix & Resubmit'
@@ -196,7 +196,7 @@ export default async function IssuerOnboardPage() {
 
   /* ---------------------- Active / Pending flow ---------------------- */
   return (
-    <section className='mx-auto max-w-2xl py-10'>
+    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={Building2}
         title={issuer.name}
