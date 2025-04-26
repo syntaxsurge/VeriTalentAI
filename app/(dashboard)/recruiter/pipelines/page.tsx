@@ -1,5 +1,8 @@
 import { redirect } from 'next/navigation'
 
+import { KanbanSquare } from 'lucide-react'
+
+import PageCard from '@/components/ui/page-card'
 import PipelinesTable, { RowType } from '@/components/dashboard/recruiter/pipelines-table'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
@@ -76,29 +79,32 @@ export default async function PipelinesPage({
 
   /* ------------------------------- View ---------------------------------- */
   return (
-    <section className='flex-1 p-4 lg:p-8'>
-      <div className='mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center'>
-        <h1 className='text-lg font-medium lg:text-2xl'>Pipelines</h1>
-        <NewPipelineDialog />
-      </div>
+    <section className='mx-auto max-w-5xl py-10'>
+      <PageCard
+        icon={KanbanSquare}
+        title='Pipelines'
+        description='Manage and track your hiring pipelines.'
+        actions={<NewPipelineDialog />}
+      >
+        <div className='space-y-4 overflow-x-auto'>
+          <PipelinesTable
+            rows={rows}
+            sort={sort}
+            order={order as 'asc' | 'desc'}
+            basePath='/recruiter/pipelines'
+            initialParams={initialParams}
+            searchQuery={searchTerm}
+          />
 
-      {/* Results */}
-      <PipelinesTable
-        rows={rows}
-        sort={sort}
-        order={order as 'asc' | 'desc'}
-        basePath='/recruiter/pipelines'
-        initialParams={initialParams}
-        searchQuery={searchTerm}
-      />
-
-      <TablePagination
-        page={page}
-        hasNext={hasNext}
-        basePath='/recruiter/pipelines'
-        initialParams={initialParams}
-        pageSize={pageSize}
-      />
+          <TablePagination
+            page={page}
+            hasNext={hasNext}
+            basePath='/recruiter/pipelines'
+            initialParams={initialParams}
+            pageSize={pageSize}
+          />
+        </div>
+      </PageCard>
     </section>
   )
 }

@@ -1,5 +1,8 @@
 import { redirect } from 'next/navigation'
 
+import { Users } from 'lucide-react'
+
+import PageCard from '@/components/ui/page-card'
 import TalentFilters from '@/components/dashboard/recruiter/talent-filters'
 import TalentTable, { RowType } from '@/components/dashboard/recruiter/talent-table'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
@@ -83,45 +86,51 @@ export default async function TalentSearchPage({
 
   /* ------------------------------- View ---------------------------------- */
   return (
-    <section className='flex-1 p-4 lg:p-8'>
-      <h1 className='mb-6 text-lg font-medium lg:text-2xl'>Talent Search</h1>
+    <section className='mx-auto max-w-6xl py-10'>
+      <PageCard
+        icon={Users}
+        title='Talent Search'
+        description='Discover and shortlist qualified candidates.'
+      >
+        <div className='space-y-6'>
+          {/* Filters */}
+          <TalentFilters
+            basePath='/recruiter/talent'
+            initialParams={initialParams}
+            skillMin={skillMin}
+            skillMax={skillMax}
+            verifiedOnly={verifiedOnly}
+          />
 
-      {/* Filters */}
-      <TalentFilters
-        basePath='/recruiter/talent'
-        initialParams={initialParams}
-        skillMin={skillMin}
-        skillMax={skillMax}
-        verifiedOnly={verifiedOnly}
-      />
+          {/* Results table */}
+          <TalentTable
+            rows={rows}
+            sort={sort}
+            order={order as 'asc' | 'desc'}
+            basePath='/recruiter/talent'
+            initialParams={{
+              ...initialParams,
+              skillMin: String(skillMin),
+              skillMax: String(skillMax),
+              verifiedOnly: verifiedOnly ? '1' : '',
+            }}
+            searchQuery={searchTerm}
+          />
 
-      {/* Results table */}
-      <TalentTable
-        rows={rows}
-        sort={sort}
-        order={order as 'asc' | 'desc'}
-        basePath='/recruiter/talent'
-        initialParams={{
-          ...initialParams,
-          skillMin: String(skillMin),
-          skillMax: String(skillMax),
-          verifiedOnly: verifiedOnly ? '1' : '',
-        }}
-        searchQuery={searchTerm}
-      />
-
-      <TablePagination
-        page={page}
-        hasNext={hasNext}
-        basePath='/recruiter/talent'
-        initialParams={{
-          ...initialParams,
-          skillMin: String(skillMin),
-          skillMax: String(skillMax),
-          verifiedOnly: verifiedOnly ? '1' : '',
-        }}
-        pageSize={pageSize}
-      />
+          <TablePagination
+            page={page}
+            hasNext={hasNext}
+            basePath='/recruiter/talent'
+            initialParams={{
+              ...initialParams,
+              skillMin: String(skillMin),
+              skillMax: String(skillMax),
+              verifiedOnly: verifiedOnly ? '1' : '',
+            }}
+            pageSize={pageSize}
+          />
+        </div>
+      </PageCard>
     </section>
   )
 }

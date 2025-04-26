@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation'
 import { format } from 'date-fns'
 import { eq } from 'drizzle-orm'
 
+import { KanbanSquare } from 'lucide-react'
+
+import PageCard from '@/components/ui/page-card'
 import PipelineBoard from '@/components/dashboard/recruiter/pipeline-board'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
@@ -14,7 +17,7 @@ import { candidates } from '@/lib/db/schema/candidate'
 export const revalidate = 0
 
 /**
- * Recruiter pipeline board (Kanban‑style) — charts removed per UX feedback.
+ * Recruiter pipeline board (Kanban-style) wrapped in PageCard.
  */
 export default async function PipelineBoardPage({ params }: { params: Promise<{ id: string }> }) {
   /* ------------------------- dynamic param -------------------------- */
@@ -55,7 +58,7 @@ export default async function PipelineBoardPage({ params }: { params: Promise<{ 
     stage: Stage
   }
 
-  /* ------------- normalise into stage‑keyed collections ------------- */
+  /* ------------- normalise into stage-keyed collections ------------- */
   const initialData: Record<Stage, Candidate[]> = STAGES.reduce(
     (acc, s) => ({ ...acc, [s]: [] }),
     {} as Record<Stage, Candidate[]>,
@@ -76,30 +79,28 @@ export default async function PipelineBoardPage({ params }: { params: Promise<{ 
 
   /* ------------------------------ UI ------------------------------- */
   return (
-    <section className='space-y-8'>
-      {/* Header */}
-      <header className='space-y-1'>
-        <h2 className='flex items-center gap-2 text-2xl font-semibold'>
-          {pipeline.name}
-          <span className='bg-muted rounded-full px-2 py-0.5 text-xs'>
-            {totalCandidates} {totalCandidates === 1 ? 'Candidate' : 'Candidates'}
-          </span>
-        </h2>
+    <section className='mx-auto max-w-6xl py-10'>
+      <PageCard
+        icon={KanbanSquare}
+        title={pipeline.name}
+        description={pipeline.description || undefined}
+      >
+        <div className='space-y-6'>
+          {/* Meta */}
+          <div className='flex flex-wrap items-center gap-2 text-sm'>
+            <span className='bg-muted rounded-full px-2 py-0.5 text-xs'>
+              {totalCandidates} {totalCandidates === 1 ? 'Candidate' : 'Candidates'}
+            </span>
+            <span className='text-muted-foreground'>
+              Created {format(pipeline.createdAt, 'PPP')} • Updated{' '}
+              {format(pipeline.updatedAt, 'PPP')}
+            </span>
+          </div>
 
-        {pipeline.description && (
-          <p className='text-muted-foreground max-w-3xl whitespace-pre-line'>
-            {pipeline.description}
-          </p>
-        )}
-
-        <p className='text-muted-foreground text-xs'>
-          Created {format(pipeline.createdAt, 'PPP')} • Updated 
-          {format(pipeline.updatedAt, 'PPP')}
-        </p>
-      </header>
-
-      {/* Kanban board */}
-      <PipelineBoard pipelineId={pipelineId} initialData={initialData} />
+          {/* Kanban board */}
+          <PipelineBoard pipelineId={pipelineId} initialData={initialData} />
+        </div>
+      </PageCard>
     </section>
   )
 }
