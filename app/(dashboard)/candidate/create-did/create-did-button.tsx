@@ -31,7 +31,7 @@ export function CreateDidButton() {
   })
 
   /* Toast handling */
-  const toastId = React.useRef<string | number | undefined>()
+  const toastId = React.useRef<string | number | undefined>(undefined)
 
   function handleClick() {
     toastId.current = toast.loading('Creating DID…')

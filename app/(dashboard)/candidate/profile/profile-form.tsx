@@ -51,7 +51,7 @@ export default function ProfileForm({
   const [bio, setBio] = React.useState<string>(defaultBio || '')
 
   /* Keep toast ID to update after server response */
-  const toastId = React.useRef<string | number | undefined>()
+  const toastId = React.useRef<string | number | undefined>(undefined)
 
   /* Submit handler - show loading toast then trigger server action */
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
