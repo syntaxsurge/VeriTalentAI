@@ -10,7 +10,7 @@ import { db } from '@/lib/db/drizzle'
 import { invitations, teamMembers, activityLogs, ActivityType } from '@/lib/db/schema'
 
 /* -------------------------------------------------------------------------- */
-/*                                  A C C E P T                               */
+/*                                  A C C E P T                               */
 /* -------------------------------------------------------------------------- */
 
 const acceptSchema = z.object({ invitationId: z.coerce.number() })
@@ -88,7 +88,7 @@ export const acceptInvitationAction = async (...args: Parameters<typeof _acceptI
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                 D E C L I N E                              */
+/*                                 D E C L I N E                              */
 /* -------------------------------------------------------------------------- */
 
 const declineSchema = z.object({ invitationId: z.coerce.number() })
@@ -106,8 +106,9 @@ const _declineInvitation = validatedActionWithUser(
           eq(invitations.status, 'pending'),
         ),
       )
+      .returning({ id: invitations.id }) // ensure affected rows are returned
 
-    if (res.rowCount === 0) return { error: 'Invitation not found or already handled.' }
+    if (res.length === 0) return { error: 'Invitation not found or already handled.' }
 
     revalidatePath('/invitations')
     return { success: 'Invitation declined.' }
@@ -120,7 +121,7 @@ export const declineInvitationAction = async (...args: Parameters<typeof _declin
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                 D E L E T E                                */
+/*                                 D E L E T E                                */
 /* -------------------------------------------------------------------------- */
 
 const deleteSchema = z.object({ invitationId: z.coerce.number() })
