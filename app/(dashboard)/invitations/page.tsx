@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
+import { Mail } from 'lucide-react'
 
+import PageCard from '@/components/ui/page-card'
 import InvitationsTable, { RowType } from '@/components/dashboard/invitations-table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getInvitationsPage } from '@/lib/db/queries/invitations'
 import { getUser } from '@/lib/db/queries/queries'
@@ -13,11 +14,7 @@ export const revalidate = 0
 /* -------------------------------------------------------------------------- */
 
 type Query = Record<string, string | string[] | undefined>
-
-function first(p: Query, k: string): string | undefined {
-  const v = p[k]
-  return Array.isArray(v) ? v[0] : v
-}
+const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */
@@ -35,10 +32,8 @@ export default async function InvitationsPage({
 
   /* --------------------------- Query params ------------------------------ */
   const page = Math.max(1, Number(first(params, 'page') ?? '1'))
-
   const sizeRaw = Number(first(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
   const sort = first(params, 'sort') ?? 'invitedAt'
   const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(params, 'q') ?? '').trim()
@@ -60,25 +55,24 @@ export default async function InvitationsPage({
 
   /* ------------------------ Build initialParams -------------------------- */
   const initialParams: Record<string, string> = {}
-  const add = (k: string) => {
-    const val = first(params, k)
-    if (val) initialParams[k] = val
+  const copy = (k: string) => {
+    const v = first(params, k)
+    if (v) initialParams[k] = v
   }
-  add('size')
-  add('sort')
-  add('order')
+  copy('size')
+  copy('sort')
+  copy('order')
   if (searchTerm) initialParams['q'] = searchTerm
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className='flex-1'>
-      <h2 className='mb-4 text-xl font-semibold'>Team Invitations</h2>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Invitations Overview</CardTitle>
-        </CardHeader>
-        <CardContent className='overflow-x-auto'>
+    <section className='mx-auto max-w-5xl py-10'>
+      <PageCard
+        icon={Mail}
+        title='Team Invitations'
+        description='Review and manage the invitations sent to your email.'
+      >
+        <div className='space-y-4 overflow-x-auto'>
           <InvitationsTable
             rows={rows}
             sort={sort}
@@ -95,8 +89,8 @@ export default async function InvitationsPage({
             initialParams={initialParams}
             pageSize={pageSize}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </PageCard>
     </section>
   )
 }
