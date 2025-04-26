@@ -147,10 +147,10 @@ function usePrettyDate(d?: Date | null) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                         R E U S A B L E   U I                              */
+/*                           H I G H L I G H T   L I S T                      */
 /* -------------------------------------------------------------------------- */
 
-function CollapsibleList<T>({
+function HighlightList<T>({
   title,
   icon: Icon,
   items,
@@ -162,7 +162,7 @@ function CollapsibleList<T>({
   renderItem: (item: T) => React.ReactNode
 }) {
   const [expanded, setExpanded] = useState(false)
-  const visible = expanded ? items : items.slice(0, 4)
+  const visible = expanded ? items : items.slice(0, 5)
 
   return (
     <div className='space-y-6'>
@@ -172,32 +172,19 @@ function CollapsibleList<T>({
         <h4 className='text-lg font-semibold'>{title}</h4>
       </div>
 
-      {/* Timeline list */}
-      <ol className='relative border-l border-muted-foreground/20'>
-        {visible.map((it, i) => (
-          <li key={i} className='mb-6 ml-4'>
-            {/* Timeline dot */}
-            <span className='absolute -left-2 top-2 h-3 w-3 rounded-full bg-primary' />
-            {renderItem(it)}
-          </li>
-        ))}
-      </ol>
+      {/* List */}
+      <div className='flex flex-col gap-4'>{visible.map((it, i) => <div key={i}>{renderItem(it)}</div>)}</div>
 
       {/* Expand / collapse control */}
-      {items.length > 4 && (
-        <Button
-          variant='ghost'
-          size='sm'
-          onClick={() => setExpanded((p) => !p)}
-          className='text-primary gap-1'
-        >
+      {items.length > 5 && (
+        <Button variant='ghost' size='sm' onClick={() => setExpanded((p) => !p)} className='text-primary gap-1'>
           {expanded ? (
             <>
               Show Less <ChevronUp className='h-4 w-4' />
             </>
           ) : (
             <>
-              Show More ({items.length - 4}) <ChevronDown className='h-4 w-4' />
+              Show More ({items.length - 5}) <ChevronDown className='h-4 w-4' />
             </>
           )}
         </Button>
@@ -349,10 +336,10 @@ export default function CandidateDetailedProfileView({
 
             <TabsContent value='experience' className='space-y-4'>
               {experiences.length === 0 ? (
-                <p className='text-muted-foreground'>No experience credentials yet.</p>
+                <p className='text-muted-foreground'>No experience highlights yet.</p>
               ) : (
                 <ScrollArea className='max-h-[500px] pr-3'>
-                  <CollapsibleList
+                  <HighlightList
                     title='Professional Experience'
                     icon={Briefcase}
                     items={experiences}
@@ -374,10 +361,10 @@ export default function CandidateDetailedProfileView({
 
             <TabsContent value='projects' className='space-y-4'>
               {projects.length === 0 ? (
-                <p className='text-muted-foreground'>No project credentials yet.</p>
+                <p className='text-muted-foreground'>No project highlights yet.</p>
               ) : (
                 <ScrollArea className='max-h-[500px] pr-3'>
-                  <CollapsibleList
+                  <HighlightList
                     title='Highlighted Projects'
                     icon={BookOpen}
                     items={projects}

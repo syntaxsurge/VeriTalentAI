@@ -11,7 +11,7 @@ import {
 import { toast } from 'sonner'
 
 import { saveHighlightsAction } from '@/app/(dashboard)/candidate/highlights/actions'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
@@ -69,7 +69,7 @@ export default function HighlightsBoard({
     )
       return
 
-    /* Helper to get setter by droppableId */
+    /* Helpers to get state & setter by droppableId */
     const get = (id: string) =>
       id === 'experience' ? exp : id === 'project' ? proj : pool
     const set = (id: string) =>
@@ -79,15 +79,22 @@ export default function HighlightsBoard({
         ? setProj
         : setPool
 
-    /* Remove from source */
-    const sourceList = get(source.droppableId)
-    const [moved] = sourceList.splice(source.index, 1)
-    set(source.droppableId)([...sourceList])
-
-    /* Insert into destination */
+    const srcList = get(source.droppableId)
     const destList = get(destination.droppableId)
-    destList.splice(destination.index, 0, moved)
-    set(destination.droppableId)([...destList])
+
+    if (source.droppableId === destination.droppableId) {
+      /* Reordering within the same column */
+      const reordered = reorder(srcList, source.index, destination.index)
+      set(source.droppableId)(reordered)
+    } else {
+      /* Moving item between columns */
+      const removedList = Array.from(srcList)
+      const [moved] = removedList.splice(source.index, 1)
+      const insertedList = Array.from(destList)
+      insertedList.splice(destination.index, 0, moved)
+      set(source.droppableId)(removedList)
+      set(destination.droppableId)(insertedList)
+    }
   }
 
   /* ---------------------------------------------------------------------- */
@@ -163,9 +170,7 @@ export default function HighlightsBoard({
                   key={`${id}-${cred.id}`}
                   draggableId={`${id}-${cred.id}`}
                   index={idx}
-                  isDragDisabled={
-                    !isPool && idx >= max /* only first 5 are draggable */
-                  }
+                  isDragDisabled={!isPool && idx >= max}
                 >
                   {(dragProv, dragSnap) => (
                     <Card
@@ -205,11 +210,8 @@ export default function HighlightsBoard({
     <div className='space-y-6'>
       <DragDropContext onDragEnd={onDragEnd}>
         <div className='grid gap-6 md:grid-cols-3'>
-          {/* Experience column */}
           {renderColumn('experience', 'Experience', exp)}
-          {/* Project column */}
           {renderColumn('project', 'Projects', proj)}
-          {/* Available pool */}
           {renderColumn('pool', 'Available', pool, Infinity)}
         </div>
       </DragDropContext>

@@ -83,21 +83,24 @@ export const saveHighlightsAction = validatedActionWithUser(
       if (wrongCategory) return { error: 'Category mismatch in highlights.' }
     }
 
-    /* ------------------- upsert experience highlights ------------------- */
+    /* ----------------------- rebuild highlights rows --------------------- */
     await db.delete(candidateHighlights).where(eq(candidateHighlights.candidateId, cand.id))
 
-    const inserts = [
-      ...parsed.experience.map((id, idx) => ({
-        candidateId: cand.id,
-        credentialId: id,
-        sortOrder: idx + 1,
-      })),
-      ...parsed.project.map((id, idx) => ({
-        candidateId: cand.id,
-        credentialId: id,
-        sortOrder: idx + 1,
-      })),
-    ]
+    /* Ensure a single, continuous sortOrder across all highlights so that
+       ordering is unambiguous and unique per candidate. */
+    const expInserts = parsed.experience.map((id, idx) => ({
+      candidateId: cand.id,
+      credentialId: id,
+      sortOrder: idx + 1,
+    }))
+
+    const projInserts = parsed.project.map((id, idx) => ({
+      candidateId: cand.id,
+      credentialId: id,
+      sortOrder: parsed.experience.length + idx + 1,
+    }))
+
+    const inserts = [...expInserts, ...projInserts]
 
     if (inserts.length) await db.insert(candidateHighlights).values(inserts)
 

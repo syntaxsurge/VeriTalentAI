@@ -111,57 +111,6 @@ export default async function RecruiterCandidateProfile({
       status: p.status,
     }))
 
-  /* fallback: if no highlights yet, pick latest 5 each */
-  async function fallback(category: CredentialCategory, limit = 5) {
-    return db
-      .select({
-        id: candidateCredentials.id,
-        title: candidateCredentials.title,
-        createdAt: candidateCredentials.createdAt,
-        issuerName: issuers.name,
-        link: candidateCredentials.fileUrl,
-        description: candidateCredentials.type,
-        status: candidateCredentials.status,
-      })
-      .from(candidateCredentials)
-      .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-      .where(
-        and(
-          eq(candidateCredentials.candidateId, candidateId),
-          eq(candidateCredentials.category, category),
-        ),
-      )
-      .orderBy(desc(candidateCredentials.createdAt))
-      .limit(limit)
-  }
-
-  if (experiences.length === 0) {
-    const rows = await fallback(CredentialCategory.EXPERIENCE)
-    rows.forEach((e) =>
-      experiences.push({
-        id: e.id,
-        title: e.title,
-        company: e.issuerName,
-        createdAt: e.createdAt,
-        status: e.status,
-      }),
-    )
-  }
-
-  if (projects.length === 0) {
-    const rows = await fallback(CredentialCategory.PROJECT)
-    rows.forEach((p) =>
-      projects.push({
-        id: p.id,
-        title: p.title,
-        link: p.link,
-        description: p.description,
-        createdAt: p.createdAt,
-        status: p.status,
-      }),
-    )
-  }
-
   /* --------------------- Pipelines owned by recruiter --------------------- */
   const pipelines = await db
     .select({ id: recruiterPipelines.id, name: recruiterPipelines.name })

@@ -1,4 +1,4 @@
-import { desc, eq, and } from 'drizzle-orm'
+import { asc, desc, eq, and } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
 import {
@@ -12,6 +12,7 @@ import {
 } from '@/lib/db/queries/candidate-details'
 import {
   candidateCredentials,
+  candidateHighlights,
   CredentialCategory,
   CredentialStatus,
 } from '@/lib/db/schema/candidate'
@@ -30,6 +31,7 @@ type Experience = {
   title: string
   company: string | null
   createdAt: Date
+  status?: string | null
 }
 
 type Project = {
@@ -38,6 +40,7 @@ type Project = {
   link: string | null
   description: string | null
   createdAt: Date
+  status?: string | null
 }
 
 /* Helpers */
@@ -69,7 +72,7 @@ export default async function PublicCandidateProfile({
   if (!row) return <div>Candidate not found.</div>
 
   /* -------------------- experiences & projects -------------------------- */
-  const baseSelect = () =>
+  const highlightBase = () =>
     db
       .select({
         id: candidateCredentials.id,
@@ -78,33 +81,41 @@ export default async function PublicCandidateProfile({
         issuerName: issuers.name,
         link: candidateCredentials.fileUrl,
         description: candidateCredentials.type,
+        status: candidateCredentials.status,
+        sortOrder: candidateHighlights.sortOrder,
       })
-      .from(candidateCredentials)
+      .from(candidateHighlights)
+      .innerJoin(
+        candidateCredentials,
+        eq(candidateHighlights.credentialId, candidateCredentials.id),
+      )
       .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
+      .where(eq(candidateHighlights.candidateId, candidateId))
 
-  const experienceRows = await baseSelect()
+  const experienceRows = await highlightBase()
     .where(
       and(
-        eq(candidateCredentials.candidateId, candidateId),
         eq(candidateCredentials.category, CredentialCategory.EXPERIENCE),
+        eq(candidateHighlights.candidateId, candidateId),
       ),
     )
-    .orderBy(desc(candidateCredentials.createdAt))
+    .orderBy(asc(candidateHighlights.sortOrder))
 
-  const projectRows = await baseSelect()
+  const projectRows = await highlightBase()
     .where(
       and(
-        eq(candidateCredentials.candidateId, candidateId),
         eq(candidateCredentials.category, CredentialCategory.PROJECT),
+        eq(candidateHighlights.candidateId, candidateId),
       ),
     )
-    .orderBy(desc(candidateCredentials.createdAt))
+    .orderBy(asc(candidateHighlights.sortOrder))
 
   const experiences: Experience[] = experienceRows.map((e) => ({
     id: e.id,
     title: e.title,
     company: e.issuerName,
     createdAt: e.createdAt,
+    status: e.status as string | null,
   }))
 
   const projects: Project[] = projectRows.map((p) => ({
@@ -113,6 +124,7 @@ export default async function PublicCandidateProfile({
     link: p.link,
     description: p.description,
     createdAt: p.createdAt,
+    status: p.status as string | null,
   }))
 
   /* ----------------------- paged credentials ---------------------------- */
