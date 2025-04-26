@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
+import { Activity as ActivityIcon } from 'lucide-react'
 
+import PageCard from '@/components/ui/page-card'
 import ActivityLogsTable, { RowType } from '@/components/dashboard/settings/activity-logs-table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
 import { getUser } from '@/lib/db/queries/queries'
@@ -9,35 +10,24 @@ import { ActivityType } from '@/lib/db/schema'
 
 export const revalidate = 0
 
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
 type Query = Record<string, string | string[] | undefined>
 
-/** Safely return the first value of a query param. */
 function getParam(params: Query, key: string): string | undefined {
   const v = params[key]
   return Array.isArray(v) ? v[0] : v
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                    Page                                    */
-/* -------------------------------------------------------------------------- */
-
 export default async function ActivityPage({
   searchParams,
 }: {
-  /** Next 15 passes searchParams as an async object — await it first. */
   searchParams: Promise<Query> | Query
 }) {
-  /* ---------------------- Resolve dynamic API first ----------------------- */
   const params = (await searchParams) as Query
 
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
-  /* --------------------------- Query params ------------------------------ */
+  /* ---------------------- Query parameters ---------------------- */
   const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
 
   const sizeRaw = Number(getParam(params, 'size') ?? '10')
@@ -47,7 +37,7 @@ export default async function ActivityPage({
   const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (getParam(params, 'q') ?? '').trim()
 
-  /* -------------------------- Data fetching ------------------------------ */
+  /* ------------------------- Data fetch ------------------------- */
   const { logs, hasNext } = await getActivityLogsPage(
     user.id,
     page,
@@ -64,7 +54,7 @@ export default async function ActivityPage({
     timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : String(log.timestamp),
   }))
 
-  /* ------------------------ Build initialParams -------------------------- */
+  /* -------------------- Preserve query state -------------------- */
   const initialParams: Record<string, string> = {}
   const add = (k: string) => {
     const val = getParam(params, k)
@@ -75,16 +65,15 @@ export default async function ActivityPage({
   add('order')
   if (searchTerm) initialParams['q'] = searchTerm
 
-  /* ------------------------------ View ----------------------------------- */
+  /* ----------------------------- UI ----------------------------- */
   return (
-    <section className='flex-1 p-4 lg:p-8'>
-      <h1 className='mb-6 text-lg font-medium lg:text-2xl'>Activity Log</h1>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent className='overflow-x-auto'>
+    <section className='mx-auto max-w-5xl py-10'>
+      <PageCard
+        icon={ActivityIcon}
+        title='Activity Log'
+        description='Review your recent account activity and sign-ins.'
+      >
+        <div className='space-y-4 overflow-x-auto'>
           <ActivityLogsTable
             rows={rows}
             sort={sort}
@@ -101,8 +90,8 @@ export default async function ActivityPage({
             initialParams={initialParams}
             pageSize={pageSize}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </PageCard>
     </section>
   )
 }

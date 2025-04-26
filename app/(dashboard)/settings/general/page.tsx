@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
+import { Settings as SettingsIcon } from 'lucide-react'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import PageCard from '@/components/ui/page-card'
 import { getUser } from '@/lib/db/queries/queries'
 
 import GeneralForm from './general-form'
@@ -12,17 +13,14 @@ export default async function GeneralSettingsPage() {
   if (!user) redirect('/sign-in')
 
   return (
-    <section className='flex-1 p-4 lg:p-8'>
-      <h1 className='mb-6 text-lg font-medium lg:text-2xl'>General Settings</h1>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <GeneralForm defaultName={user.name || ''} defaultEmail={user.email} />
-        </CardContent>
-      </Card>
+    <section className='mx-auto max-w-5xl py-10'>
+      <PageCard
+        icon={SettingsIcon}
+        title='Account Information'
+        description='Update your name and email address.'
+      >
+        <GeneralForm defaultName={user.name || ''} defaultEmail={user.email} />
+      </PageCard>
     </section>
   )
 }
