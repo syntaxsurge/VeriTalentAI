@@ -4,7 +4,9 @@ import { asc, eq } from 'drizzle-orm'
 import ProfileHeader from '@/components/candidate/profile-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import HighlightsBoard from '@/components/dashboard/candidate/highlights-board'
+import HighlightsBoard, {
+  type Credential as HighlightCredential,
+} from '@/components/dashboard/candidate/highlights-board'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import {
@@ -50,24 +52,42 @@ export default async function CandidateHighlightsSettings() {
     .where(eq(candidateHighlights.candidateId, candRow.id))
     .orderBy(asc(candidateHighlights.sortOrder))
 
-  /* Group highlighted creds by category */
-  const byCat = {
-    EXPERIENCE: [] as typeof creds,
-    PROJECT: [] as typeof creds,
-  }
+  /* ------------------ Prepare selected + available lists ------------- */
+  const selectedIds = new Set(hlRows.map((h) => h.credentialId))
+
+  const selectedExperience: HighlightCredential[] = []
+  const selectedProject: HighlightCredential[] = []
+
   hlRows.forEach((h) => {
     const cred = creds.find((c) => c.id === h.credentialId)
-    if (
-      cred &&
-      (cred.category === CredentialCategory.EXPERIENCE ||
-        cred.category === CredentialCategory.PROJECT)
-    ) {
-      byCat[cred.category].push(cred)
+    if (!cred) return
+    if (cred.category === CredentialCategory.EXPERIENCE) {
+      selectedExperience.push({
+        id: cred.id,
+        title: cred.title,
+        category: 'EXPERIENCE',
+      })
+    } else if (cred.category === CredentialCategory.PROJECT) {
+      selectedProject.push({
+        id: cred.id,
+        title: cred.title,
+        category: 'PROJECT',
+      })
     }
   })
 
-  const selectedIds = new Set(hlRows.map((h) => h.credentialId))
-  const available = creds.filter((c) => !selectedIds.has(c.id))
+  const available: HighlightCredential[] = creds
+    .filter(
+      (c) =>
+        (c.category === CredentialCategory.EXPERIENCE ||
+          c.category === CredentialCategory.PROJECT) &&
+        !selectedIds.has(c.id),
+    )
+    .map((c) => ({
+      id: c.id,
+      title: c.title,
+      category: c.category as 'EXPERIENCE' | 'PROJECT',
+    }))
 
   /* ------------------------------------------------------------------ */
   /*                               View                                 */
@@ -87,27 +107,27 @@ export default async function CandidateHighlightsSettings() {
           <CardTitle className='text-2xl font-extrabold tracking-tight'>
             Profile Highlights
           </CardTitle>
-          <p className='text-muted-foreground text-sm'>
-            Showcase up to 
+          <p className='text-sm text-muted-foreground'>
+            Showcase up to{' '}
             <Badge variant='secondary' className='mx-1'>
               5
-            </Badge>
-            credentials each for 
+            </Badge>{' '}
+            credentials each for{' '}
             <Badge variant='secondary' className='mx-1'>
               Experience
-            </Badge>
-            and 
+            </Badge>{' '}
+            and{' '}
             <Badge variant='secondary' className='mx-1'>
               Projects
-            </Badge>
-             – just like the featured section on LinkedIn.
+            </Badge>{' '}
+            – just like the featured section on LinkedIn.
           </p>
         </CardHeader>
 
         <CardContent className='pt-0'>
           <HighlightsBoard
-            selectedExperience={byCat.EXPERIENCE}
-            selectedProject={byCat.PROJECT}
+            selectedExperience={selectedExperience}
+            selectedProject={selectedProject}
             available={available}
           />
         </CardContent>
