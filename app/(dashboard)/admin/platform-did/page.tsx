@@ -16,7 +16,7 @@ export default async function PlatformDidPage() {
   const existingDid = process.env.PLATFORM_ISSUER_DID ?? null
 
   return (
-    <section className='mx-auto max-w-2xl py-10'>
+    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={KeyRound}
         title='Platform DID'
