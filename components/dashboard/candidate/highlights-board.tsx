@@ -201,35 +201,45 @@ export default function HighlightsBoard({
                       ref={dragProv.innerRef}
                       {...dragProv.draggableProps}
                       {...dragProv.dragHandleProps}
-                      className={`flex items-center gap-3 rounded-md border bg-background px-3 py-2 shadow-sm ${
+                      className={`flex gap-3 rounded-md border bg-background px-3 py-2 shadow-sm ${
                         dragSnap.isDragging ? 'opacity-80' : ''
                       }`}
                     >
                       {/* Drag handle */}
                       <GripVertical className='h-4 w-4 flex-shrink-0 text-muted-foreground' />
 
-                      {/* Main text + category */}
-                      <div className='flex min-w-0 flex-1 items-center gap-2 truncate'>
-                        <span className='truncate font-medium'>{cred.title}</span>
-                        <Badge
-                          variant='secondary'
-                          className='flex-shrink-0 text-[10px] capitalize'
-                        >
-                          {cred.category.toLowerCase()}
-                        </Badge>
-                      </div>
+                      {/* Content */}
+                      <div className='min-w-0 flex-1 space-y-1'>
+                        {/* Title row */}
+                        <div className='flex items-center gap-2'>
+                          <span className='truncate font-medium'>{cred.title}</span>
 
-                      {/* File link icon */}
-                      {cred.fileUrl && (
-                        <a
-                          href={cred.fileUrl}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='flex-shrink-0'
-                        >
-                          <ExternalLink className='h-4 w-4 text-muted-foreground hover:text-primary' />
-                        </a>
-                      )}
+                          {/* File link icon next to title */}
+                          {cred.fileUrl && (
+                            <a
+                              href={cred.fileUrl}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              className='flex-shrink-0'
+                            >
+                              <ExternalLink className='h-4 w-4 text-muted-foreground hover:text-primary' />
+                            </a>
+                          )}
+                        </div>
+
+                        {/* Category badge + type underneath */}
+                        <div className='flex items-center gap-2'>
+                          <Badge
+                            variant='secondary'
+                            className='flex-shrink-0 text-[10px] capitalize'
+                          >
+                            {cred.category.toLowerCase()}
+                          </Badge>
+                          <span className='truncate text-xs text-muted-foreground capitalize'>
+                            {cred.type}
+                          </span>
+                        </div>
+                      </div>
 
                       {/* "Extra” badge if over max items in selected column */}
                       {!isPool && idx >= max && (
