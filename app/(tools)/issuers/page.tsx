@@ -1,4 +1,3 @@
-// ⬇️  unchanged from previous /issuers/page.tsx - moved only for organisation
 import { asc, desc, ilike, or, and, eq } from 'drizzle-orm'
 
 import IssuerFilters from '@/components/issuer-directory/issuer-filters'
@@ -35,15 +34,22 @@ export default async function IssuerDirectoryPage({
   const categoryFilter = first(params, 'category')
   const industryFilter = first(params, 'industry')
 
-  const validCategory =
+  /* ---------------------------------------------------------------------- */
+  /*                         Validate enum filters                          */
+  /* ---------------------------------------------------------------------- */
+  const validCategory: IssuerCategory | undefined =
     categoryFilter && (Object.values(IssuerCategory) as string[]).includes(categoryFilter)
-      ? categoryFilter
-      : undefined
-  const validIndustry =
-    industryFilter && (Object.values(IssuerIndustry) as string[]).includes(industryFilter)
-      ? industryFilter
+      ? (categoryFilter as IssuerCategory)
       : undefined
 
+  const validIndustry: IssuerIndustry | undefined =
+    industryFilter && (Object.values(IssuerIndustry) as string[]).includes(industryFilter)
+      ? (industryFilter as IssuerIndustry)
+      : undefined
+
+  /* ---------------------------------------------------------------------- */
+  /*                              Sort mapping                              */
+  /* ---------------------------------------------------------------------- */
   const sortMap = {
     name: issuersTable.name,
     domain: issuersTable.domain,
@@ -51,14 +57,24 @@ export default async function IssuerDirectoryPage({
     industry: issuersTable.industry,
     createdAt: issuersTable.createdAt,
   } as const
+
   const orderExpr =
     order === 'asc'
       ? asc(sortMap[sort as keyof typeof sortMap])
       : desc(sortMap[sort as keyof typeof sortMap])
 
+  /* ---------------------------------------------------------------------- */
+  /*                               Where clause                             */
+  /* ---------------------------------------------------------------------- */
   let whereExpr: any = eq(issuersTable.status, IssuerStatus.ACTIVE)
-  if (validCategory) whereExpr = and(whereExpr, eq(issuersTable.category, validCategory))
-  if (validIndustry) whereExpr = and(whereExpr, eq(issuersTable.industry, validIndustry))
+
+  if (validCategory) {
+    whereExpr = and(whereExpr, eq(issuersTable.category, validCategory))
+  }
+
+  if (validIndustry) {
+    whereExpr = and(whereExpr, eq(issuersTable.industry, validIndustry))
+  }
 
   if (searchTerm.length > 0) {
     const searchCond = or(
@@ -70,6 +86,9 @@ export default async function IssuerDirectoryPage({
     whereExpr = and(whereExpr, searchCond)
   }
 
+  /* ---------------------------------------------------------------------- */
+  /*                              Query rows                                */
+  /* ---------------------------------------------------------------------- */
   const offset = (page - 1) * pageSize
   const rowsRaw = await db
     .select()
@@ -94,6 +113,9 @@ export default async function IssuerDirectoryPage({
     createdAt: i.createdAt?.toISOString() ?? '',
   }))
 
+  /* ---------------------------------------------------------------------- */
+  /*                         Build initial params                           */
+  /* ---------------------------------------------------------------------- */
   const initialParams: Record<string, string> = {}
   const add = (k: string) => {
     const val = first(params, k)
@@ -106,6 +128,9 @@ export default async function IssuerDirectoryPage({
   if (validCategory) initialParams['category'] = validCategory
   if (validIndustry) initialParams['industry'] = validIndustry
 
+  /* ---------------------------------------------------------------------- */
+  /*                                View                                    */
+  /* ---------------------------------------------------------------------- */
   return (
     <section className='mx-auto max-w-7xl space-y-10'>
       <header className='space-y-2'>
