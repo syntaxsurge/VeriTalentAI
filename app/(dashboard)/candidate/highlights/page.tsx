@@ -5,7 +5,6 @@ import { Star } from 'lucide-react'
 
 import ProfileHeader from '@/components/candidate/profile-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import HighlightsBoard, {
   type Credential as HighlightCredential,
 } from '@/components/dashboard/candidate/highlights-board'
@@ -112,19 +111,9 @@ export default async function CandidateHighlightsSettings() {
               Profile Highlights
             </CardTitle>
             <p className='text-sm text-muted-foreground'>
-              Showcase up to{' '}
-              <Badge variant='secondary' className='mx-1'>
-                5
-              </Badge>{' '}
-              credentials each for{' '}
-              <Badge variant='secondary' className='mx-1'>
-                Experience
-              </Badge>{' '}
-              and{' '}
-              <Badge variant='secondary' className='mx-1'>
-                Projects
-              </Badge>{' '}
-              – just like the featured section on LinkedIn.
+              Showcase up to <span className='font-semibold'>5</span> credentials each for{' '}
+              <span className='font-semibold'>Experience</span> and{' '}
+              <span className='font-semibold'>Projects</span>.
             </p>
           </div>
         </CardHeader>
