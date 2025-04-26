@@ -28,6 +28,8 @@ type Experience = {
   id: number
   title: string
   company: string | null
+  type: string | null
+  link: string | null
   createdAt: Date
   status?: string | null
 }
@@ -129,6 +131,8 @@ export default async function PublicCandidateProfile({
     id: e.id,
     title: e.title,
     company: e.issuerName,
+    type: e.description,
+    link: e.link,
     createdAt: e.createdAt,
     status: e.status,
   }))

@@ -11,6 +11,7 @@ import {
   ChevronUp,
   Download,
   Globe2,
+  ArrowUpRight,
 } from 'lucide-react'
 import { SiGithub, SiLinkedin } from 'react-icons/si'
 import { FaTwitter } from 'react-icons/fa'
@@ -77,6 +78,8 @@ export interface Experience {
   id: number
   title: string
   company: string | null
+  type?: string | null
+  link?: string | null
   status?: string | null
   createdAt: Date
 }
@@ -334,6 +337,7 @@ export default function CandidateDetailedProfileView({
               </TabsTrigger>
             </TabsList>
 
+            {/* ----------------- Experience Tab ----------------- */}
             <TabsContent value='experience' className='space-y-4'>
               {experiences.length === 0 ? (
                 <p className='text-muted-foreground'>No experience highlights yet.</p>
@@ -344,14 +348,36 @@ export default function CandidateDetailedProfileView({
                     icon={Briefcase}
                     items={experiences}
                     renderItem={(exp) => (
-                      <div className='space-y-1'>
-                        <h5 className='flex items-center gap-2 font-semibold'>
-                          {exp.title}
-                          <StatusBadge status={(exp.status ?? 'unverified') as string} showIcon />
-                        </h5>
-                        {exp.company && (
-                          <p className='text-muted-foreground text-sm'>{exp.company}</p>
-                        )}
+                      <div className='rounded-lg border bg-background/50 p-4'>
+                        <div className='flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-4'>
+                          {/* Left — details */}
+                          <div className='flex-1 space-y-0.5'>
+                            <h5 className='text-base font-semibold'>{exp.title}</h5>
+                            {exp.company && (
+                              <p className='text-muted-foreground text-sm'>{exp.company}</p>
+                            )}
+                            {exp.type && (
+                              <p className='text-xs uppercase tracking-wide text-muted-foreground'>
+                                {exp.type}
+                              </p>
+                            )}
+                            {exp.link && (
+                              <Link
+                                href={exp.link}
+                                target='_blank'
+                                className='mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline'
+                              >
+                                View File
+                                <ArrowUpRight className='h-3 w-3' />
+                              </Link>
+                            )}
+                          </div>
+
+                          {/* Right — status */}
+                          <div className='flex-shrink-0 self-start sm:self-center'>
+                            <StatusBadge status={(exp.status ?? 'unverified') as string} showIcon />
+                          </div>
+                        </div>
                       </div>
                     )}
                   />
@@ -359,6 +385,7 @@ export default function CandidateDetailedProfileView({
               )}
             </TabsContent>
 
+            {/* ------------------ Projects Tab ------------------ */}
             <TabsContent value='projects' className='space-y-4'>
               {projects.length === 0 ? (
                 <p className='text-muted-foreground'>No project highlights yet.</p>
@@ -369,24 +396,34 @@ export default function CandidateDetailedProfileView({
                     icon={BookOpen}
                     items={projects}
                     renderItem={(proj) => (
-                      <div className='space-y-1'>
-                        <h5 className='flex items-center gap-2 font-semibold'>
-                          {proj.title}
-                          <StatusBadge status={(proj.status ?? 'unverified') as string} showIcon />
-                        </h5>
-                        {proj.description && <p className='text-sm'>{proj.description}</p>}
-                        {proj.link && (
-                          <Button
-                            asChild
-                            variant='link'
-                            size='sm'
-                            className='-ml-2 text-primary'
-                          >
-                            <Link href={proj.link} target='_blank'>
-                              Visit Link
-                            </Link>
-                          </Button>
-                        )}
+                      <div className='rounded-lg border bg-background/50 p-4'>
+                        <div className='flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-4'>
+                          {/* Left — details */}
+                          <div className='flex-1 space-y-0.5'>
+                            <h5 className='text-base font-semibold'>{proj.title}</h5>
+                            {proj.description && (
+                              <p className='text-sm'>{proj.description}</p>
+                            )}
+                            {proj.link && (
+                              <Link
+                                href={proj.link}
+                                target='_blank'
+                                className='mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline'
+                              >
+                                Visit Link
+                                <ArrowUpRight className='h-3 w-3' />
+                              </Link>
+                            )}
+                          </div>
+
+                          {/* Right — status */}
+                          <div className='flex-shrink-0 self-start sm:self-center'>
+                            <StatusBadge
+                              status={(proj.status ?? 'unverified') as string}
+                              showIcon
+                            />
+                          </div>
+                        </div>
                       </div>
                     )}
                   />
