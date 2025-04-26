@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+import { FileText } from 'lucide-react'
+
+import ProfileHeader from '@/components/candidate/profile-header'
 import CandidateCredentialsTable, {
   RowType,
 } from '@/components/dashboard/candidate/credentials-table'
@@ -30,6 +33,7 @@ export default async function CredentialsPage({
 }) {
   const params = (await searchParams) as Query
 
+  /* ------------------------------ Auth ----------------------------------- */
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
@@ -64,35 +68,53 @@ export default async function CredentialsPage({
 
   /* ------------------------ Initial query params ------------------------ */
   const initialParams: Record<string, string> = {}
-  const add = (k: string) => {
+  const addParam = (k: string) => {
     const val = first(params, k)
     if (val) initialParams[k] = val
   }
-  add('size')
-  add('sort')
-  add('order')
+  addParam('size')
+  addParam('sort')
+  addParam('order')
   if (searchTerm) initialParams['q'] = searchTerm
 
   /* -------------------------------- View -------------------------------- */
   return (
-    <section className='space-y-6'>
-      <div className='flex items-center justify-between'>
-        <h2 className='text-xl font-semibold'>My Credentials</h2>
-        <Link href='/candidate/credentials/add'>
-          <Button size='sm'>Add Credential</Button>
-        </Link>
-      </div>
+    <section className="mx-auto max-w-5xl space-y-10 py-10">
+      {/* Candidate header */}
+      <ProfileHeader
+        name={user.name ?? null}
+        email={user.email ?? ''}
+        avatarSrc={(user as any)?.image ?? undefined}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Credentials Overview</CardTitle>
+      {/* Credentials card */}
+      <Card className="shadow-md transition-shadow hover:shadow-lg">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          {/* Icon, title, description */}
+          <div className="flex items-center gap-3">
+            <FileText className="text-primary h-10 w-10 flex-shrink-0" />
+            <div>
+              <CardTitle className="text-2xl font-extrabold tracking-tight">
+                My Credentials
+              </CardTitle>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Add, organise, and track all of your verifiable credentials.
+              </p>
+            </div>
+          </div>
+
+          {/* Action */}
+          <Link href="/candidate/credentials/add">
+            <Button size="sm">Add Credential</Button>
+          </Link>
         </CardHeader>
-        <CardContent className='overflow-x-auto'>
+
+        <CardContent className="space-y-4 overflow-x-auto pt-0">
           <CandidateCredentialsTable
             rows={rows}
             sort={sort}
             order={order as 'asc' | 'desc'}
-            basePath='/candidate/credentials'
+            basePath="/candidate/credentials"
             initialParams={initialParams}
             searchQuery={searchTerm}
           />
@@ -100,7 +122,7 @@ export default async function CredentialsPage({
           <TablePagination
             page={page}
             hasNext={hasNext}
-            basePath='/candidate/credentials'
+            basePath="/candidate/credentials"
             initialParams={initialParams}
             pageSize={pageSize}
           />
