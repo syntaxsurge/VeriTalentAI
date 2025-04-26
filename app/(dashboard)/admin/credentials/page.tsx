@@ -1,7 +1,10 @@
 import { redirect } from 'next/navigation'
+import { FileText } from 'lucide-react'
 
-import AdminCredentialsTable, { type RowType } from '@/components/dashboard/admin/credentials-table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import PageCard from '@/components/ui/page-card'
+import AdminCredentialsTable, {
+  type RowType,
+} from '@/components/dashboard/admin/credentials-table'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminCredentialsPage } from '@/lib/db/queries/admin-credentials'
 import { getUser } from '@/lib/db/queries/queries'
@@ -70,14 +73,13 @@ export default async function AdminCredentialsPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className='space-y-6'>
-      <h2 className='text-2xl font-semibold'>All Credentials</h2>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Credentials Overview</CardTitle>
-        </CardHeader>
-        <CardContent className='overflow-x-auto'>
+    <section className='mx-auto max-w-5xl py-10'>
+      <PageCard
+        icon={FileText}
+        title='All Credentials'
+        description='View and manage all candidate credentials.'
+      >
+        <div className='space-y-4 overflow-x-auto'>
           <AdminCredentialsTable
             rows={rows}
             sort={sort}
@@ -94,8 +96,8 @@ export default async function AdminCredentialsPage({
             initialParams={initialParams}
             pageSize={pageSize}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </PageCard>
     </section>
   )
 }

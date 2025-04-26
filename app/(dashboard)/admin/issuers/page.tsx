@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
+import { Building } from 'lucide-react'
 
-import AdminIssuersTable, { RowType } from '@/components/dashboard/admin/issuers-table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import PageCard from '@/components/ui/page-card'
+import AdminIssuersTable, { type RowType } from '@/components/dashboard/admin/issuers-table'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
 import { getUser } from '@/lib/db/queries/queries'
@@ -72,14 +73,13 @@ export default async function AdminIssuersPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className='space-y-6'>
-      <h2 className='text-2xl font-semibold'>Issuer Management</h2>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>All Issuers</CardTitle>
-        </CardHeader>
-        <CardContent className='overflow-x-auto'>
+    <section className='mx-auto max-w-5xl py-10'>
+      <PageCard
+        icon={Building}
+        title='Issuer Management'
+        description='Review, verify, and manage issuers.'
+      >
+        <div className='space-y-4 overflow-x-auto'>
           <AdminIssuersTable
             rows={rows}
             sort={sort}
@@ -96,8 +96,8 @@ export default async function AdminIssuersPage({
             initialParams={initialParams}
             pageSize={pageSize}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </PageCard>
     </section>
   )
 }

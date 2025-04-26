@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
+import { KeyRound } from 'lucide-react'
 
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import PageCard from '@/components/ui/page-card'
 import { getUser } from '@/lib/db/queries/queries'
 
 import UpdateDidForm from './update-did-form'
@@ -15,22 +16,18 @@ export default async function PlatformDidPage() {
   const existingDid = process.env.PLATFORM_ISSUER_DID ?? null
 
   return (
-    <section className='max-w-2xl space-y-6'>
-      <h2 className='text-2xl font-semibold'>Platform Decentralized Identifier (DID)</h2>
-
-      <p className='text-muted-foreground text-sm'>
-        The platform uses this DID whenever Viskify itself issues verifiable credentials. Paste an
-        existing value or generate a fresh one below.
-      </p>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className='text-base font-medium'>Manage Platform DID</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <UpdateDidForm defaultDid={existingDid} />
-        </CardContent>
-      </Card>
+    <section className='mx-auto max-w-2xl py-10'>
+      <PageCard
+        icon={KeyRound}
+        title='Platform DID'
+        description='The platform uses this DID whenever Viskify itself issues verifiable credentials.'
+      >
+        <p className='mb-6 text-sm text-muted-foreground'>
+          Paste an existing DID or generate a fresh one below. The value is stored in the
+          environment file and used for credential issuance.
+        </p>
+        <UpdateDidForm defaultDid={existingDid} />
+      </PageCard>
     </section>
   )
 }
