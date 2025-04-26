@@ -11,7 +11,7 @@ import {
   ChevronUp,
   Download,
   Globe2,
-  ArrowUpRight,
+  ExternalLink,
 } from 'lucide-react'
 import { SiGithub, SiLinkedin } from 'react-icons/si'
 import { FaTwitter } from 'react-icons/fa'
@@ -352,7 +352,20 @@ export default function CandidateDetailedProfileView({
                         <div className='flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-4'>
                           {/* Left — details */}
                           <div className='flex-1 space-y-0.5'>
-                            <h5 className='text-base font-semibold'>{exp.title}</h5>
+                            <h5 className='text-base font-semibold flex items-center gap-1'>
+                              {exp.title}
+                              {exp.link && (
+                                <Link
+                                  href={exp.link}
+                                  target='_blank'
+                                  rel='noopener noreferrer'
+                                  className='text-muted-foreground hover:text-primary'
+                                >
+                                  <ExternalLink className='h-4 w-4' />
+                                  <span className='sr-only'>View file</span>
+                                </Link>
+                              )}
+                            </h5>
                             {exp.company && (
                               <p className='text-muted-foreground text-sm'>{exp.company}</p>
                             )}
@@ -360,16 +373,6 @@ export default function CandidateDetailedProfileView({
                               <p className='text-xs uppercase tracking-wide text-muted-foreground'>
                                 {exp.type}
                               </p>
-                            )}
-                            {exp.link && (
-                              <Link
-                                href={exp.link}
-                                target='_blank'
-                                className='mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline'
-                              >
-                                View File
-                                <ArrowUpRight className='h-3 w-3' />
-                              </Link>
                             )}
                           </div>
 
@@ -400,20 +403,21 @@ export default function CandidateDetailedProfileView({
                         <div className='flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-4'>
                           {/* Left — details */}
                           <div className='flex-1 space-y-0.5'>
-                            <h5 className='text-base font-semibold'>{proj.title}</h5>
-                            {proj.description && (
-                              <p className='text-sm'>{proj.description}</p>
-                            )}
-                            {proj.link && (
-                              <Link
-                                href={proj.link}
-                                target='_blank'
-                                className='mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline'
-                              >
-                                Visit Link
-                                <ArrowUpRight className='h-3 w-3' />
-                              </Link>
-                            )}
+                            <h5 className='text-base font-semibold flex items-center gap-1'>
+                              {proj.title}
+                              {proj.link && (
+                                <Link
+                                  href={proj.link}
+                                  target='_blank'
+                                  rel='noopener noreferrer'
+                                  className='text-muted-foreground hover:text-primary'
+                                >
+                                  <ExternalLink className='h-4 w-4' />
+                                  <span className='sr-only'>Visit link</span>
+                                </Link>
+                              )}
+                            </h5>
+                            {proj.description && <p className='text-sm'>{proj.description}</p>}
                           </div>
 
                           {/* Right — status */}
