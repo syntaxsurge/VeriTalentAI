@@ -15,8 +15,10 @@ export default function DeleteAccountForm() {
   async function handleDelete() {
     const fd = new FormData()
     fd.append('password', password)
-    const res = await deleteAccount({}, fd)
-    if (res?.success) router.push('/sign-in')
+    const res = (await deleteAccount({}, fd)) as { error?: string }
+    if (!res?.error) {
+      router.push('/sign-in')
+    }
     return res
   }
 
