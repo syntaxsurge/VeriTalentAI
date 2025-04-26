@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation'
 import { asc, eq } from 'drizzle-orm'
 
-import HighlightsBoard from '@/components/dashboard/candidate/highlights-board'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { UserAvatar } from '@/components/ui/user-avatar'
+import HighlightsBoard from '@/components/dashboard/candidate/highlights-board'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import {
@@ -12,23 +13,28 @@ import {
   candidateHighlights,
   candidates,
 } from '@/lib/db/schema/candidate'
+import { users } from '@/lib/db/schema/core'
 
 export const revalidate = 0
 
 export default async function CandidateHighlightsSettings() {
-  /* --------------------------- Auth guard --------------------------- */
+  /* ------------------------------------------------------------------ */
+  /*                               Auth                                 */
+  /* ------------------------------------------------------------------ */
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
-  const [cand] = await db
-    .select({ id: candidates.id })
+  const [candRow] = await db
+    .select({ id: candidates.id, bio: candidates.bio })
     .from(candidates)
     .where(eq(candidates.userId, user.id))
     .limit(1)
 
-  if (!cand) redirect('/candidate/profile')
+  if (!candRow) redirect('/candidate/profile')
 
-  /* ------------------------ Credentials fetch ----------------------- */
+  /* ------------------------------------------------------------------ */
+  /*                       Fetch credentials + highlights                */
+  /* ------------------------------------------------------------------ */
   const creds = await db
     .select({
       id: candidateCredentials.id,
@@ -36,16 +42,16 @@ export default async function CandidateHighlightsSettings() {
       category: candidateCredentials.category,
     })
     .from(candidateCredentials)
-    .where(eq(candidateCredentials.candidateId, cand.id))
+    .where(eq(candidateCredentials.candidateId, candRow.id))
     .orderBy(asc(candidateCredentials.createdAt))
 
-  /* ------------------------ Highlights fetch ------------------------ */
   const hlRows = await db
     .select()
     .from(candidateHighlights)
-    .where(eq(candidateHighlights.candidateId, cand.id))
+    .where(eq(candidateHighlights.candidateId, candRow.id))
     .orderBy(asc(candidateHighlights.sortOrder))
 
+  /* Group highlighted creds by category */
   const byCat = {
     EXPERIENCE: [] as typeof creds,
     PROJECT: [] as typeof creds,
@@ -64,40 +70,57 @@ export default async function CandidateHighlightsSettings() {
   const selectedIds = new Set(hlRows.map((h) => h.credentialId))
   const available = creds.filter((c) => !selectedIds.has(c.id))
 
-  /* --------------------------- Render --------------------------- */
+  /* ------------------------------------------------------------------ */
+  /*                               View                                 */
+  /* ------------------------------------------------------------------ */
   return (
-    <section className='flex-1 space-y-8 p-4 lg:p-8'>
-      {/* Hero */}
-      <header className='space-y-2 rounded-2xl bg-gradient-to-r from-primary/20 via-transparent to-transparent p-6 shadow-sm'>
-        <h1 className='text-2xl font-extrabold tracking-tight'>
-          Profile&nbsp;Highlights
-        </h1>
-        <p className='max-w-2xl text-sm text-muted-foreground'>
-          Choose up to&nbsp;
-          <Badge variant='secondary' className='mx-1'>
-            5
-          </Badge>
-          credentials each for{' '}
-          <Badge variant='secondary' className='mx-1'>
-            Experience
-          </Badge>
-          and{' '}
-          <Badge variant='secondary' className='mx-1'>
-            Projects
-          </Badge>
-          to showcase at the top of your profile — much like featured posts on
-          social platforms such as LinkedIn.
-        </p>
-      </header>
+    <section className='flex-1 space-y-10'>
+      {/* -------------------------------------------------------------- */}
+      {/*                          Hero Banner                           */}
+      {/* -------------------------------------------------------------- */}
+      <div className='relative isolate'>
+        {/* LinkedIn-like cover */}
+        <div className='h-44 w-full rounded-2xl bg-gradient-to-r from-primary/90 via-primary to-primary/80 shadow-md' />
 
-      {/* Highlights board */}
-      <Card>
-        <CardHeader>
-          <CardTitle className='text-base font-semibold'>
-            Manage Your Highlights
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+        {/* Avatar & name */}
+        <div className='absolute -bottom-12 left-6 flex items-end gap-4'>
+          <UserAvatar
+            src={(user as any)?.image ?? undefined}
+            name={user.name ?? null}
+            email={user.email ?? null}
+            className='size-24 ring-4 ring-background'
+          />
+          <div className='pb-2'>
+            <h1 className='text-2xl font-extrabold leading-tight'>{user.name}</h1>
+            <p className='text-muted-foreground text-sm'>{user.email}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* -------------------------------------------------------------- */}
+      {/*                     Highlights management                      */}
+      {/* -------------------------------------------------------------- */}
+      <Card className='shadow-md transition-shadow hover:shadow-lg'>
+        <CardContent className='space-y-6 pt-12'>
+          <header className='space-y-2 text-center md:text-left'>
+            <h2 className='text-xl font-semibold tracking-tight'>Profile&nbsp;Highlights</h2>
+            <p className='text-muted-foreground text-sm'>
+              Showcase up to&nbsp;
+              <Badge variant='secondary' className='mx-1'>
+                5
+              </Badge>
+              credentials each for&nbsp;
+              <Badge variant='secondary' className='mx-1'>
+                Experience
+              </Badge>
+              and&nbsp;
+              <Badge variant='secondary' className='mx-1'>
+                Projects
+              </Badge>
+              – just like the featured section on LinkedIn.
+            </p>
+          </header>
+
           <HighlightsBoard
             selectedExperience={byCat.EXPERIENCE}
             selectedProject={byCat.PROJECT}
