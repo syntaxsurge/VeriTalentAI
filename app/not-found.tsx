@@ -19,7 +19,7 @@ export default function NotFound() {
 
         {/* Headline */}
         <h1 className='text-4xl font-extrabold tracking-tight'>
-          404&nbsp;&mdash;&nbsp;Page&nbsp;Not&nbsp;Found
+          404 &mdash; Page Not Found
         </h1>
 
         {/* Description */}
@@ -29,7 +29,7 @@ export default function NotFound() {
 
         {/* Back home */}
         <Link href='/' passHref>
-          <Button size='sm'>Go&nbsp;Home</Button>
+          <Button size='sm'>Go Home</Button>
         </Link>
       </div>
     </main>

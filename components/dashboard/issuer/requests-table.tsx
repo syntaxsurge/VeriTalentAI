@@ -67,7 +67,7 @@ function RowActions({ row }: { row: RowType }) {
       className='text-primary hover:bg-muted hover:text-foreground inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium'
     >
       <FileSignature className='h-4 w-4' />
-      <span className='hidden sm:inline'>Review&nbsp;&amp;&nbsp;Sign</span>
+      <span className='hidden sm:inline'>Review &amp; Sign</span>
     </Link>
   )
 }

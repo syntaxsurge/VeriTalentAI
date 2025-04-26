@@ -67,7 +67,7 @@ export function CreateDidButton() {
         ) : (
           <>
             <KeyRound className='mr-2 h-5 w-5 flex-shrink-0' />
-            Create DID&nbsp;for&nbsp;My&nbsp;Company
+            Create DID for My Company
           </>
         )}
       </Button>

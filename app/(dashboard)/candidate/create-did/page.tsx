@@ -148,8 +148,8 @@ export default async function CreateDIDPage() {
 
           <p className='text-sm leading-relaxed'>
             A Decentralised Identifier (DID) acts like a verified username for your company. Once
-            created, your team can issue&nbsp;
-            <span className='font-semibold'>signed</span>&nbsp;credentials that employers, clients,
+            created, your team can issue 
+            <span className='font-semibold'>signed</span> credentials that employers, clients,
             and platforms can trust instantly.
           </p>
 

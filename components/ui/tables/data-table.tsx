@@ -276,7 +276,7 @@ export function DataTable<T extends Record<string, any>>({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant='outline' className='sm:ml-2'>
-                  Bulk&nbsp;Selection {selectedCount > 0 && `(${selectedCount})`}{' '}
+                  Bulk Selection {selectedCount > 0 && `(${selectedCount})`}{' '}
                   <ChevronDown className='ml-1 h-4 w-4' />
                 </Button>
               </DropdownMenuTrigger>

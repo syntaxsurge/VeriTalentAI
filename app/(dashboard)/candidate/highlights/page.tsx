@@ -85,22 +85,22 @@ export default async function CandidateHighlightsSettings() {
       <Card className='shadow-md transition-shadow hover:shadow-lg'>
         <CardHeader className='p-6 space-y-2'>
           <CardTitle className='text-2xl font-extrabold tracking-tight'>
-            Profile&nbsp;Highlights
+            Profile Highlights
           </CardTitle>
           <p className='text-muted-foreground text-sm'>
-            Showcase up to&nbsp;
+            Showcase up to 
             <Badge variant='secondary' className='mx-1'>
               5
             </Badge>
-            credentials each for&nbsp;
+            credentials each for 
             <Badge variant='secondary' className='mx-1'>
               Experience
             </Badge>
-            and&nbsp;
+            and 
             <Badge variant='secondary' className='mx-1'>
               Projects
             </Badge>
-            &nbsp;– just like the featured section on LinkedIn.
+             – just like the featured section on LinkedIn.
           </p>
         </CardHeader>
 

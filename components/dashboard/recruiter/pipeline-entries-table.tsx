@@ -94,7 +94,7 @@ function RowActions({ row }: { row: RowType }) {
         <DropdownMenuItem asChild>
           <Link href={`/recruiter/pipelines/${row.pipelineId}`} className='cursor-pointer'>
             <FolderKanban className='mr-2 h-4 w-4' />
-            View&nbsp;Pipeline
+            View Pipeline
           </Link>
         </DropdownMenuItem>
 

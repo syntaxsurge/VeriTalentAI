@@ -63,7 +63,7 @@ export default function TalentFilters({
       {/* Skill‑score range */}
       <div className='flex flex-col'>
         <label htmlFor='skillRange' className='mb-2 text-sm font-medium'>
-          Skill&nbsp;Score&nbsp;({range[0]}–{range[1]})
+          Skill Score ({range[0]}–{range[1]})
         </label>
         <Slider
           id='skillRange'
@@ -91,7 +91,7 @@ export default function TalentFilters({
           onChange={(e) => setVerifiedOnly(e.target.checked)}
         />
         <label htmlFor='verifiedOnly' className='cursor-pointer text-sm'>
-          Verified&nbsp;only
+          Verified only
         </label>
       </div>
     </div>

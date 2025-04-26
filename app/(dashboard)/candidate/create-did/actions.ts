@@ -60,7 +60,7 @@ export async function createDidAction(): Promise<{ success?: string; error?: str
   }
 
   /* ------------------------------------------------------------ */
-  /*              C R E A T E   &nbsp;N E W   D I D                */
+  /*              C R E A T E    N E W   D I D                */
   /* ------------------------------------------------------------ */
   try {
     const { did } = await createCheqdDID()

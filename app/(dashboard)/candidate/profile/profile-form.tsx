@@ -79,14 +79,14 @@ export default function ProfileForm({
       <div className='grid gap-6 md:grid-cols-2'>
         <div className='space-y-2'>
           <Label htmlFor='name' className='font-medium'>
-            Full&nbsp;Name
+            Full Name
           </Label>
           <Input id='name' name='name' defaultValue={defaultName} required />
         </div>
 
         <div className='space-y-2'>
           <Label htmlFor='websiteUrl' className='font-medium'>
-            Personal&nbsp;Website
+            Personal Website
           </Label>
           <Input
             id='websiteUrl'
@@ -103,7 +103,7 @@ export default function ProfileForm({
       {/* --------------------------- About -------------------------- */}
       <div className='space-y-2'>
         <Label htmlFor='bio' className='font-medium'>
-          About&nbsp;You
+          About You
         </Label>
         <textarea
           id='bio'
@@ -122,7 +122,7 @@ export default function ProfileForm({
 
       {/* ------------------------ Social Links ---------------------- */}
       <fieldset className='space-y-4'>
-        <legend className='text-base font-medium'>Social&nbsp;Links</legend>
+        <legend className='text-base font-medium'>Social Links</legend>
 
         <div className='grid gap-6 md:grid-cols-2'>
           <div className='space-y-2'>

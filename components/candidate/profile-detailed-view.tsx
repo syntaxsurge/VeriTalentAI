@@ -193,11 +193,11 @@ function CollapsibleList<T>({
         >
           {expanded ? (
             <>
-              Show&nbsp;Less <ChevronUp className='h-4 w-4' />
+              Show Less <ChevronUp className='h-4 w-4' />
             </>
           ) : (
             <>
-              Show&nbsp;More&nbsp;({items.length - 4}) <ChevronDown className='h-4 w-4' />
+              Show More ({items.length - 4}) <ChevronDown className='h-4 w-4' />
             </>
           )}
         </Button>
@@ -270,7 +270,7 @@ export default function CandidateDetailedProfileView({
             <CardHeader>
               <CardTitle className='flex items-center gap-2 text-base'>
                 <Download className='h-5 w-5' />
-                Résumé&nbsp;PDF
+                Résumé PDF
               </CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
@@ -281,7 +281,7 @@ export default function CandidateDetailedProfileView({
               <Button variant='secondary' className='w-full gap-2' asChild>
                 <a href={`/api/candidates/${candidateId}/resume`} download>
                   <Download className='h-4 w-4' />
-                  Download&nbsp;PDF
+                  Download PDF
                 </a>
               </Button>
             </CardContent>
@@ -302,7 +302,7 @@ export default function CandidateDetailedProfileView({
                   <dd className='text-lg font-bold'>{snapshot.uniqueIssuers}</dd>
                 </div>
                 <div>
-                  <dt className='text-muted-foreground'>Avg&nbsp;Score</dt>
+                  <dt className='text-muted-foreground'>Avg Score</dt>
                   <dd className='text-lg font-bold'>
                     {snapshot.avgScore !== null ? `${snapshot.avgScore}%` : '—'}
                   </dd>
@@ -396,7 +396,7 @@ export default function CandidateDetailedProfileView({
                             className='-ml-2 text-primary'
                           >
                             <Link href={proj.link} target='_blank'>
-                              Visit&nbsp;Link
+                              Visit Link
                             </Link>
                           </Button>
                         )}
@@ -486,7 +486,7 @@ export default function CandidateDetailedProfileView({
                       className='flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2'
                     >
                       <span className='font-medium'>
-                        Quiz&nbsp;#{p.quizId} • Score&nbsp;{p.score ?? '—'}
+                        Quiz #{p.quizId} • Score {p.score ?? '—'}
                       </span>
                       <span className='text-muted-foreground text-xs'>
                         {usePrettyDate(p.createdAt)}

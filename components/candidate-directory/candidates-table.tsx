@@ -121,7 +121,7 @@ export default function CandidatesTable({
       sortable: false,
       render: (_v, row) => (
         <Button asChild variant='link' size='sm' className='text-primary'>
-          <Link href={`/candidates/${row.id}`}>View&nbsp;Profile</Link>
+          <Link href={`/candidates/${row.id}`}>View Profile</Link>
         </Button>
       ),
     },

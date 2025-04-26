@@ -99,7 +99,7 @@ export default function ProfileHeader({
               <DropdownMenuContent align='end' className='rounded-lg p-1 shadow-lg'>
                 <DropdownMenuItem onClick={copyLink} className='cursor-pointer'>
                   <Clipboard className='mr-2 h-4 w-4' />
-                  Copy&nbsp;URL
+                  Copy URL
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

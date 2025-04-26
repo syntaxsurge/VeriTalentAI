@@ -82,7 +82,7 @@ export default async function PipelineBoardPage({ params }: { params: Promise<{ 
         <h2 className='flex items-center gap-2 text-2xl font-semibold'>
           {pipeline.name}
           <span className='bg-muted rounded-full px-2 py-0.5 text-xs'>
-            {totalCandidates}&nbsp;{totalCandidates === 1 ? 'Candidate' : 'Candidates'}
+            {totalCandidates} {totalCandidates === 1 ? 'Candidate' : 'Candidates'}
           </span>
         </h2>
 
@@ -93,7 +93,7 @@ export default async function PipelineBoardPage({ params }: { params: Promise<{ 
         )}
 
         <p className='text-muted-foreground text-xs'>
-          Created&nbsp;{format(pipeline.createdAt, 'PPP')} • Updated&nbsp;
+          Created {format(pipeline.createdAt, 'PPP')} • Updated 
           {format(pipeline.updatedAt, 'PPP')}
         </p>
       </header>

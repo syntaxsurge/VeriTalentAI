@@ -16,7 +16,7 @@ export default async function PlatformDidPage() {
 
   return (
     <section className='max-w-2xl space-y-6'>
-      <h2 className='text-2xl font-semibold'>Platform Decentralized Identifier&nbsp;(DID)</h2>
+      <h2 className='text-2xl font-semibold'>Platform Decentralized Identifier (DID)</h2>
 
       <p className='text-muted-foreground text-sm'>
         The platform uses this DID whenever Viskify itself issues verifiable credentials. Paste an
