@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { asc, eq } from 'drizzle-orm'
 
+import { Star } from 'lucide-react'
+
 import ProfileHeader from '@/components/candidate/profile-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -103,25 +105,28 @@ export default async function CandidateHighlightsSettings() {
 
       {/* Highlights management */}
       <Card className='shadow-md transition-shadow hover:shadow-lg'>
-        <CardHeader className='space-y-2'>
-          <CardTitle className='text-2xl font-extrabold tracking-tight'>
-            Profile Highlights
-          </CardTitle>
-          <p className='text-sm text-muted-foreground'>
-            Showcase up to{' '}
-            <Badge variant='secondary' className='mx-1'>
-              5
-            </Badge>{' '}
-            credentials each for{' '}
-            <Badge variant='secondary' className='mx-1'>
-              Experience
-            </Badge>{' '}
-            and{' '}
-            <Badge variant='secondary' className='mx-1'>
-              Projects
-            </Badge>{' '}
-            - just like the featured section on LinkedIn.
-          </p>
+        <CardHeader className='flex items-center gap-3 space-y-0'>
+          <Star className='text-primary h-10 w-10 flex-shrink-0' />
+          <div>
+            <CardTitle className='text-2xl font-extrabold tracking-tight'>
+              Profile Highlights
+            </CardTitle>
+            <p className='text-sm text-muted-foreground'>
+              Showcase up to{' '}
+              <Badge variant='secondary' className='mx-1'>
+                5
+              </Badge>{' '}
+              credentials each for{' '}
+              <Badge variant='secondary' className='mx-1'>
+                Experience
+              </Badge>{' '}
+              and{' '}
+              <Badge variant='secondary' className='mx-1'>
+                Projects
+              </Badge>{' '}
+              – just like the featured section on LinkedIn.
+            </p>
+          </div>
         </CardHeader>
 
         <CardContent className='pt-0'>

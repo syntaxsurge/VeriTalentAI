@@ -214,7 +214,7 @@ export default function HighlightsBoard({
         </div>
       </DragDropContext>
 
-      <div className='flex justify-end'>
+      <div className='flex justify-start'>
         <Button
           onClick={handleSave}
           disabled={isPending}
