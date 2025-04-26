@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
 import { asc, eq } from 'drizzle-orm'
 
+import ProfileHeader from '@/components/candidate/profile-header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { UserAvatar } from '@/components/ui/user-avatar'
 import HighlightsBoard from '@/components/dashboard/candidate/highlights-board'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
@@ -13,7 +13,6 @@ import {
   candidateHighlights,
   candidates,
 } from '@/lib/db/schema/candidate'
-import { users } from '@/lib/db/schema/core'
 
 export const revalidate = 0
 
@@ -75,31 +74,14 @@ export default async function CandidateHighlightsSettings() {
   /* ------------------------------------------------------------------ */
   return (
     <section className='flex-1 space-y-10'>
-      {/* -------------------------------------------------------------- */}
-      {/*                          Hero Banner                           */}
-      {/* -------------------------------------------------------------- */}
-      <div className='relative isolate'>
-        {/* LinkedIn-like cover */}
-        <div className='h-44 w-full rounded-2xl bg-gradient-to-r from-primary/90 via-primary to-primary/80 shadow-md' />
+      {/* Header */}
+      <ProfileHeader
+        name={user.name ?? null}
+        email={user.email ?? ''}
+        avatarSrc={(user as any)?.image ?? undefined}
+      />
 
-        {/* Avatar & name */}
-        <div className='absolute -bottom-12 left-6 flex items-end gap-4'>
-          <UserAvatar
-            src={(user as any)?.image ?? undefined}
-            name={user.name ?? null}
-            email={user.email ?? null}
-            className='size-24 ring-4 ring-background'
-          />
-          <div className='pb-2'>
-            <h1 className='text-2xl font-extrabold leading-tight'>{user.name}</h1>
-            <p className='text-muted-foreground text-sm'>{user.email}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* -------------------------------------------------------------- */}
-      {/*                     Highlights management                      */}
-      {/* -------------------------------------------------------------- */}
+      {/* Highlights management */}
       <Card className='shadow-md transition-shadow hover:shadow-lg'>
         <CardContent className='space-y-6 pt-12'>
           <header className='space-y-2 text-center md:text-left'>
