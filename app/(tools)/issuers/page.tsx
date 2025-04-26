@@ -12,6 +12,13 @@ import {
   IssuerIndustry,
 } from '@/lib/db/schema/issuer'
 
+/* -------------------------------------------------------------------------- */
+/*                               TYPE HELPERS                                 */
+/* -------------------------------------------------------------------------- */
+
+type IssuerCategoryType = (typeof IssuerCategory)[keyof typeof IssuerCategory]
+type IssuerIndustryType = (typeof IssuerIndustry)[keyof typeof IssuerIndustry]
+
 export const revalidate = 0
 
 type Query = Record<string, string | string[] | undefined>
@@ -37,14 +44,14 @@ export default async function IssuerDirectoryPage({
   /* ---------------------------------------------------------------------- */
   /*                         Validate enum filters                          */
   /* ---------------------------------------------------------------------- */
-  const validCategory: IssuerCategory | undefined =
+  const validCategory: IssuerCategoryType | undefined =
     categoryFilter && (Object.values(IssuerCategory) as string[]).includes(categoryFilter)
-      ? (categoryFilter as IssuerCategory)
+      ? (categoryFilter as IssuerCategoryType)
       : undefined
 
-  const validIndustry: IssuerIndustry | undefined =
+  const validIndustry: IssuerIndustryType | undefined =
     industryFilter && (Object.values(IssuerIndustry) as string[]).includes(industryFilter)
-      ? (industryFilter as IssuerIndustry)
+      ? (industryFilter as IssuerIndustryType)
       : undefined
 
   /* ---------------------------------------------------------------------- */
@@ -69,11 +76,11 @@ export default async function IssuerDirectoryPage({
   let whereExpr: any = eq(issuersTable.status, IssuerStatus.ACTIVE)
 
   if (validCategory) {
-    whereExpr = and(whereExpr, eq(issuersTable.category, validCategory))
+    whereExpr = and(whereExpr, eq(issuersTable.category, validCategory as any))
   }
 
   if (validIndustry) {
-    whereExpr = and(whereExpr, eq(issuersTable.industry, validIndustry))
+    whereExpr = and(whereExpr, eq(issuersTable.industry, validIndustry as any))
   }
 
   if (searchTerm.length > 0) {
