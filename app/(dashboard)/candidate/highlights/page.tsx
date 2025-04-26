@@ -103,7 +103,7 @@ export default async function CandidateHighlightsSettings() {
 
       {/* Highlights management */}
       <Card className='shadow-md transition-shadow hover:shadow-lg'>
-        <CardHeader className='p-6 space-y-2'>
+        <CardHeader className='space-y-2'>
           <CardTitle className='text-2xl font-extrabold tracking-tight'>
             Profile Highlights
           </CardTitle>
