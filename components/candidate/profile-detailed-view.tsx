@@ -264,7 +264,7 @@ export default function CandidateDetailedProfileView({
               </CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
-              <p className='text-sm text-muted-foreground'>
+              <p className='text-muted-foreground text-sm'>
                 Generate a professionally formatted résumé summarizing your profile, credentials,
                 experiences, and projects.
               </p>
@@ -352,7 +352,7 @@ export default function CandidateDetailedProfileView({
                         <div className='flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-4'>
                           {/* Left — details */}
                           <div className='flex-1 space-y-0.5'>
-                            <h5 className='text-base font-semibold flex items-center gap-1'>
+                            <h5 className='flex items-center gap-2 text-base font-semibold'>
                               {exp.title}
                               {exp.link && (
                                 <Link
@@ -370,7 +370,7 @@ export default function CandidateDetailedProfileView({
                               <p className='text-muted-foreground text-sm'>{exp.company}</p>
                             )}
                             {exp.type && (
-                              <p className='text-xs uppercase tracking-wide text-muted-foreground'>
+                              <p className='text-muted-foreground text-xs uppercase tracking-wide'>
                                 {exp.type}
                               </p>
                             )}
@@ -403,7 +403,7 @@ export default function CandidateDetailedProfileView({
                         <div className='flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-4'>
                           {/* Left — details */}
                           <div className='flex-1 space-y-0.5'>
-                            <h5 className='text-base font-semibold flex items-center gap-1'>
+                            <h5 className='flex items-center gap-2 text-base font-semibold'>
                               {proj.title}
                               {proj.link && (
                                 <Link
