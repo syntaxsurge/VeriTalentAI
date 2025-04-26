@@ -53,7 +53,7 @@ export function CreateDidButton() {
           Creating DID…
         </>
       ) : (
-        'Create DID for My Company'
+        'Create DID for My Team'
       )}
     </Button>
   )
