@@ -51,7 +51,8 @@ type HighlightRow = {
   description: string | null
   status: string | null
   sortOrder: number | null
-  category: CredentialCategory
+  /** String literals returned by DB enum; matches keys of CredentialCategory */
+  category: keyof typeof CredentialCategory
 }
 
 /* Helpers */
@@ -103,7 +104,7 @@ export default async function PublicCandidateProfile({
       )
       .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
 
-  const experienceRows: HighlightRow[] = await highlightBase()
+  const experienceRowsRaw = await highlightBase()
     .where(
       and(
         eq(candidateHighlights.candidateId, candidateId),
@@ -112,7 +113,7 @@ export default async function PublicCandidateProfile({
     )
     .orderBy(asc(candidateHighlights.sortOrder))
 
-  const projectRows: HighlightRow[] = await highlightBase()
+  const projectRowsRaw = await highlightBase()
     .where(
       and(
         eq(candidateHighlights.candidateId, candidateId),
@@ -121,7 +122,10 @@ export default async function PublicCandidateProfile({
     )
     .orderBy(asc(candidateHighlights.sortOrder))
 
-  const experiences: Experience[] = experienceRows.map((e: HighlightRow): Experience => ({
+  const experienceRows: HighlightRow[] = experienceRowsRaw as HighlightRow[]
+  const projectRows: HighlightRow[] = projectRowsRaw as HighlightRow[]
+
+  const experiences: Experience[] = experienceRows.map((e): Experience => ({
     id: e.id,
     title: e.title,
     company: e.issuerName,
@@ -129,7 +133,7 @@ export default async function PublicCandidateProfile({
     status: e.status,
   }))
 
-  const projects: Project[] = projectRows.map((p: HighlightRow): Project => ({
+  const projects: Project[] = projectRows.map((p): Project => ({
     id: p.id,
     title: p.title,
     link: p.link,
