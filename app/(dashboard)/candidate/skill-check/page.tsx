@@ -1,23 +1,23 @@
 import { eq } from 'drizzle-orm'
+import { Bot } from 'lucide-react'
 
 import { DidRequiredModal } from '@/components/dashboard/candidate/did-required-modal'
+import PageCard from '@/components/ui/page-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import { skillQuizzes } from '@/lib/db/schema/candidate'
-import { Bot } from 'lucide-react'
 
 import StartQuizForm from './start-quiz-form'
 
 export const revalidate = 0
 
 export default async function SkillCheckPage() {
-  /* ------------------------------ Auth ---------------------------------- */
+  /* ---------------- Authentication ---------------- */
   const user = await getUser()
   if (!user) return <div>Please sign in</div>
 
-  /* ------------------------- Require team DID --------------------------- */
   const [{ did } = {}] = await db
     .select({ did: teams.did })
     .from(teamMembers)
@@ -25,54 +25,42 @@ export default async function SkillCheckPage() {
     .where(eq(teamMembers.userId, user.id))
     .limit(1)
 
-  if (!did) {
-    return <DidRequiredModal />
-  }
+  if (!did) return <DidRequiredModal />
 
-  /* ------------------------------- Data --------------------------------- */
+  /* -------------------- Data --------------------- */
   const quizzes = await db.select().from(skillQuizzes)
 
-  /* ------------------------------- View --------------------------------- */
+  /* -------------------- UI ----------------------- */
   return (
-    <section className="mx-auto max-w-5xl py-10">
-      <Card className="shadow-md transition-shadow hover:shadow-lg">
-        <CardHeader className="flex items-center gap-3 space-y-0">
-          <Bot className="text-primary h-10 w-10 flex-shrink-0" />
-          <div>
-            <CardTitle className="text-2xl font-extrabold tracking-tight">
-              AI Skill Check
-            </CardTitle>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Pass a quiz to instantly earn a verifiable <strong>Skill Pass</strong> credential.
-            </p>
+    <section className='mx-auto max-w-5xl py-10'>
+      <PageCard
+        icon={Bot}
+        title='AI Skill Check'
+        description='Pass a quiz to instantly earn a verifiable Skill Pass credential.'
+      >
+        {quizzes.length === 0 ? (
+          <p className='text-muted-foreground'>No quizzes found. Seed the database first.</p>
+        ) : (
+          <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+            {quizzes.map((quiz) => (
+              <Card
+                key={quiz.id}
+                className='group relative overflow-hidden transition-shadow hover:shadow-xl'
+              >
+                <CardHeader>
+                  <CardTitle className='line-clamp-2 min-h-[3rem]'>{quiz.title}</CardTitle>
+                </CardHeader>
+                <CardContent className='flex flex-col gap-4'>
+                  <p className='line-clamp-3 flex-1 text-sm text-muted-foreground'>
+                    {quiz.description}
+                  </p>
+                  <StartQuizForm quiz={quiz} />
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </CardHeader>
-
-        <CardContent className="space-y-6 pt-0">
-          {quizzes.length === 0 ? (
-            <p className="text-muted-foreground">No quizzes found. Seed the database first.</p>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {quizzes.map((quiz) => (
-                <Card
-                  key={quiz.id}
-                  className="group relative overflow-hidden transition-shadow hover:shadow-xl"
-                >
-                  <CardHeader>
-                    <CardTitle className="line-clamp-2 min-h-[3rem]">{quiz.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-col gap-4">
-                    <p className="text-muted-foreground line-clamp-3 flex-1 text-sm">
-                      {quiz.description}
-                    </p>
-                    <StartQuizForm quiz={quiz} />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        )}
+      </PageCard>
     </section>
   )
 }

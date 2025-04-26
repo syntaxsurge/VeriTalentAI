@@ -1,10 +1,9 @@
 import { redirect } from 'next/navigation'
 import { asc, eq } from 'drizzle-orm'
-
 import { Star } from 'lucide-react'
 
 import ProfileHeader from '@/components/candidate/profile-header'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import PageCard from '@/components/ui/page-card'
 import HighlightsBoard, {
   type Credential as HighlightCredential,
 } from '@/components/dashboard/candidate/highlights-board'
@@ -20,9 +19,7 @@ import {
 export const revalidate = 0
 
 export default async function CandidateHighlightsSettings() {
-  /* ------------------------------------------------------------------ */
-  /*                               Auth                                 */
-  /* ------------------------------------------------------------------ */
+  /* ------------------------- Auth ------------------------- */
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
@@ -34,9 +31,7 @@ export default async function CandidateHighlightsSettings() {
 
   if (!candRow) redirect('/candidate/profile')
 
-  /* ------------------------------------------------------------------ */
-  /*                       Fetch credentials + highlights                */
-  /* ------------------------------------------------------------------ */
+  /* --------------- Credentials + highlights -------------- */
   const creds = await db
     .select({
       id: candidateCredentials.id,
@@ -53,9 +48,7 @@ export default async function CandidateHighlightsSettings() {
     .where(eq(candidateHighlights.candidateId, candRow.id))
     .orderBy(asc(candidateHighlights.sortOrder))
 
-  /* ------------------ Prepare selected + available lists ------------- */
   const selectedIds = new Set(hlRows.map((h) => h.credentialId))
-
   const selectedExperience: HighlightCredential[] = []
   const selectedProject: HighlightCredential[] = []
 
@@ -63,17 +56,9 @@ export default async function CandidateHighlightsSettings() {
     const cred = creds.find((c) => c.id === h.credentialId)
     if (!cred) return
     if (cred.category === CredentialCategory.EXPERIENCE) {
-      selectedExperience.push({
-        id: cred.id,
-        title: cred.title,
-        category: 'EXPERIENCE',
-      })
+      selectedExperience.push({ id: cred.id, title: cred.title, category: 'EXPERIENCE' })
     } else if (cred.category === CredentialCategory.PROJECT) {
-      selectedProject.push({
-        id: cred.id,
-        title: cred.title,
-        category: 'PROJECT',
-      })
+      selectedProject.push({ id: cred.id, title: cred.title, category: 'PROJECT' })
     }
   })
 
@@ -90,42 +75,26 @@ export default async function CandidateHighlightsSettings() {
       category: c.category as 'EXPERIENCE' | 'PROJECT',
     }))
 
-  /* ------------------------------------------------------------------ */
-  /*                               View                                 */
-  /* ------------------------------------------------------------------ */
+  /* -------------------------- UI ------------------------- */
   return (
     <section className='flex-1 space-y-10'>
-      {/* Header */}
       <ProfileHeader
         name={user.name ?? null}
         email={user.email ?? ''}
         avatarSrc={(user as any)?.image ?? undefined}
       />
 
-      {/* Highlights management */}
-      <Card className='shadow-md transition-shadow hover:shadow-lg'>
-        <CardHeader className='flex items-center gap-3 space-y-0'>
-          <Star className='text-primary h-10 w-10 flex-shrink-0' />
-          <div>
-            <CardTitle className='text-2xl font-extrabold tracking-tight'>
-              Profile Highlights
-            </CardTitle>
-            <p className='text-sm text-muted-foreground'>
-              Showcase up to <span className='font-semibold'>5</span> credentials each for{' '}
-              <span className='font-semibold'>Experience</span> and{' '}
-              <span className='font-semibold'>Projects</span>.
-            </p>
-          </div>
-        </CardHeader>
-
-        <CardContent className='pt-0'>
-          <HighlightsBoard
-            selectedExperience={selectedExperience}
-            selectedProject={selectedProject}
-            available={available}
-          />
-        </CardContent>
-      </Card>
+      <PageCard
+        icon={Star}
+        title='Profile Highlights'
+        description='Showcase up to 5 credentials each for Experience and Projects.'
+      >
+        <HighlightsBoard
+          selectedExperience={selectedExperience}
+          selectedProject={selectedProject}
+          available={available}
+        />
+      </PageCard>
     </section>
   )
 }

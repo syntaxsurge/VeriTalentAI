@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { eq, sql } from 'drizzle-orm'
 import { KeyRound } from 'lucide-react'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import PageCard from '@/components/ui/page-card'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { db } from '@/lib/db/drizzle'
@@ -13,31 +13,19 @@ import { CreateDidButton } from './create-did-button'
 
 export const revalidate = 0
 
-/* -------------------------------------------------------------------------- */
-/*                                    TYPES                                   */
-/* -------------------------------------------------------------------------- */
-
 type Member = {
   id: number
   name: string | null
   email: string
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   CONSTS                                   */
-/* -------------------------------------------------------------------------- */
-
 const MAX_DISPLAY = 5
-
-/* -------------------------------------------------------------------------- */
-/*                                    PAGE                                    */
-/* -------------------------------------------------------------------------- */
 
 export default async function CreateDIDPage() {
   const user = await getUser()
   if (!user) redirect('/sign-in')
 
-  /* -------------------------- Resolve membership -------------------------- */
+  /* ---------------- Membership & team ---------------- */
   const [membership] = await db
     .select({ teamId: teamMembers.teamId })
     .from(teamMembers)
@@ -45,17 +33,15 @@ export default async function CreateDIDPage() {
     .limit(1)
 
   let displayMembers: Member[] = []
-  let teamSize = 1 // at least the current user
+  let teamSize = 1
 
   if (membership?.teamId) {
-    /* Total team size */
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(teamMembers)
       .where(eq(teamMembers.teamId, membership.teamId))
     teamSize = count
 
-    /* Sample members for avatar row */
     const rows = await db
       .select({
         id: usersT.id,
@@ -67,14 +53,9 @@ export default async function CreateDIDPage() {
       .where(eq(teamMembers.teamId, membership.teamId))
       .limit(MAX_DISPLAY)
 
-    displayMembers = rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      email: r.email,
-    }))
+    displayMembers = rows.map((r) => ({ id: r.id, name: r.name, email: r.email }))
   }
 
-  /* Ensure current user appears */
   if (!displayMembers.some((m) => m.id === user.id)) {
     displayMembers.unshift({ id: user.id, name: user.name, email: user.email })
     displayMembers = displayMembers.slice(0, MAX_DISPLAY)
@@ -82,38 +63,30 @@ export default async function CreateDIDPage() {
 
   const overflow = Math.max(teamSize - displayMembers.length, 0)
 
-  /* ------------------------------- VIEW ----------------------------------- */
+  /* --------------------------- UI --------------------------- */
   return (
-    <section className="mx-auto max-w-5xl py-10">
-      <Card className="shadow-md transition-shadow hover:shadow-lg">
-        <CardHeader className="flex items-center gap-3 space-y-0">
-          <KeyRound className="text-primary h-10 w-10 flex-shrink-0" />
-          <div>
-            <CardTitle className="text-2xl font-extrabold tracking-tight">
-              Create your Team&nbsp;DID
-            </CardTitle>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Unlock verifiable credentials and sign them as a team.
-            </p>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          {/* Team avatars */}
-          <div className="flex -space-x-3">
+    <section className='mx-auto max-w-5xl py-10'>
+      <PageCard
+        icon={KeyRound}
+        title='Create your Team DID'
+        description='Unlock verifiable credentials and sign them as a team.'
+      >
+        <div className='space-y-6'>
+          {/* Avatars */}
+          <div className='-space-x-3 flex'>
             {displayMembers.map((member) => (
               <HoverCard key={member.id}>
                 <HoverCardTrigger asChild>
                   <UserAvatar
                     name={member.name}
                     email={member.email}
-                    className="ring-background border-background size-10 cursor-pointer rounded-full border-2 shadow"
+                    className='size-10 cursor-pointer rounded-full border-2 border-background ring-background shadow'
                   />
                 </HoverCardTrigger>
-                <HoverCardContent className="w-48 text-sm">
+                <HoverCardContent className='w-48 text-sm'>
                   {member.name ?? 'Unnamed'}
                   <br />
-                  <span className="text-muted-foreground break-all text-xs">{member.email}</span>
+                  <span className='break-all text-xs text-muted-foreground'>{member.email}</span>
                 </HoverCardContent>
               </HoverCard>
             ))}
@@ -121,26 +94,26 @@ export default async function CreateDIDPage() {
             {overflow > 0 && (
               <HoverCard>
                 <HoverCardTrigger asChild>
-                  <div className="border-background bg-muted flex size-10 cursor-pointer items-center justify-center rounded-full border-2 text-xs font-medium text-muted-foreground">
+                  <div className='flex size-10 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-muted text-xs font-medium text-muted-foreground'>
                     +{overflow}
                   </div>
                 </HoverCardTrigger>
-                <HoverCardContent className="w-48 text-sm">
+                <HoverCardContent className='w-48 text-sm'>
                   {overflow} more member{overflow > 1 ? 's' : ''}
                 </HoverCardContent>
               </HoverCard>
             )}
           </div>
 
-          <p className="text-sm leading-relaxed">
+          <p className='leading-relaxed text-sm'>
             A Decentralised Identifier (DID) acts like a verified username for your company. Once
-            created, your team can issue <span className="font-semibold">signed</span> credentials
+            created, your team can issue <span className='font-semibold'>signed</span> credentials
             that employers, clients, and platforms can trust instantly.
           </p>
 
           <CreateDidButton />
-        </CardContent>
-      </Card>
+        </div>
+      </PageCard>
     </section>
   )
 }
