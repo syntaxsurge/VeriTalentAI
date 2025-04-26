@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
 import { eq, sql } from 'drizzle-orm'
 import { KeyRound } from 'lucide-react'
 
-import ProfileHeader from '@/components/candidate/profile-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { UserAvatar } from '@/components/ui/user-avatar'
@@ -85,44 +84,36 @@ export default async function CreateDIDPage() {
 
   /* ------------------------------- VIEW ----------------------------------- */
   return (
-    <section className='mx-auto max-w-5xl space-y-10'>
-      {/* Profile-style header for visual consistency */}
-      <ProfileHeader
-        name={user.name ?? null}
-        email={user.email ?? ''}
-        avatarSrc={(user as any)?.image ?? undefined}
-      />
-
-      {/* Main card */}
-      <Card className='shadow-md transition-shadow hover:shadow-lg'>
-        <CardHeader className='flex items-center gap-3 space-y-0'>
-          <KeyRound className='text-primary h-10 w-10 flex-shrink-0' />
+    <section className="mx-auto max-w-5xl py-10">
+      <Card className="shadow-md transition-shadow hover:shadow-lg">
+        <CardHeader className="flex items-center gap-3 space-y-0">
+          <KeyRound className="text-primary h-10 w-10 flex-shrink-0" />
           <div>
-            <CardTitle className='text-2xl font-extrabold tracking-tight'>
+            <CardTitle className="text-2xl font-extrabold tracking-tight">
               Create your Team&nbsp;DID
             </CardTitle>
-            <p className='text-muted-foreground mt-1 text-sm'>
+            <p className="text-muted-foreground mt-1 text-sm">
               Unlock verifiable credentials and sign them as a team.
             </p>
           </div>
         </CardHeader>
 
-        <CardContent className='space-y-6'>
+        <CardContent className="space-y-6">
           {/* Team avatars */}
-          <div className='flex -space-x-3'>
+          <div className="flex -space-x-3">
             {displayMembers.map((member) => (
               <HoverCard key={member.id}>
                 <HoverCardTrigger asChild>
                   <UserAvatar
                     name={member.name}
                     email={member.email}
-                    className='ring-background border-background size-10 cursor-pointer rounded-full border-2 shadow'
+                    className="ring-background border-background size-10 cursor-pointer rounded-full border-2 shadow"
                   />
                 </HoverCardTrigger>
-                <HoverCardContent className='w-48 text-sm'>
+                <HoverCardContent className="w-48 text-sm">
                   {member.name ?? 'Unnamed'}
                   <br />
-                  <span className='text-muted-foreground break-all text-xs'>{member.email}</span>
+                  <span className="text-muted-foreground break-all text-xs">{member.email}</span>
                 </HoverCardContent>
               </HoverCard>
             ))}
@@ -130,20 +121,20 @@ export default async function CreateDIDPage() {
             {overflow > 0 && (
               <HoverCard>
                 <HoverCardTrigger asChild>
-                  <div className='border-background bg-muted flex size-10 cursor-pointer items-center justify-center rounded-full border-2 text-xs font-medium text-muted-foreground'>
+                  <div className="border-background bg-muted flex size-10 cursor-pointer items-center justify-center rounded-full border-2 text-xs font-medium text-muted-foreground">
                     +{overflow}
                   </div>
                 </HoverCardTrigger>
-                <HoverCardContent className='w-48 text-sm'>
+                <HoverCardContent className="w-48 text-sm">
                   {overflow} more member{overflow > 1 ? 's' : ''}
                 </HoverCardContent>
               </HoverCard>
             )}
           </div>
 
-          <p className='text-sm leading-relaxed'>
+          <p className="text-sm leading-relaxed">
             A Decentralised Identifier (DID) acts like a verified username for your company. Once
-            created, your team can issue <span className='font-semibold'>signed</span> credentials
+            created, your team can issue <span className="font-semibold">signed</span> credentials
             that employers, clients, and platforms can trust instantly.
           </p>
 
