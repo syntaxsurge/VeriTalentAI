@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { GripVertical, Save, Plus } from 'lucide-react'
+import { GripVertical, Loader2 } from 'lucide-react'
 import {
   DragDropContext,
   Droppable,
@@ -218,10 +218,16 @@ export default function HighlightsBoard({
         <Button
           onClick={handleSave}
           disabled={isPending}
-          className='gap-2'
+          className='w-full md:w-max'
         >
-          <Save className='h-4 w-4' />
-          Save&nbsp;Highlights
+          {isPending ? (
+            <>
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+              Saving…
+            </>
+          ) : (
+            'Save Highlights'
+          )}
         </Button>
       </div>
     </div>
