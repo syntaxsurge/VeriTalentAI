@@ -1,6 +1,6 @@
 import { asc, desc, eq, and } from 'drizzle-orm'
 
-import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
+import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import { type RowType as CredRowType } from '@/components/dashboard/recruiter/credentials-table'
 import { db } from '@/lib/db/drizzle'
 import { candidates, users, quizAttempts, issuers } from '@/lib/db/schema'

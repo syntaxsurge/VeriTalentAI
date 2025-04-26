@@ -24,13 +24,13 @@ import { Button } from '@/components/ui/button'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import StatusBadge from '@/components/ui/status-badge'
 
-import ProfileHeader from './profile-header'
 import CredentialsTable, {
   RowType as CredRow,
 } from '@/components/dashboard/recruiter/credentials-table'
 import PipelineEntriesTable, {
   RowType as PipeRow,
 } from '@/components/dashboard/recruiter/pipeline-entries-table'
+import ProfileHeader from './profile-header'
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */

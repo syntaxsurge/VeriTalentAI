@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { asc, eq } from 'drizzle-orm'
 import { Star } from 'lucide-react'
 
-import ProfileHeader from '@/components/candidate/profile-header'
+import ProfileHeader from '@/components/dashboard/candidate/profile-header'
 import PageCard from '@/components/ui/page-card'
 import HighlightsBoard, {
   type Credential as HighlightCredential,

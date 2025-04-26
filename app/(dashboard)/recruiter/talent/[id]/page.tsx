@@ -1,7 +1,7 @@
 import { asc, desc, eq, and, inArray } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 
-import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
+import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import AddToPipelineForm from './add-to-pipeline-form'
 import { getUser } from '@/lib/db/queries/queries'
 import { db } from '@/lib/db/drizzle'

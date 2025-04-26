@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 import { User } from 'lucide-react'
 
-import ProfileHeader from '@/components/candidate/profile-header'
+import ProfileHeader from '@/components/dashboard/candidate/profile-header'
 import PageCard from '@/components/ui/page-card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
