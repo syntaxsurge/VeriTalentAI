@@ -77,7 +77,7 @@ export interface Experience {
   id: number
   title: string
   company: string | null
-  status: string
+  status?: string | null
   createdAt: Date
 }
 
@@ -86,7 +86,7 @@ export interface Project {
   title: string
   link: string | null
   description: string | null
-  status: string
+  status?: string | null
   createdAt: Date
 }
 
@@ -360,7 +360,7 @@ export default function CandidateDetailedProfileView({
                       <div className='space-y-1'>
                         <h5 className='flex items-center gap-2 font-semibold'>
                           {exp.title}
-                          <StatusBadge status={exp.status} showIcon />
+                          <StatusBadge status={(exp.status ?? 'unverified') as string} showIcon />
                         </h5>
                         {exp.company && (
                           <p className='text-muted-foreground text-sm'>{exp.company}</p>
@@ -385,7 +385,7 @@ export default function CandidateDetailedProfileView({
                       <div className='space-y-1'>
                         <h5 className='flex items-center gap-2 font-semibold'>
                           {proj.title}
-                          <StatusBadge status={proj.status} showIcon />
+                          <StatusBadge status={(proj.status ?? 'unverified') as string} showIcon />
                         </h5>
                         {proj.description && <p className='text-sm'>{proj.description}</p>}
                         {proj.link && (
