@@ -159,7 +159,7 @@ function HighlightList<T>({
   items,
   renderItem,
 }: {
-  title: string
+  title?: string
   icon: React.ElementType
   items: T[]
   renderItem: (item: T) => React.ReactNode
@@ -169,18 +169,22 @@ function HighlightList<T>({
 
   return (
     <div className='space-y-6'>
-      {/* Section header */}
-      <div className='flex items-center gap-2'>
-        <Icon className='h-5 w-5 text-primary' />
-        <h4 className='text-lg font-semibold'>{title}</h4>
-      </div>
+      {title && (
+        <div className='flex items-center gap-2'>
+          <Icon className='h-5 w-5 text-primary' />
+          <h4 className='text-lg font-semibold'>{title}</h4>
+        </div>
+      )}
 
-      {/* List */}
       <div className='flex flex-col gap-4'>{visible.map((it, i) => <div key={i}>{renderItem(it)}</div>)}</div>
 
-      {/* Expand / collapse control */}
       {items.length > 5 && (
-        <Button variant='ghost' size='sm' onClick={() => setExpanded((p) => !p)} className='text-primary gap-1'>
+        <Button
+          variant='ghost'
+          size='sm'
+          onClick={() => setExpanded((p) => !p)}
+          className='gap-1 text-primary'
+        >
           {expanded ? (
             <>
               Show Less <ChevronUp className='h-4 w-4' />
@@ -217,12 +221,10 @@ export default function CandidateDetailedProfileView({
   pipeline,
   showShare = true,
 }: Props) {
-  /* -------------------------- Derived helpers --------------------------- */
   const totalCredentials =
     statusCounts.verified + statusCounts.pending + statusCounts.rejected + statusCounts.unverified
   const profilePath = `/candidates/${candidateId}`
 
-  /* Social media links */
   const socialIcons = [
     { href: socials.twitterUrl, icon: FaTwitter, label: 'Twitter' },
     { href: socials.githubUrl, icon: SiGithub, label: 'GitHub' },
@@ -230,13 +232,8 @@ export default function CandidateDetailedProfileView({
     { href: socials.websiteUrl, icon: Globe2, label: 'Website' },
   ].filter((s) => !!s.href) as { href: string; icon: React.ElementType; label: string }[]
 
-  /* ---------------------------------------------------------------------- */
-  /*                                 RENDER                                 */
-  /* ---------------------------------------------------------------------- */
-
   return (
     <section className='space-y-10'>
-      {/* Header */}
       <ProfileHeader
         name={name}
         email={email}
@@ -251,11 +248,9 @@ export default function CandidateDetailedProfileView({
         socials={socialIcons}
       />
 
-      {/* Layout */}
       <div className='grid gap-8 lg:grid-cols-[280px_1fr]'>
-        {/* --------------------------- SIDEBAR -------------------------- */}
+        {/* SIDEBAR */}
         <aside className='space-y-8'>
-          {/* PDF Resume card */}
           <Card>
             <CardHeader>
               <CardTitle className='flex items-center gap-2 text-base'>
@@ -264,7 +259,7 @@ export default function CandidateDetailedProfileView({
               </CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
-              <p className='text-muted-foreground text-sm'>
+              <p className='text-sm text-muted-foreground'>
                 Generate a professionally formatted résumé summarizing your profile, credentials,
                 experiences, and projects.
               </p>
@@ -277,7 +272,6 @@ export default function CandidateDetailedProfileView({
             </CardContent>
           </Card>
 
-          {/* Snapshot card */}
           <Card className='sticky top-24'>
             <CardHeader>
               <CardTitle className='flex items-center gap-2 text-base'>
@@ -310,9 +304,8 @@ export default function CandidateDetailedProfileView({
           </Card>
         </aside>
 
-        {/* ----------------------------- MAIN --------------------------- */}
+        {/* MAIN */}
         <main className='space-y-12'>
-          {/* About */}
           {bio && (
             <Card>
               <CardHeader>
@@ -324,9 +317,8 @@ export default function CandidateDetailedProfileView({
             </Card>
           )}
 
-          {/* Experiences & Projects */}
           <Tabs defaultValue='experience' className='space-y-6'>
-            <TabsList className='grid w-full grid-cols-2'>
+            <TabsList className='w-full'>
               <TabsTrigger value='experience' className='gap-2'>
                 <Briefcase className='h-4 w-4' />
                 Experience
@@ -337,20 +329,18 @@ export default function CandidateDetailedProfileView({
               </TabsTrigger>
             </TabsList>
 
-            {/* ----------------- Experience Tab ----------------- */}
             <TabsContent value='experience' className='space-y-4'>
               {experiences.length === 0 ? (
                 <p className='text-muted-foreground'>No experience highlights yet.</p>
               ) : (
                 <ScrollArea className='max-h-[500px] pr-3'>
                   <HighlightList
-                    title='Professional Experience'
+                    title='' /* omit header */
                     icon={Briefcase}
                     items={experiences}
                     renderItem={(exp) => (
                       <div className='rounded-lg border bg-background/50 p-4'>
                         <div className='flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-4'>
-                          {/* Left — details */}
                           <div className='flex-1 space-y-0.5'>
                             <h5 className='flex items-center gap-2 text-base font-semibold'>
                               {exp.title}
@@ -367,16 +357,14 @@ export default function CandidateDetailedProfileView({
                               )}
                             </h5>
                             {exp.company && (
-                              <p className='text-muted-foreground text-sm'>{exp.company}</p>
+                              <p className='text-sm text-muted-foreground'>{exp.company}</p>
                             )}
                             {exp.type && (
-                              <p className='text-muted-foreground text-xs uppercase tracking-wide'>
+                              <p className='text-xs uppercase tracking-wide text-muted-foreground'>
                                 {exp.type}
                               </p>
                             )}
                           </div>
-
-                          {/* Right — status */}
                           <div className='flex-shrink-0 self-start sm:self-center'>
                             <StatusBadge status={(exp.status ?? 'unverified') as string} showIcon />
                           </div>
@@ -388,20 +376,18 @@ export default function CandidateDetailedProfileView({
               )}
             </TabsContent>
 
-            {/* ------------------ Projects Tab ------------------ */}
             <TabsContent value='projects' className='space-y-4'>
               {projects.length === 0 ? (
                 <p className='text-muted-foreground'>No project highlights yet.</p>
               ) : (
                 <ScrollArea className='max-h-[500px] pr-3'>
                   <HighlightList
-                    title='Highlighted Projects'
+                    title='' /* omit header */
                     icon={BookOpen}
                     items={projects}
                     renderItem={(proj) => (
                       <div className='rounded-lg border bg-background/50 p-4'>
                         <div className='flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-4'>
-                          {/* Left — details */}
                           <div className='flex-1 space-y-0.5'>
                             <h5 className='flex items-center gap-2 text-base font-semibold'>
                               {proj.title}
@@ -419,13 +405,8 @@ export default function CandidateDetailedProfileView({
                             </h5>
                             {proj.description && <p className='text-sm'>{proj.description}</p>}
                           </div>
-
-                          {/* Right — status */}
                           <div className='flex-shrink-0 self-start sm:self-center'>
-                            <StatusBadge
-                              status={(proj.status ?? 'unverified') as string}
-                              showIcon
-                            />
+                            <StatusBadge status={(proj.status ?? 'unverified') as string} showIcon />
                           </div>
                         </div>
                       </div>
@@ -436,7 +417,6 @@ export default function CandidateDetailedProfileView({
             </TabsContent>
           </Tabs>
 
-          {/* Credentials */}
           <Card id='credentials'>
             <CardHeader>
               <CardTitle className='flex flex-wrap items-center gap-2'>
@@ -447,7 +427,6 @@ export default function CandidateDetailedProfileView({
                 <StatusBadge status='unverified' showIcon count={statusCounts.unverified} />
               </CardTitle>
             </CardHeader>
-
             <CardContent className='space-y-4'>
               <CredentialsTable
                 rows={credentials.rows}
@@ -457,7 +436,6 @@ export default function CandidateDetailedProfileView({
                 initialParams={credentials.pagination.initialParams}
                 searchQuery={credentials.pagination.initialParams['q'] ?? ''}
               />
-
               <TablePagination
                 page={credentials.pagination.page}
                 hasNext={credentials.pagination.hasNext}
@@ -468,7 +446,6 @@ export default function CandidateDetailedProfileView({
             </CardContent>
           </Card>
 
-          {/* Pipeline entries */}
           {pipeline && (
             <Card id='pipeline-entries'>
               <CardHeader className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
@@ -495,7 +472,6 @@ export default function CandidateDetailedProfileView({
             </Card>
           )}
 
-          {/* Skill passes */}
           <Card id='skill-passes'>
             <CardHeader>
               <CardTitle className='flex items-center gap-2'>
@@ -505,7 +481,7 @@ export default function CandidateDetailedProfileView({
             </CardHeader>
             <CardContent>
               {passes.length === 0 ? (
-                <p className='text-muted-foreground text-sm'>No passes yet.</p>
+                <p className='text-sm text-muted-foreground'>No passes yet.</p>
               ) : (
                 <ul className='space-y-3'>
                   {passes.map((p) => (
@@ -516,7 +492,7 @@ export default function CandidateDetailedProfileView({
                       <span className='font-medium'>
                         Quiz #{p.quizId} • Score {p.score ?? '—'}
                       </span>
-                      <span className='text-muted-foreground text-xs'>
+                      <span className='text-xs text-muted-foreground'>
                         {usePrettyDate(p.createdAt)}
                       </span>
                     </li>
