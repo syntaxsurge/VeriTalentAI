@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 
 import { FileText } from 'lucide-react'
 
-import ProfileHeader from '@/components/candidate/profile-header'
 import PageCard from '@/components/ui/page-card'
 import CandidateCredentialsTable, {
   RowType,
@@ -71,13 +70,7 @@ export default async function CredentialsPage({
 
   /* --------------------------- UI -------------------------- */
   return (
-    <section className='mx-auto max-w-5xl space-y-10 py-10'>
-      <ProfileHeader
-        name={user.name ?? null}
-        email={user.email ?? ''}
-        avatarSrc={(user as any)?.image ?? undefined}
-      />
-
+    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={FileText}
         title='My Credentials'
