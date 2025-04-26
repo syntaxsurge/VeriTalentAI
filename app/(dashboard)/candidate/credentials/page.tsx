@@ -1,16 +1,18 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
-
+import { eq } from 'drizzle-orm'
 import { FileText } from 'lucide-react'
 
 import PageCard from '@/components/ui/page-card'
-import CandidateCredentialsTable, {
-  RowType,
-} from '@/components/dashboard/candidate/credentials-table'
-import { Button } from '@/components/ui/button'
+import CandidateCredentialsTable, { RowType } from '@/components/dashboard/candidate/credentials-table'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import AddCredentialDialog from '@/components/dashboard/candidate/add-credential-dialog'
+
 import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credentials'
 import { getUser } from '@/lib/db/queries/queries'
+import { db } from '@/lib/db/drizzle'
+import { teams, teamMembers } from '@/lib/db/schema/core'
+
+import { addCredential } from './actions'
 
 export const revalidate = 0
 
@@ -27,6 +29,23 @@ export default async function CredentialsPage({
   /* -------------------------- Auth -------------------------- */
   const user = await getUser()
   if (!user) redirect('/sign-in')
+
+  /* ----------------------- DID Check ------------------------ */
+  const [{ did } = {}] = await db
+    .select({ did: teams.did })
+    .from(teamMembers)
+    .leftJoin(teams, eq(teamMembers.teamId, teams.id))
+    .where(eq(teamMembers.userId, user.id))
+    .limit(1)
+  const hasDid = !!did
+
+  /* --------------------- Add Credential SA ------------------ */
+  const addCredentialAction = async (
+    formData: FormData,
+  ): Promise<{ error?: string } | void> => {
+    'use server'
+    return await addCredential({}, formData)
+  }
 
   /* ------------------------ Params ------------------------- */
   const page = Math.max(1, Number(first(params, 'page') ?? '1'))
@@ -76,9 +95,10 @@ export default async function CredentialsPage({
         title='My Credentials'
         description='Add, organise, and track all of your verifiable credentials.'
         actions={
-          <Link href='/candidate/credentials/add'>
-            <Button size='sm'>Add Credential</Button>
-          </Link>
+          <AddCredentialDialog
+            addCredentialAction={addCredentialAction}
+            hasDid={hasDid}
+          />
         }
       >
         <div className='space-y-4 overflow-x-auto'>

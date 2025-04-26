@@ -70,9 +70,6 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className='space-y-8'>
-      {/* Headline */}
-      <h3 className='text-xl font-semibold tracking-tight'>New Credential</h3>
-
       {/* Essential fields */}
       <div className='grid gap-6 sm:grid-cols-2'>
         <div className='space-y-2'>
