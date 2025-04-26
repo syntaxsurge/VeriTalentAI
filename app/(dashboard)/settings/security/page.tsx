@@ -22,7 +22,6 @@ export default function SecurityPage() {
   }, [userPromise, router])
 
   return (
-    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={Shield}
         title='Security Settings'
@@ -51,6 +50,5 @@ export default function SecurityPage() {
           </Card>
         </div>
       </PageCard>
-    </section>
   )
 }

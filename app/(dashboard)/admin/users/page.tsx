@@ -76,8 +76,7 @@ export default async function AdminUsersPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className='mx-auto max-w-5xl py-10'>
-      <PageCard
+    <PageCard
         icon={Users}
         title='All Users'
         description='Manage all user accounts across the platform.'
@@ -101,6 +100,5 @@ export default async function AdminUsersPage({
           />
         </div>
       </PageCard>
-    </section>
   )
 }

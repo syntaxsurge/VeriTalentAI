@@ -65,7 +65,6 @@ export default async function CreateDIDPage() {
 
   /* --------------------------- UI --------------------------- */
   return (
-    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={KeyRound}
         title='Create your Team DID'
@@ -114,6 +113,5 @@ export default async function CreateDIDPage() {
           <CreateDidButton />
         </div>
       </PageCard>
-    </section>
   )
 }

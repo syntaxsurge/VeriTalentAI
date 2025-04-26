@@ -73,8 +73,7 @@ export default async function AdminIssuersPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className='mx-auto max-w-5xl py-10'>
-      <PageCard
+    <PageCard
         icon={Building}
         title='Issuer Management'
         description='Review, verify, and manage issuers.'
@@ -98,6 +97,5 @@ export default async function AdminIssuersPage({
           />
         </div>
       </PageCard>
-    </section>
   )
 }

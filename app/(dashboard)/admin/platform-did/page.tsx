@@ -16,8 +16,7 @@ export default async function PlatformDidPage() {
   const existingDid = process.env.PLATFORM_ISSUER_DID ?? null
 
   return (
-    <section className='mx-auto max-w-5xl py-10'>
-      <PageCard
+    <PageCard
         icon={KeyRound}
         title='Platform DID'
         description='The platform uses this DID whenever Viskify itself issues verifiable credentials.'
@@ -28,6 +27,5 @@ export default async function PlatformDidPage() {
         </p>
         <UpdateDidForm defaultDid={existingDid} />
       </PageCard>
-    </section>
   )
 }

@@ -116,23 +116,20 @@ export default async function IssuerOnboardPage() {
   /* ----------------------- First-time creation ----------------------- */
   if (!issuer) {
     return (
-      <section className='mx-auto max-w-5xl py-10'>
-        <PageCard
+      <PageCard
           icon={Building2}
           title='Create Your Organisation'
           description='Provide organisation details to begin issuing verified credentials.'
         >
           <CreateIssuerForm />
         </PageCard>
-      </section>
     )
   }
 
   /* --------------------------- Rejected flow ------------------------- */
   if (issuer.status === IssuerStatus.REJECTED) {
     return (
-      <section className='mx-auto max-w-5xl py-10'>
-        <PageCard
+      <PageCard
           icon={Wrench}
           title='Fix & Resubmit'
           description='Review feedback, update your details, and resubmit for approval.'
@@ -190,14 +187,12 @@ export default async function IssuerOnboardPage() {
             <EditIssuerForm issuer={issuer} />
           </div>
         </PageCard>
-      </section>
     )
   }
 
   /* ---------------------- Active / Pending flow ---------------------- */
   return (
-    <section className='mx-auto max-w-5xl py-10'>
-      <PageCard
+    <PageCard
         icon={Building2}
         title={issuer.name}
         description='Organisation profile'
@@ -278,6 +273,5 @@ export default async function IssuerOnboardPage() {
           )}
         </div>
       </PageCard>
-    </section>
   )
 }

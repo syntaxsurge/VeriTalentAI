@@ -13,7 +13,6 @@ export default async function GeneralSettingsPage() {
   if (!user) redirect('/sign-in')
 
   return (
-    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={SettingsIcon}
         title='Account Information'
@@ -21,6 +20,5 @@ export default async function GeneralSettingsPage() {
       >
         <GeneralForm defaultName={user.name || ''} defaultEmail={user.email} />
       </PageCard>
-    </section>
   )
 }

@@ -44,7 +44,6 @@ export function Settings({
   initialParams,
 }: SettingsProps) {
   return (
-    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={Users}
         title='Team Settings'
@@ -126,6 +125,5 @@ export function Settings({
           <InviteTeamMember isOwner={isOwner} />
         </div>
       </PageCard>
-    </section>
   )
 }

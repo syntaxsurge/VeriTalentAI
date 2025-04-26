@@ -73,8 +73,7 @@ export default async function AdminCredentialsPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className='mx-auto max-w-5xl py-10'>
-      <PageCard
+    <PageCard
         icon={FileText}
         title='All Credentials'
         description='View and manage all candidate credentials.'
@@ -98,6 +97,5 @@ export default async function AdminCredentialsPage({
           />
         </div>
       </PageCard>
-    </section>
   )
 }

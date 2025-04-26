@@ -79,7 +79,6 @@ export default async function PipelinesPage({
 
   /* ------------------------------- View ---------------------------------- */
   return (
-    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={KanbanSquare}
         title='Pipelines'
@@ -105,6 +104,5 @@ export default async function PipelinesPage({
           />
         </div>
       </PageCard>
-    </section>
   )
 }

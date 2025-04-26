@@ -32,7 +32,6 @@ export default async function SkillCheckPage() {
 
   /* -------------------- UI ----------------------- */
   return (
-    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={Bot}
         title='AI Skill Check'
@@ -61,6 +60,5 @@ export default async function SkillCheckPage() {
           </div>
         )}
       </PageCard>
-    </section>
   )
 }

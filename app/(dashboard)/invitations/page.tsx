@@ -66,7 +66,6 @@ export default async function InvitationsPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={Mail}
         title='Team Invitations'
@@ -91,6 +90,5 @@ export default async function InvitationsPage({
           />
         </div>
       </PageCard>
-    </section>
   )
 }

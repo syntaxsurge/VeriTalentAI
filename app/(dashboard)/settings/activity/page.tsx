@@ -67,7 +67,6 @@ export default async function ActivityPage({
 
   /* ----------------------------- UI ----------------------------- */
   return (
-    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={ActivityIcon}
         title='Activity Log'
@@ -92,6 +91,5 @@ export default async function ActivityPage({
           />
         </div>
       </PageCard>
-    </section>
   )
 }

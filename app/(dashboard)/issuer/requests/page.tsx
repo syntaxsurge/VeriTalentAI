@@ -79,8 +79,7 @@ export default async function RequestsPage({
 
   /* ------------------------------ View ----------------------------------- */
   return (
-    <section className='mx-auto max-w-5xl py-10'>
-      <PageCard
+    <PageCard
         icon={ListChecks}
         title='Verification Requests'
         description='Review and manage credential verification requests submitted by candidates.'
@@ -104,6 +103,5 @@ export default async function RequestsPage({
           />
         </div>
       </PageCard>
-    </section>
   )
 }

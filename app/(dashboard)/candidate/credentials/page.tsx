@@ -89,7 +89,6 @@ export default async function CredentialsPage({
 
   /* --------------------------- UI -------------------------- */
   return (
-    <section className='mx-auto max-w-5xl py-10'>
       <PageCard
         icon={FileText}
         title='My Credentials'
@@ -120,6 +119,5 @@ export default async function CredentialsPage({
           />
         </div>
       </PageCard>
-    </section>
   )
 }
