@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { asc, eq } from 'drizzle-orm'
 
 import ProfileHeader from '@/components/candidate/profile-header'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import HighlightsBoard from '@/components/dashboard/candidate/highlights-board'
 import { db } from '@/lib/db/drizzle'
@@ -83,26 +83,28 @@ export default async function CandidateHighlightsSettings() {
 
       {/* Highlights management */}
       <Card className='shadow-md transition-shadow hover:shadow-lg'>
-        <CardContent className='space-y-6 pt-12'>
-          <header className='space-y-2 text-center md:text-left'>
-            <h2 className='text-xl font-semibold tracking-tight'>Profile&nbsp;Highlights</h2>
-            <p className='text-muted-foreground text-sm'>
-              Showcase up to&nbsp;
-              <Badge variant='secondary' className='mx-1'>
-                5
-              </Badge>
-              credentials each for&nbsp;
-              <Badge variant='secondary' className='mx-1'>
-                Experience
-              </Badge>
-              and&nbsp;
-              <Badge variant='secondary' className='mx-1'>
-                Projects
-              </Badge>
-              – just like the featured section on LinkedIn.
-            </p>
-          </header>
+        <CardHeader className='pt-12 space-y-2'>
+          <CardTitle className='text-2xl font-extrabold tracking-tight'>
+            Profile&nbsp;Highlights
+          </CardTitle>
+          <p className='text-muted-foreground text-sm'>
+            Showcase up to&nbsp;
+            <Badge variant='secondary' className='mx-1'>
+              5
+            </Badge>
+            credentials each for&nbsp;
+            <Badge variant='secondary' className='mx-1'>
+              Experience
+            </Badge>
+            and&nbsp;
+            <Badge variant='secondary' className='mx-1'>
+              Projects
+            </Badge>
+            &nbsp;– just like the featured section on LinkedIn.
+          </p>
+        </CardHeader>
 
+        <CardContent className='pt-0'>
           <HighlightsBoard
             selectedExperience={byCat.EXPERIENCE}
             selectedProject={byCat.PROJECT}
