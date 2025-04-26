@@ -1,9 +1,7 @@
 import { asc, desc, eq, and } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/candidate/profile-detailed-view'
-import {
-  type RowType as CredRowType,
-} from '@/components/dashboard/recruiter/credentials-table'
+import { type RowType as CredRowType } from '@/components/dashboard/recruiter/credentials-table'
 import { db } from '@/lib/db/drizzle'
 import { candidates, users, quizAttempts, issuers } from '@/lib/db/schema'
 import {
@@ -43,11 +41,24 @@ type Project = {
   status?: string | null
 }
 
+/** Raw row returned from the highlights query */
+type HighlightRow = {
+  id: number
+  title: string
+  createdAt: Date
+  issuerName: string | null
+  link: string | null
+  description: string | null
+  status: string | null
+  sortOrder: number | null
+  category: CredentialCategory
+}
+
 /* Helpers */
 const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 /* -------------------------------------------------------------------------- */
-/*                                 PAGE                                       */
+/*                                    PAGE                                    */
 /* -------------------------------------------------------------------------- */
 
 export default async function PublicCandidateProfile({
@@ -61,7 +72,7 @@ export default async function PublicCandidateProfile({
   const candidateId = Number(id)
   const q = (await searchParams) as Query
 
-  /* -------------------------- candidate row ----------------------------- */
+  /* ------------------------- Candidate row ------------------------------ */
   const [row] = await db
     .select({ cand: candidates, userRow: users })
     .from(candidates)
@@ -71,7 +82,7 @@ export default async function PublicCandidateProfile({
 
   if (!row) return <div>Candidate not found.</div>
 
-  /* -------------------- experiences & projects -------------------------- */
+  /* ------------------ Experiences & Projects --------------------------- */
   const highlightBase = () =>
     db
       .select({
@@ -82,6 +93,7 @@ export default async function PublicCandidateProfile({
         link: candidateCredentials.fileUrl,
         description: candidateCredentials.type,
         status: candidateCredentials.status,
+        category: candidateCredentials.category,
         sortOrder: candidateHighlights.sortOrder,
       })
       .from(candidateHighlights)
@@ -90,49 +102,47 @@ export default async function PublicCandidateProfile({
         eq(candidateHighlights.credentialId, candidateCredentials.id),
       )
       .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-      .where(eq(candidateHighlights.candidateId, candidateId))
 
-  const experienceRows = await highlightBase()
+  const experienceRows: HighlightRow[] = await highlightBase()
     .where(
       and(
+        eq(candidateHighlights.candidateId, candidateId),
         eq(candidateCredentials.category, CredentialCategory.EXPERIENCE),
-        eq(candidateHighlights.candidateId, candidateId),
       ),
     )
     .orderBy(asc(candidateHighlights.sortOrder))
 
-  const projectRows = await highlightBase()
+  const projectRows: HighlightRow[] = await highlightBase()
     .where(
       and(
-        eq(candidateCredentials.category, CredentialCategory.PROJECT),
         eq(candidateHighlights.candidateId, candidateId),
+        eq(candidateCredentials.category, CredentialCategory.PROJECT),
       ),
     )
     .orderBy(asc(candidateHighlights.sortOrder))
 
-  const experiences: Experience[] = experienceRows.map((e) => ({
+  const experiences: Experience[] = experienceRows.map((e: HighlightRow): Experience => ({
     id: e.id,
     title: e.title,
     company: e.issuerName,
     createdAt: e.createdAt,
-    status: e.status as string | null,
+    status: e.status,
   }))
 
-  const projects: Project[] = projectRows.map((p) => ({
+  const projects: Project[] = projectRows.map((p: HighlightRow): Project => ({
     id: p.id,
     title: p.title,
     link: p.link,
     description: p.description,
     createdAt: p.createdAt,
-    status: p.status as string | null,
+    status: p.status,
   }))
 
-  /* ----------------------- paged credentials ---------------------------- */
+  /* ---------------------- Paged credentials ---------------------------- */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))
   const sizeRaw = Number(first(q, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
-  /* Restrict sort key to accepted values */
   const allowedSortKeys = ['createdAt', 'status', 'title', 'issuer'] as const
   type SortKey = typeof allowedSortKeys[number]
   const sortRaw = (first(q, 'sort') ?? 'status') as string
@@ -152,8 +162,7 @@ export default async function PublicCandidateProfile({
     searchTerm,
   )
 
-  /* Align with recruiter RowType (no `type` or `vcJson`, status is enum) */
-  const credRows: CredRowType[] = rawCredRows.map((c) => ({
+  const credRows: CredRowType[] = rawCredRows.map((c): CredRowType => ({
     id: c.id,
     title: c.title,
     category: (c as any).category ?? CredentialCategory.OTHER,
@@ -172,14 +181,14 @@ export default async function PublicCandidateProfile({
   keep('order')
   if (searchTerm) credInitialParams['q'] = searchTerm
 
-  /* -------------------------- quiz passes ------------------------------- */
+  /* ------------------------ Quiz passes ------------------------------- */
   const passes = await db
     .select()
     .from(quizAttempts)
     .where(eq(quizAttempts.candidateId, candidateId))
     .orderBy(desc(quizAttempts.createdAt))
 
-  /* ----------------------------- view ----------------------------------- */
+  /* ---------------------------- View ---------------------------------- */
   return (
     <CandidateDetailedProfileView
       candidateId={candidateId}
