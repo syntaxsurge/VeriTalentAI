@@ -49,8 +49,8 @@ export default function VerifyCredentialPage() {
       setResult(verified ? 'verified' : 'failed')
       setMessage(
         verified
-          ? 'Credential signature verified successfully.'
-          : 'Credential verification failed.',
+          ? 'Credential signature is valid.'
+          : 'Credential signature is NOT valid.',
       )
     })
   }
@@ -70,8 +70,8 @@ export default function VerifyCredentialPage() {
   return (
     <PageCard
       icon={Fingerprint}
-      title='Verify Credential or DID'
-      description='Validate a Verifiable Credential JWT / JSON or resolve a did:cheqd identifier.'
+      title='Check Credential or DID'
+      description='Check whether a Verifiable Credential signature is valid or resolve a did:cheqd identifier.'
     >
       <div className='space-y-6'>
         <form onSubmit={handleSubmit} className='space-y-4'>
@@ -87,7 +87,7 @@ export default function VerifyCredentialPage() {
 
           <div className='flex flex-wrap gap-2'>
             <Button type='submit' disabled={isPending}>
-              {isPending ? 'Checking…' : 'Check'}
+              {isPending ? 'Checking…' : 'Check Status'}
             </Button>
 
             <Button
