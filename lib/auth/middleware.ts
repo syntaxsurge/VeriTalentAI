@@ -87,7 +87,12 @@ export function interceptVeridaAuthToken(request: NextRequest): NextResponse | v
   const authToken = request.nextUrl.searchParams.get('auth_token')
   if (!authToken) return
 
+  /* Preserve optional `state` so the callback can redirect correctly */
+  const state = request.nextUrl.searchParams.get('state') ?? undefined
+
   const callbackUrl = new URL('/api/verida/callback', request.url)
+  if (state) callbackUrl.searchParams.set('state', state)
+
   const response = NextResponse.redirect(callbackUrl)
 
   response.cookies.set({
