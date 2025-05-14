@@ -18,5 +18,5 @@ export const VERIDA_API_VERSION = getEnv('NEXT_PUBLIC_VERIDA_API_VERSION') as st
 export const VERIDA_DEFAULT_SCOPES = (getEnv('NEXT_PUBLIC_VERIDA_DEFAULT_SCOPES') as string).split(
   ',',
 )
-export const VERIDA_APP_DID = getEnv('VERIDA_APP_DID') as string
+export const VERIDA_APP_DID = getEnv('NEXT_PUBLIC_VERIDA_APP_DID') as string
 export const VERIDA_APP_REDIRECT_URL = getEnv('NEXT_PUBLIC_VERIDA_APP_REDIRECT_URL') as string
