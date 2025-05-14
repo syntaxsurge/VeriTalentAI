@@ -29,7 +29,7 @@ export default function ProfileHeader({
   showPublicProfile = false,
   stats = [],
   socials = [],
-  veridaConnected = false,
+  veridaConnected = false, // retained for parent convenience
   children,
 }: ProfileHeaderProps & { veridaConnected?: boolean }) {
   /* ---------------------------- share link ---------------------------- */
@@ -97,12 +97,6 @@ export default function ProfileHeader({
                 </Link>
               </Button>
             )}
-
-            {veridaConnected && (
-              <span className='inline-flex items-center rounded-full bg-green-600 px-3 py-1 text-xs font-semibold text-white'>
-                Verida&nbsp;Connected
-              </span>
-            )}
           </div>
         </div>
 
@@ -149,6 +143,7 @@ export default function ProfileHeader({
           </div>
         )}
 
+        {/* Children such as VeridaConnectButton */}
         {children}
       </div>
     </TooltipProvider>

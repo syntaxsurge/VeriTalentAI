@@ -7,7 +7,7 @@ import VeridaConnectButton from '@/components/ui/verida-connect-button'
 import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
 import { candidates } from '@/lib/db/schema/candidate'
-import { veridaTokens } from '@/lib/db/schema/verida'
+import { getVeridaToken } from '@/lib/db/queries/queries'
 
 import ProfileForm from './profile-form'
 
@@ -22,12 +22,7 @@ export default async function ProfilePage() {
     .where(eq(candidates.userId, user.id))
     .limit(1)
 
-  const [tokenRow] = await db
-    .select()
-    .from(veridaTokens)
-    .where(eq(veridaTokens.userId, user.id))
-    .limit(1)
-
+  const tokenRow = await getVeridaToken(user.id)
   const hasVeridaToken = !!tokenRow
 
   const profilePath = candidate ? `/candidates/${candidate.id}` : undefined
