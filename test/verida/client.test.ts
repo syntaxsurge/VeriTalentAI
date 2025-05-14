@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 
-import { buildAuthUrl } from '@/lib/verida/client'
+import { buildAuthUrl } from '@/lib/verida/public'
 
 /**
  * Basic sanity check that the generated authentication link matches
