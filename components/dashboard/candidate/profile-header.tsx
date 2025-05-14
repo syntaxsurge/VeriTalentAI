@@ -29,9 +29,8 @@ export default function ProfileHeader({
   showPublicProfile = false,
   stats = [],
   socials = [],
-  veridaConnected = false, // retained for parent convenience
   children,
-}: ProfileHeaderProps & { veridaConnected?: boolean }) {
+}: ProfileHeaderProps) {
   /* ---------------------------- share link ---------------------------- */
   function copyLink() {
     if (!profilePath) return
