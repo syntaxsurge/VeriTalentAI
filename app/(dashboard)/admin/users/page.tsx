@@ -1,81 +1,46 @@
-import { redirect } from 'next/navigation'
-
 import { Users } from 'lucide-react'
 
-import AdminUsersTable, { type RowType } from '@/components/dashboard/admin/users-table'
+import AdminUsersTable from '@/components/dashboard/admin/users-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminUsersPage } from '@/lib/db/queries/admin-users'
-import { getUser } from '@/lib/db/queries/queries'
+import type { AdminUserRow } from '@/lib/types/tables'
+import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
+/**
+ * Admin → Users management listing.
+ * Uniformly parses pagination, sort and search via `getTableParams`.
+ */
+export default async function AdminUsersPage({ searchParams }: { searchParams?: Promise<Query> }) {
+  const params = await resolveSearchParams(searchParams)
 
-type Query = Record<string, string | string[] | undefined>
+  /* -------------------------- Table helpers --------------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
+    params,
+    ['name', 'email', 'role', 'createdAt'] as const,
+    'createdAt',
+  )
 
-/** Safely return the first value of a query param. */
-function getParam(params: Query, key: string): string | undefined {
-  const v = params[key]
-  return Array.isArray(v) ? v[0] : v
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                    Page                                    */
-/* -------------------------------------------------------------------------- */
-
-export default async function AdminUsersPage({
-  searchParams,
-}: {
-  searchParams: Promise<Query> | Query
-}) {
-  const params = (await searchParams) as Query
-
-  const currentUser = await getUser()
-  if (!currentUser) redirect('/sign-in')
-  if (currentUser.role !== 'admin') redirect('/dashboard')
-
-  /* --------------------------- Query params ------------------------------ */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sort = getParam(params, 'sort') ?? 'createdAt'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
-
-  /* ---------------------------- Data fetch ------------------------------- */
+  /* ----------------------------- Data --------------------------------- */
   const { users, hasNext } = await getAdminUsersPage(
     page,
     pageSize,
     sort as 'name' | 'email' | 'role' | 'createdAt',
-    order as 'asc' | 'desc',
+    order,
     searchTerm,
   )
 
-  const rows: RowType[] = users.map((u) => ({
+  const rows: AdminUserRow[] = users.map((u) => ({
     id: u.id,
     name: u.name,
     email: u.email,
     role: u.role,
-    createdAt: u.createdAt.toISOString(),
+    createdAt: new Date(u.createdAt as any).toISOString(),
   }))
 
-  /* ------------------------ Build initialParams -------------------------- */
-  const initialParams: Record<string, string> = {}
-  const add = (k: string) => {
-    const val = getParam(params, k)
-    if (val) initialParams[k] = val
-  }
-  add('size')
-  add('sort')
-  add('order')
-  if (searchTerm) initialParams['q'] = searchTerm
-
-  /* ------------------------------ View ----------------------------------- */
+  /* ----------------------------- View --------------------------------- */
   return (
     <PageCard
       icon={Users}

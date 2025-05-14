@@ -1,19 +1,13 @@
-import { asc, desc, ilike, or } from 'drizzle-orm'
+import type { AdminUserRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
+import { getPaginatedList } from './query-helpers'
 import { users } from '../schema/core'
 
-export type AdminUserRow = {
-  id: number
-  name: string | null
-  email: string
-  role: string
-  createdAt: Date
-}
+/* -------------------------------------------------------------------------- */
+/*                        A D M I N   U S E R S                               */
+/* -------------------------------------------------------------------------- */
 
-/**
- * Return a page of users with optional full‑text search, sorting and pagination.
- */
 export async function getAdminUsersPage(
   page: number,
   pageSize = 10,
@@ -21,34 +15,14 @@ export async function getAdminUsersPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ users: AdminUserRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
+  const sortMap = {
+    name: users.name,
+    email: users.email,
+    role: users.role,
+    createdAt: users.createdAt,
+  } as const
 
-  /* --------------------------- ORDER BY helper --------------------------- */
-  const orderBy =
-    sortBy === 'name'
-      ? order === 'asc'
-        ? asc(users.name)
-        : desc(users.name)
-      : sortBy === 'email'
-        ? order === 'asc'
-          ? asc(users.email)
-          : desc(users.email)
-        : sortBy === 'role'
-          ? order === 'asc'
-            ? asc(users.role)
-            : desc(users.role)
-          : order === 'asc'
-            ? asc(users.createdAt)
-            : desc(users.createdAt)
-
-  /* ----------------------------- WHERE clause ---------------------------- */
-  const whereClause =
-    searchTerm.trim().length === 0
-      ? null
-      : or(ilike(users.name, `%${searchTerm}%`), ilike(users.email, `%${searchTerm}%`))
-
-  /* ------------------------------ Query ---------------------------------- */
-  let q = db
+  const baseQuery = db
     .select({
       id: users.id,
       name: users.name,
@@ -58,15 +32,16 @@ export async function getAdminUsersPage(
     })
     .from(users)
 
-  if (whereClause) q = q.where(whereClause)
-
-  const rows = await q
-    .orderBy(orderBy)
-    .limit(pageSize + 1)
-    .offset(offset)
-
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
+  const { rows, hasNext } = await getPaginatedList<AdminUserRow>(
+    baseQuery,
+    page,
+    pageSize,
+    sortBy,
+    sortMap,
+    order,
+    searchTerm,
+    [users.name, users.email, users.role],
+  )
 
   return { users: rows, hasNext }
 }

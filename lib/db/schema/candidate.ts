@@ -24,6 +24,14 @@ export const candidates = pgTable(
     id: serial('id').primaryKey(),
     userId: integer('user_id').notNull(),
     bio: text('bio'),
+    /** AI-generated 120-word profile summary */
+    summary: text('summary'),
+    /** SHA-256 hash of profile content used for the last summary */
+    summaryHash: varchar('summary_hash', { length: 64 }),
+    /** Timestamp when the last AI summary was generated */
+    summaryGeneratedAt: timestamp('summary_generated_at'),
+    /** How many AI summaries were generated on the generation date */
+    summaryDailyCount: integer('summary_daily_count').notNull().default(0),
     /** Optional social links */
     twitterUrl: varchar('twitter_url', { length: 255 }),
     githubUrl: varchar('github_url', { length: 255 }),
@@ -39,7 +47,6 @@ export const candidates = pgTable(
 /*                       C A N D I D A T E   C R E D E N T I A L S            */
 /* -------------------------------------------------------------------------- */
 
-/** High-level credential categories */
 export const credentialCategoryEnum = pgEnum('credential_category', [
   'EDUCATION',
   'EXPERIENCE',
@@ -73,11 +80,16 @@ export const candidateCredentials = pgTable('candidate_credentials', {
   issuerId: integer('issuer_id').references(() => issuers.id),
   category: credentialCategoryEnum('category').notNull().default(CredentialCategory.OTHER),
   title: varchar('title', { length: 200 }).notNull(),
-  /** Fine-grained type identifier (e.g. 'bachelor', 'github_repo') */
+  /**
+   * Fine-grained type identifier (e.g. 'bachelor', 'certificate').
+   */
   type: varchar('type', { length: 50 }).notNull(),
   fileUrl: text('file_url'),
+  /** -------------------------------------------------------------------- */
   status: varchar('status', { length: 20 }).notNull().default(CredentialStatus.UNVERIFIED),
   verified: boolean('verified').notNull().default(false),
+  /** Signed VC proof JWT (optional). */
+  vcJwt: text('vc_jwt'),
   /** Full VC JSON (optional). */
   vcJson: text('vc_json'),
   issuedAt: timestamp('issued_at'),
@@ -90,10 +102,6 @@ export const candidateCredentials = pgTable('candidate_credentials', {
 /*                   N E W   C A N D I D A T E   H I G H L I G H T S          */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Stores up to five experience highlights and five project highlights chosen by a candidate.
- * The UI restricts insertion to the allowed categories and enforces the five-item cap.
- */
 export const candidateHighlights = pgTable(
   'candidate_highlights',
   {
@@ -126,14 +134,28 @@ export const skillQuizzes = pgTable('skill_quizzes', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
+export const skillQuizQuestions = pgTable('skill_quiz_questions', {
+  id: serial('id').primaryKey(),
+  quizId: integer('quiz_id')
+    .notNull()
+    .references(() => skillQuizzes.id, { onDelete: 'cascade' }),
+  prompt: text('prompt').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
 export const quizAttempts = pgTable('quiz_attempts', {
   id: serial('id').primaryKey(),
   candidateId: integer('candidate_id').notNull(),
   quizId: integer('quiz_id').notNull(),
+  /** Hex-encoded RNG seed that produced the question order */
+  seed: varchar('seed', { length: 66 }).notNull().default(''),
   score: integer('score'),
   maxScore: integer('max_score').default(100),
   pass: integer('pass').default(0),
-  vcIssuedId: text('vc_issued_id'),
+  vcJwt: text('vc_jwt'),
+  /** Optional Verifiable Credential JSON */
+  vcJson: text('vc_json'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
@@ -186,6 +208,13 @@ export const quizAttemptsRelations = relations(quizAttempts, ({ one }) => ({
   }),
 }))
 
+export const skillQuizQuestionsRelations = relations(skillQuizQuestions, ({ one }) => ({
+  quiz: one(skillQuizzes, {
+    fields: [skillQuizQuestions.quizId],
+    references: [skillQuizzes.id],
+  }),
+}))
+
 /* -------------------------------------------------------------------------- */
 /*                               T Y P E S                                    */
 /* -------------------------------------------------------------------------- */
@@ -201,6 +230,9 @@ export type NewCandidateHighlight = typeof candidateHighlights.$inferInsert
 
 export type SkillQuiz = typeof skillQuizzes.$inferSelect
 export type NewSkillQuiz = typeof skillQuizzes.$inferInsert
+
+export type SkillQuizQuestion = typeof skillQuizQuestions.$inferSelect
+export type NewSkillQuizQuestion = typeof skillQuizQuestions.$inferInsert
 
 export type QuizAttempt = typeof quizAttempts.$inferSelect
 export type NewQuizAttempt = typeof quizAttempts.$inferInsert

@@ -1,22 +1,13 @@
-import { and, asc, desc, eq, ilike } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+
+import type { PipelineEntryRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
-import { recruiterPipelines as rp, pipelineCandidates as pc } from '../schema/recruiter'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
+import { recruiterPipelines, pipelineCandidates } from '../schema/recruiter'
 
 /* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export type PipelineEntryRow = {
-  id: number
-  pipelineId: number
-  pipelineName: string
-  stage: string
-  addedAt: Date
-}
-
-/* -------------------------------------------------------------------------- */
-/*                             Paginated fetch                                */
+/*                             Paginated fetch                                */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -32,54 +23,55 @@ export async function getCandidatePipelineEntriesPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ entries: PipelineEntryRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
+  /* --------------------------- ORDER BY helper --------------------------- */
+  const sortMap = {
+    pipelineName: recruiterPipelines.name,
+    stage: pipelineCandidates.stage,
+    addedAt: pipelineCandidates.addedAt,
+    id: pipelineCandidates.id,
+  } as const
 
-  /* --------------------------- ORDER BY helper --------------------------- */
-  const orderBy =
-    sortBy === 'pipelineName'
-      ? order === 'asc'
-        ? asc(rp.name)
-        : desc(rp.name)
-      : sortBy === 'stage'
-        ? order === 'asc'
-          ? asc(pc.stage)
-          : desc(pc.stage)
-        : sortBy === 'addedAt'
-          ? order === 'asc'
-            ? asc(pc.addedAt)
-            : desc(pc.addedAt)
-          : order === 'asc'
-            ? asc(pc.id)
-            : desc(pc.id)
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
 
   /* ----------------------------- WHERE clause ---------------------------- */
-  const where =
-    searchTerm.trim().length === 0
-      ? and(eq(pc.candidateId, candidateId), eq(rp.recruiterId, recruiterId))
-      : and(
-          eq(pc.candidateId, candidateId),
-          eq(rp.recruiterId, recruiterId),
-          ilike(rp.name, `%${searchTerm}%`),
-        )
+  const base = and(
+    eq(pipelineCandidates.candidateId, candidateId),
+    eq(recruiterPipelines.recruiterId, recruiterId),
+  )
+
+  const searchCond = buildSearchCondition(searchTerm, [recruiterPipelines.name])
+  const whereClause = searchCond ? and(base, searchCond) : base
 
   /* ------------------------------ Query ---------------------------------- */
-  const rows = await db
+  const baseQuery = db
     .select({
-      id: pc.id,
-      pipelineId: rp.id,
-      pipelineName: rp.name,
-      stage: pc.stage,
-      addedAt: pc.addedAt,
+      id: pipelineCandidates.id,
+      pipelineId: recruiterPipelines.id,
+      pipelineName: recruiterPipelines.name,
+      stage: pipelineCandidates.stage,
+      addedAt: pipelineCandidates.addedAt,
     })
-    .from(pc)
-    .innerJoin(rp, eq(pc.pipelineId, rp.id))
-    .where(where as any)
+    .from(pipelineCandidates)
+    .innerJoin(recruiterPipelines, eq(pipelineCandidates.pipelineId, recruiterPipelines.id))
+    .where(whereClause as any)
     .orderBy(orderBy)
-    .limit(pageSize + 1)
-    .offset(offset)
 
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
+  /* Use <any> so we can narrow addedAt safely without TS2358 */
+  const { rows, hasNext } = await paginate<any>(baseQuery as any, page, pageSize)
 
-  return { entries: rows as PipelineEntryRow[], hasNext }
+  /* Serialise Date → ISO or coerce to string for uniform consumption */
+  const entries: PipelineEntryRow[] = rows.map((r: any) => ({
+    id: r.id,
+    pipelineId: r.pipelineId,
+    pipelineName: r.pipelineName,
+    stage: r.stage,
+    addedAt:
+      r.addedAt instanceof Date
+        ? r.addedAt.toISOString()
+        : r.addedAt !== undefined
+          ? String(r.addedAt)
+          : undefined,
+  }))
+
+  return { entries, hasNext }
 }

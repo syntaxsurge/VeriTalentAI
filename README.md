@@ -1,91 +1,156 @@
-# Viskify
+# Viskify — AI-Assisted Talent Verification powered by **cheqd**
 
-**Viskify** is a trust-layer for hiring that merges blockchain-signed credentials with AI-graded skill proofs.
-Candidates create a **single verifiable profile for free**, recruiters instantly filter talent by proof instead of promises, and issuers sign credentials in minutes rather than weeks.
+_Verifiable Credentials, deterministic DIDs and usage-based billing with zero smart-contract deployment._
 
----
-
-## ✨ Key Features
-
-| Domain                     | Highlights                                                     |
-| -------------------------- | -------------------------------------------------------------- |
-| **Verifiable Credentials** | cheqd-issued VCs for diplomas, certificates & references       |
-| **AI Skill-Pass**          | GPT-4o grades open-text quizzes → instant SkillPass VC         |
-| **Talent Search**          | Recruiters query by skills, verified creds & scores            |
-| **Recruiter Pipelines**    | Kanban workflow with custom stages                             |
-| **Issuer Dashboard**       | Organisations review & sign credential requests                |
-| **Freemium Pricing**       | Unlimited personal usage — pay only for advanced team features |
-| **Activity Logs**          | Every critical action is auditable                             |
-| **Stripe Billing**         | Subscription & metered verification charges                    |
+[![Viskify Demo](public/images/viskify-demo.png)](https://youtu.be/demo-placeholder)
 
 ---
 
-## 🗺️ High-Level Workflow
+## ✨ Why Viskify?
 
-1. **Account & Team Setup** - email sign-up, auto-team creation, optional invites.
-2. **Profile & Credential Vault** - candidates upload credentials (default **Unverified**).
-3. **Verification Request** - select issuer from directory → issuer notified.
-4. **Issuer Review** - approve → VC signed on cheqd, reject → status updated.
-5. **AI Skill-Check** - pass quiz ≥ threshold → SkillPass VC minted.
-6. **Talent Discovery** - recruiters filter/search, add to pipelines, invite.
+- **did:cheqd identities** — every Team and Issuer provisions a deterministic `did:cheqd:…` via Cheqd Studio’s `/did/create` endpoint; those DIDs become the subjects for all future credentials.
+- **Verifiable Credentials (VC-JWT)** — credentials are issued and verified through Cheqd Studio’s `/credential/issue` and `/credential/verify` APIs, then persisted in Postgres for instant retrieval.
+- **Web-2 integration** — the platform talks to Cheqd over HTTPS; no wallets, RPC nodes or Solidity required.
+- **Stripe Billing** — subscription & metered verification charges are handled through Stripe Checkout and Billing.
+- **Freemium Pricing** — unlimited personal usage — pay only for advanced team features.
 
 ---
 
-## 🏗️ Architecture
+## 🚀 Quick Start
 
-| Layer        | Tech / Responsibility                                                                  |
-| ------------ | -------------------------------------------------------------------------------------- |
-| **Frontend** | Next.js 14 • React Server / Client Components • TailwindCSS + shadcn/ui • lucide-react |
-| **Backend**  | Next.js Server Actions, Route Handlers                                                 |
-| **Database** | PostgreSQL via **drizzle-orm**; typed schema generation                                |
-| **Auth**     | Signed HttpOnly cookie sessions; bcrypt hashes                                         |
-| **VC Layer** | cheqd Studio API for DID & VC issuance / verification                                  |
-| **Payments** | Stripe SDK & Webhooks                                                                  |
-| **CI / CD**  | (omitted - DevOps out-of-scope for this doc)                                           |
+1. **Clone & install**
 
-> **Stateless server actions** + **typed drizzle queries** keep business logic close to the data while preserving React’s streaming benefits.
+   ```bash
+   git clone https://github.com/syntaxsurge/viskify-cheqd.git
+   cd viskify-cheqd
+   pnpm install
+   ```
 
-## 🚀 Getting Started
+2. **Environment files**
 
-# 1. Install deps
+   ```bash
+   cp .env.example .env
+   ```
 
-```bash
-pnpm install
-```
+   Minimum variables:
 
-# 2. Copy & fill env vars
+   | Key                               | Purpose                                                |
+   | --------------------------------- | ------------------------------------------------------ |
+   | `POSTGRES_URL`                    | PostgreSQL connection string                           |
+   | `CHEQD_API_URL`                   | Cheqd Studio base URL (e.g. `https://studio.cheqd.io`) |
+   | `CHEQD_API_KEY`                   | Cheqd Studio API key                                   |
+   | `OPENAI_API_KEY`                  | GPT-4o key for AI workflows                            |
+   | `NEXT_PUBLIC_PLATFORM_ISSUER_DID` | cheqd DID used by the platform issuer                  |
 
-```bash
-cp .env.example .env
-```
+3. **Database setup (optional Docker helper)**
 
-# 3. Run DB migrations & seed data
+   ```bash
+   docker compose up -d database   # Postgres 16 on :54322
+   pnpm db:reset                   # runs migrations & seeds demo data
+   ```
 
-```bash
-pnpm db:push     # drizzle-kit push
-pnpm db:seed     # seeds users, quizzes, stripe products
-```
+4. **Launch Viskify**
 
-# 4. Dev server
+   ```bash
+   pnpm dev
+   ```
 
-```bash
-pnpm dev
-```
+   Open <http://localhost:3000>.
 
-Navigate to http://localhost:3000 - sign up and explore for free.
+---
 
-⸻
+## 🖥 User-Journey Snapshot
 
-🛠️ Engineering Notes
+### Candidate
 
-- Type Safety - End-to-end zod validation on every mutation, plus drizzle-orm type inference.
-- UI Guidelines - All components use Tailwind, shadcn/ui, 2xl rounded corners, XL headings, soft shadows.
-- Accessibility - Focus rings, semantic HTML tags, aria-hidden handled where necessary.
-- Caching - revalidate directives keep the landing static while dynamic sections (pricing) are server rendered every hour.
-- Security - VC issuance keys & Stripe secrets never leak to the client; server actions enforce role-based guards.
+- One-click DID creation through Cheqd Studio — no wallet needed.
+- Upload credentials → UNVERIFIED · PENDING · VERIFIED/REJECTED lifecycle.
+- AI-graded skill-checks; a passing score automatically mints a cheqd VC.
 
-⸻
+### Issuer
 
-📜 License
+- Self-service onboarding with admin approval.
+- Approve / Reject verification requests — approval signs a Verifiable Credential via Cheqd Studio.
 
-MIT © 2025 Viskify
+### Recruiter
+
+- Full-text talent search with verified-only toggle.
+- Kanban pipelines, AI fit-summaries cached per recruiter × candidate.
+
+### Admin
+
+- Issuer approvals, role upgrades, credential revocation.
+- Platform DID rotation and pricing updates, all through Cheqd APIs.
+
+---
+
+## 🧑‍💻 Architecture at a Glance
+
+| Layer       | Stack                                                               |
+| ----------- | ------------------------------------------------------------------- |
+| Frontend    | Next.js 14 (App Router), React Server / Client Components           |
+| Backend     | PostgreSQL via Drizzle ORM, Edge runtime middleware, server actions |
+| Trust layer | Cheqd Studio APIs for DID creation, VC issuance & verification      |
+| Billing     | Stripe Billing for subscriptions & metered verification fees        |
+| AI          | OpenAI GPT-4o for grading, summarisation and fit analysis           |
+
+---
+
+## 🧠 AI Usage and Prompts
+
+### How AI Tools Were Used
+
+Viskify integrates OpenAI GPT-4o in three independent workflows:
+
+| Feature                                                                                                              | File(s) / Entry Point                                                                                                                                       | Model Interaction                                                              | Guard-rails & Caching                                                                                                                                                                          |
+| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Strict Quiz Grader** – grades free-text answers and converts them to a 0-100 score used by candidate Skill Passes. | `lib/ai/openai.ts ➜ openAIAssess()`<br/>`lib/ai/prompts.ts ➜ strictGraderMessages()`<br/>`lib/ai/validators.ts ➜ validateQuizScoreResponse()`               | Non-streaming chat completion with automatic validation & up to **3 retries**. | Centralised validator guarantees a 0-100 integer and `chatCompletion()` automatically retries three times before throwing.                                                                     |
+| **Candidate Profile Summary** – produces a 120-word third-person bio shown on public profiles.                       | `lib/ai/openai.ts ➜ summariseCandidateProfile()`<br/>`lib/ai/prompts.ts ➜ summariseProfileMessages()`                                                       | Single-shot chat completion.                                                   | SHA-256 hash of bio + credential list prevents duplicate generations; server limits to **2 runs per UTC day**.                                                                                 |
+| **"Why Hire" Fit Summary** – recruiter-specific JSON (five 12-word bullets, bestPipeline, pros/cons).                | `lib/ai/openai.ts ➜ generateCandidateFitSummary()`<br/>`lib/ai/prompts.ts ➜ candidateFitMessages()`<br/>`lib/ai/validators.ts ➜ validateCandidateFitJson()` | Non-streaming chat completion with automatic validation & up to **3 retries**. | Centralised validator auto-parses JSON, enforces schema, and `chatCompletion()` retries three times before error; results cached per recruiter × candidate (`recruiter_candidate_fits` table). |
+
+### AI Prompt & Usage Summary
+
+#### Exact Prompts
+
+<pre>
+— Strict Grader (system) —
+You are a strict exam grader. Respond ONLY with an integer 0-100.
+
+— Strict Grader (user) —
+Quiz topic: {{quizTitle}}
+Candidate answer: {{answer}}
+Grade (0-100):
+
+— Profile Summary (system) —
+Summarise the following candidate profile in approximately {{words}} words. Write in third-person professional tone without using personal pronouns.
+
+— Profile Summary (user) —
+{{rawCandidateProfile}}
+
+— Recruiter Fit (system) —
+You are an elite technical recruiter assistant with deep knowledge of skill
+match-making, talent branding and concise executive communication.  Follow ALL rules
+strictly:
+• Think step-by-step but output *only* the final JSON (no markdown, no commentary).
+• Each "bullets" item MUST contain exactly 12 words; start with an action verb.
+• Use the recruiter’s pipelines to choose "bestPipeline"; if none fit, return "NONE".
+• Focus on evidence from credentials/bio; do not invent facts.
+• Obey the output schema below verbatim.
+
+— Recruiter Fit (user) —
+=== Recruiter Pipelines (max 20) ===
+{{numberedPipelineList}}
+
+=== Candidate Profile ===
+{{candidateProfile}}
+
+Return the JSON now:
+</pre>
+
+#### Iterative Prompt Improvements
+
+- **Strict Grader** – tightened to enforce a single integer after early experiments returned explanations.
+- **Profile Summary** – reduced word budget and switched to third-person to avoid "I have…" phrasing.
+- **Fit Summary** – added in-prompt JSON schema, 12-word bullet constraint and a validation-with-retry loop to guarantee compliant output.
+
+---

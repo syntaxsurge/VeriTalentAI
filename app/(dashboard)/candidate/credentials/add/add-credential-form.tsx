@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 
 import { Loader2 } from 'lucide-react'
@@ -16,9 +17,10 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select'
+import type { AddCredentialFormProps } from '@/lib/types/forms'
 
 /* -------------------------------------------------------------------------- */
-/*                                    CONS                                    */
+/*                                 CONSTANTS                                  */
 /* -------------------------------------------------------------------------- */
 
 const CATEGORIES = [
@@ -31,62 +33,77 @@ const CATEGORIES = [
 ] as const
 
 /* -------------------------------------------------------------------------- */
-/*                                   PROPS                                    */
-/* -------------------------------------------------------------------------- */
-
-interface Props {
-  addCredentialAction: (formData: FormData) => Promise<{ error?: string } | void>
-}
-
-/* -------------------------------------------------------------------------- */
 /*                                    VIEW                                    */
 /* -------------------------------------------------------------------------- */
 
-export default function AddCredentialForm({ addCredentialAction }: Props) {
+export default function AddCredentialForm({ addCredentialAction }: AddCredentialFormProps) {
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  /* ---------------------------------------------------------------------- */
+  /*                               S U B M I T                              */
+  /* ---------------------------------------------------------------------- */
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
-    const toastId = toast.loading('Adding credential…')
 
+    const toastId = toast.loading('Adding credential…')
     startTransition(async () => {
       try {
         const res = await addCredentialAction(fd)
+
+        /* Explicit error from server-action */
         if (res && typeof res === 'object' && 'error' in res && res.error) {
           toast.error(res.error, { id: toastId })
-        } else {
-          toast.success('Credential added.', { id: toastId })
+          return
         }
+
+        /* Successful result without redirect */
+        toast.success('Credential added.', { id: toastId })
+        router.refresh()
       } catch (err: any) {
-        /* NEXT redirects throw an error we treat as success */
-        if (err?.digest === 'NEXT_REDIRECT' || err?.message === 'NEXT_REDIRECT') {
+        /* NEXT_REDIRECT digest indicates a server-side redirect on success */
+        if (
+          err &&
+          typeof err === 'object' &&
+          'digest' in err &&
+          (err as any).digest === 'NEXT_REDIRECT'
+        ) {
           toast.success('Credential added.', { id: toastId })
-        } else {
-          toast.error(err?.message ?? 'Something went wrong.', { id: toastId })
+          router.refresh()
+          return
         }
+
+        toast.error(err?.message ?? 'Something went wrong.', { id: toastId })
       }
     })
   }
 
+  /* ---------------------------------------------------------------------- */
+  /*                                   UI                                   */
+  /* ---------------------------------------------------------------------- */
+
   return (
     <form onSubmit={handleSubmit} className='space-y-8'>
-      {/* Essential fields */}
+      {/* Essentials */}
       <div className='grid gap-6 sm:grid-cols-2'>
+        {/* Title */}
         <div className='space-y-2'>
           <Label htmlFor='title'>Title</Label>
           <Input
             id='title'
             name='title'
             required
-            placeholder='e.g. Senior Front-End Engineer'
+            placeholder='e.g. BS Computer Science'
             autoComplete='off'
           />
         </div>
 
+        {/* Category */}
         <div className='space-y-2'>
           <Label htmlFor='category'>Category</Label>
-          <Select name='category' required defaultValue='EXPERIENCE'>
+          <Select name='category' required defaultValue='EDUCATION'>
             <SelectTrigger id='category'>
               <SelectValue placeholder='Select category' />
             </SelectTrigger>
@@ -100,27 +117,27 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
           </Select>
         </div>
 
+        {/* Type / sub-type */}
         <div className='space-y-2'>
-          <Label htmlFor='type'>Type / Sub-type</Label>
-          <Input id='type' name='type' required placeholder='e.g. full_time / github_repo' />
+          <Label htmlFor='type'>Type</Label>
+          <Input id='type' name='type' required placeholder='e.g. degree / certificate' />
         </div>
 
-        <div className='space-y-2'>
+        {/* File URL */}
+        <div className='space-y-2 sm:col-span-2'>
           <Label htmlFor='fileUrl'>File URL</Label>
           <Input
             id='fileUrl'
             name='fileUrl'
             type='url'
             required
-            placeholder='https://example.com/credential.pdf'
+            placeholder='https://university.edu/diploma.pdf'
           />
         </div>
       </div>
 
-      {/* Optional issuer combobox */}
       <IssuerSelect />
 
-      {/* Submit */}
       <Button type='submit' disabled={isPending} className='w-full sm:w-max'>
         {isPending ? (
           <>

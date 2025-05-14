@@ -1,21 +1,16 @@
-import { asc, desc, eq, ilike, or, and, sql } from 'drizzle-orm'
+import { eq, and, sql } from 'drizzle-orm'
+
+import type { IssuerRequestRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
 import { candidateCredentials, candidates, CredentialStatus } from '../schema/candidate'
 import { users } from '../schema/core'
 
-export interface IssuerRequestRow {
-  id: number
-  title: string
-  type: string
-  candidate: string
-  status: CredentialStatus
-}
+/* -------------------------------------------------------------------------- */
+/*              I S S U E R   V E R I F I C A T I O N   R E Q U E S T S       */
+/* -------------------------------------------------------------------------- */
 
-/**
- * Fetch a paginated, searchable list of credential‑verification requests
- * for a given issuer.
- */
 export async function getIssuerRequestsPage(
   issuerId: number,
   page: number,
@@ -24,9 +19,7 @@ export async function getIssuerRequestsPage(
   order: 'asc' | 'desc' = 'asc',
   searchTerm = '',
 ): Promise<{ requests: IssuerRequestRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
-
-  /* --------------------------- ORDER BY helper --------------------------- */
+  /* --------------------------- ORDER BY -------------------------------- */
   const sortMap = {
     title: candidateCredentials.title,
     type: candidateCredentials.type,
@@ -34,26 +27,22 @@ export async function getIssuerRequestsPage(
     candidate: sql`coalesce(${users.name}, ${users.email})`,
   } as const
 
-  const orderExpr = order === 'asc' ? asc(sortMap[sortBy]) : desc(sortMap[sortBy])
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
 
-  /* --------------------------- WHERE clause ------------------------------ */
-  const baseWhere = eq(candidateCredentials.issuerId, issuerId)
+  /* ---------------------------- WHERE ---------------------------------- */
+  const searchCond = buildSearchCondition(searchTerm, [
+    candidateCredentials.title,
+    candidateCredentials.type,
+    users.name,
+    users.email,
+  ])
 
-  const whereClause =
-    searchTerm.trim().length === 0
-      ? baseWhere
-      : and(
-          baseWhere,
-          or(
-            ilike(candidateCredentials.title, `%${searchTerm}%`),
-            ilike(candidateCredentials.type, `%${searchTerm}%`),
-            ilike(users.name, `%${searchTerm}%`),
-            ilike(users.email, `%${searchTerm}%`),
-          ),
-        )
+  const whereClause = searchCond
+    ? and(eq(candidateCredentials.issuerId, issuerId), searchCond)
+    : eq(candidateCredentials.issuerId, issuerId)
 
-  /* --------------------------- Query ------------------------------------ */
-  const rows = await db
+  /* ----------------------------- QUERY --------------------------------- */
+  const baseQuery = db
     .select({
       id: candidateCredentials.id,
       title: candidateCredentials.title,
@@ -61,24 +50,23 @@ export async function getIssuerRequestsPage(
       status: candidateCredentials.status,
       candidateName: users.name,
       candidateEmail: users.email,
+      vcJson: candidateCredentials.vcJson,
     })
     .from(candidateCredentials)
     .leftJoin(candidates, eq(candidateCredentials.candidateId, candidates.id))
     .leftJoin(users, eq(candidates.userId, users.id))
-    .where(whereClause)
-    .orderBy(orderExpr)
-    .limit(pageSize + 1) // Fetch one extra to detect next page
-    .offset(offset)
+    .where(whereClause as any)
+    .orderBy(orderBy)
 
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
+  const { rows, hasNext } = await paginate<any>(baseQuery as any, page, pageSize)
 
-  const requests: IssuerRequestRow[] = rows.map((r) => ({
+  const requests: IssuerRequestRow[] = rows.map((r: any) => ({
     id: r.id,
     title: r.title,
     type: r.type,
     candidate: r.candidateName ?? r.candidateEmail ?? 'Unknown',
     status: r.status as CredentialStatus,
+    vcJson: r.vcJson ?? null,
   }))
 
   return { requests, hasNext }

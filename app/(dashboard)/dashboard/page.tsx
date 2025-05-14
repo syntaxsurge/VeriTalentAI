@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation'
-
 import { and, eq, desc } from 'drizzle-orm'
 import {
   BadgeCheck,
@@ -19,8 +17,8 @@ import IssuerCharts from '@/components/dashboard/issuer/charts'
 import RecruiterCharts from '@/components/dashboard/recruiter/charts'
 import { RoleBadge } from '@/components/dashboard/role-badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import {
   candidates,
   candidateCredentials,
@@ -30,6 +28,7 @@ import {
 import { users, teams } from '@/lib/db/schema/core'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
+import type { Role } from '@/lib/types'
 
 export const revalidate = 0
 
@@ -38,8 +37,7 @@ export const revalidate = 0
 /* -------------------------------------------------------------------------- */
 
 export default async function DashboardPage() {
-  const user = await getUser()
-  if (!user) redirect('/sign-in')
+  const user = await requireAuth()
 
   /* ------------------------------------------------------------------ */
   /* Candidate metrics & datasets                                       */
@@ -249,7 +247,7 @@ export default async function DashboardPage() {
               </p>
             </div>
 
-            <RoleBadge role={user.role} />
+            <RoleBadge role={user.role as Role} />
           </div>
         </CardContent>
       </Card>

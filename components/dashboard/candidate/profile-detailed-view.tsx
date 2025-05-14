@@ -1,130 +1,37 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useState, useMemo } from 'react'
 
-import { format, formatDistanceToNow } from 'date-fns'
 import {
-  BookOpen,
-  Briefcase,
   Award,
   BarChart4,
+  BookOpen,
+  Briefcase,
   ChevronDown,
   ChevronUp,
   Download,
-  Globe2,
   ExternalLink,
+  Globe2,
 } from 'lucide-react'
 import { FaTwitter } from 'react-icons/fa'
 import { SiGithub, SiLinkedin } from 'react-icons/si'
 
-import CredentialsTable, {
-  RowType as CredRow,
-} from '@/components/dashboard/recruiter/credentials-table'
-import PipelineEntriesTable, {
-  RowType as PipeRow,
-} from '@/components/dashboard/recruiter/pipeline-entries-table'
+import GenerateSummaryButton from '@/components/dashboard/candidate/generate-summary-button'
+import SkillPassesTable from '@/components/dashboard/candidate/skill-passes-table'
+import CredentialsTable from '@/components/dashboard/recruiter/credentials-table'
+import GenerateFitButton from '@/components/dashboard/recruiter/generate-fit-button'
+import PipelineEntriesTable from '@/components/dashboard/recruiter/pipeline-entries-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import StatusBadge from '@/components/ui/status-badge'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type { SnapshotMetrics } from '@/lib/types/candidate'
+import type { CandidateDetailedProfileViewProps, ProfileStat } from '@/lib/types/components'
 
 import ProfileHeader from './profile-header'
-
-/* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface StatusCounts {
-  verified: number
-  pending: number
-  rejected: number
-  unverified: number
-}
-
-export interface Pagination {
-  page: number
-  hasNext: boolean
-  pageSize: number
-  basePath: string
-  initialParams: Record<string, string>
-}
-
-export interface CredentialsSection {
-  rows: CredRow[]
-  sort: string
-  order: 'asc' | 'desc'
-  pagination: Pagination
-}
-
-export interface PipelineSection {
-  rows: PipeRow[]
-  sort: string
-  order: 'asc' | 'desc'
-  pagination: Pagination
-  addToPipelineForm?: React.ReactNode
-}
-
-export interface QuizAttempt {
-  id: number
-  quizId: number
-  score: number | null
-  maxScore: number | null
-  createdAt: Date
-}
-
-export interface Experience {
-  id: number
-  title: string
-  company: string | null
-  type?: string | null
-  link?: string | null
-  status?: string | null
-  createdAt: Date
-}
-
-export interface Project {
-  id: number
-  title: string
-  link: string | null
-  description: string | null
-  status?: string | null
-  createdAt: Date
-}
-
-export interface Socials {
-  twitterUrl?: string | null
-  githubUrl?: string | null
-  linkedinUrl?: string | null
-  websiteUrl?: string | null
-}
-
-export interface SnapshotMetrics {
-  uniqueIssuers: number
-  avgScore: number | null
-  experienceCount: number
-  projectCount: number
-}
-
-interface Props {
-  candidateId: number
-  name: string | null
-  email: string
-  avatarSrc?: string | null
-  bio: string | null
-  pipelineSummary?: string
-  statusCounts: StatusCounts
-  passes: QuizAttempt[]
-  snapshot?: SnapshotMetrics
-  credentials: CredentialsSection
-  experiences: Experience[]
-  projects: Project[]
-  socials: Socials
-  pipeline?: PipelineSection
-  showShare?: boolean
-}
 
 /* -------------------------------------------------------------------------- */
 /*                         D E F A U L T   V A L U E S                        */
@@ -135,19 +42,6 @@ const defaultSnapshot: SnapshotMetrics = {
   avgScore: null,
   experienceCount: 0,
   projectCount: 0,
-}
-
-/* -------------------------------------------------------------------------- */
-/*                          U T I L I T Y   H O O K S                         */
-/* -------------------------------------------------------------------------- */
-
-function usePrettyDate(d?: Date | null) {
-  return useMemo(() => {
-    if (!d) return '—'
-    const diff = Math.abs(Date.now() - d.getTime())
-    const threeDays = 1000 * 60 * 60 * 24 * 3
-    return diff < threeDays ? formatDistanceToNow(d, { addSuffix: true }) : format(d, 'PPP')
-  }, [d])
 }
 
 /* -------------------------------------------------------------------------- */
@@ -215,7 +109,9 @@ export default function CandidateDetailedProfileView({
   email,
   avatarSrc,
   bio,
+  summary,
   pipelineSummary,
+  fitSummary,
   statusCounts,
   passes,
   snapshot = defaultSnapshot,
@@ -225,9 +121,25 @@ export default function CandidateDetailedProfileView({
   socials,
   pipeline,
   showShare = true,
-}: Props) {
+}: CandidateDetailedProfileViewProps) {
+  /* Ensure numeric conversion to avoid string concatenation like "0005" */
   const totalCredentials =
-    statusCounts.verified + statusCounts.pending + statusCounts.rejected + statusCounts.unverified
+    Number(statusCounts.verified) +
+    Number(statusCounts.pending) +
+    Number(statusCounts.rejected) +
+    Number(statusCounts.unverified)
+
+  const [fitJson, setFitJson] = useState<string | null>(fitSummary ?? null)
+
+  const fitParsed = useMemo(() => {
+    if (!fitJson) return null
+    try {
+      return JSON.parse(fitJson)
+    } catch {
+      return null
+    }
+  }, [fitJson])
+
   const profilePath = `/candidates/${candidateId}`
 
   const socialIcons = [
@@ -235,7 +147,16 @@ export default function CandidateDetailedProfileView({
     { href: socials.githubUrl, icon: SiGithub, label: 'GitHub' },
     { href: socials.linkedinUrl, icon: SiLinkedin, label: 'LinkedIn' },
     { href: socials.websiteUrl, icon: Globe2, label: 'Website' },
-  ].filter((s) => !!s.href) as { href: string; icon: React.ElementType; label: string }[]
+  ].filter(Boolean) as { href: string; icon: React.ElementType; label: string }[]
+
+  /* ----------------------- Build profile stats --------------------------- */
+  const stats: ProfileStat[] = [
+    { label: 'Credentials', value: totalCredentials },
+    { label: 'Skill Passes', value: passes.rows.length },
+  ]
+  if (pipelineSummary) {
+    stats.push({ label: 'Pipelines', value: pipelineSummary })
+  }
 
   return (
     <section className='space-y-10'>
@@ -245,11 +166,7 @@ export default function CandidateDetailedProfileView({
         avatarSrc={avatarSrc}
         profilePath={profilePath}
         showShare={showShare}
-        stats={[
-          { label: 'Credentials', value: totalCredentials },
-          { label: 'Skill Passes', value: passes.length },
-          { label: 'Pipelines', value: pipelineSummary || '—' },
-        ]}
+        stats={stats}
         socials={socialIcons}
       />
 
@@ -265,7 +182,7 @@ export default function CandidateDetailedProfileView({
             </CardHeader>
             <CardContent className='space-y-4'>
               <p className='text-muted-foreground text-sm'>
-                Generate a professionally formatted résumé summarizing your profile, credentials,
+                Generate a professionally formatted résumé summarising your profile, credentials,
                 experiences, and projects.
               </p>
               <Button variant='secondary' className='w-full gap-2' asChild>
@@ -322,6 +239,70 @@ export default function CandidateDetailedProfileView({
             </Card>
           )}
 
+          {/* Summary */}
+          <Card>
+            <CardHeader className='flex flex-row items-start justify-between gap-2'>
+              <div>
+                <CardTitle>AI Summary</CardTitle>
+              </div>
+              <div className='flex gap-2'>
+                <GenerateSummaryButton candidateId={candidateId} />
+                <GenerateFitButton candidateId={candidateId} onGenerated={setFitJson} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {summary ? (
+                <p className='whitespace-pre-line'>{summary}</p>
+              ) : (
+                <p className='text-muted-foreground italic'>
+                  No AI summary generated yet — click the button above to create one.
+                </p>
+              )}
+
+              {/* ─────────────────── Recruiter fit summary ─────────────────── */}
+              <hr className='my-6' />
+              {fitParsed ? (
+                <div className='space-y-4'>
+                  <h4 className='font-semibold'>Why Hire</h4>
+                  <ul className='list-disc space-y-1 pl-5'>
+                    {fitParsed.bullets?.map((b: string, i: number) => <li key={i}>{b}</li>)}
+                  </ul>
+
+                  <p>
+                    <span className='font-semibold'>Best Pipeline:</span> {fitParsed.bestPipeline}
+                  </p>
+
+                  {fitParsed.pros?.length > 0 && (
+                    <div>
+                      <p className='font-semibold'>Pros</p>
+                      <ul className='list-disc space-y-1 pl-5'>
+                        {fitParsed.pros.map((p: string, i: number) => (
+                          <li key={i}>{p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {fitParsed.cons?.length > 0 && (
+                    <div>
+                      <p className='font-semibold'>Cons</p>
+                      <ul className='list-disc space-y-1 pl-5'>
+                        {fitParsed.cons.map((c: string, i: number) => (
+                          <li key={i}>{c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className='text-muted-foreground italic'>
+                  No recruiter fit summary yet — recruiters can click "Why Hire” to generate one.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Experience & Projects */}
           <Tabs defaultValue='experience' className='space-y-6'>
             <TabsList className='w-full'>
               <TabsTrigger value='experience' className='gap-2'>
@@ -334,13 +315,13 @@ export default function CandidateDetailedProfileView({
               </TabsTrigger>
             </TabsList>
 
+            {/* Experience */}
             <TabsContent value='experience' className='space-y-4'>
               {experiences.length === 0 ? (
                 <p className='text-muted-foreground'>No experience highlights yet.</p>
               ) : (
                 <ScrollArea className='max-h-[500px] pr-3'>
                   <HighlightList
-                    title='' /* omit header */
                     icon={Briefcase}
                     items={experiences}
                     renderItem={(exp) => (
@@ -381,13 +362,13 @@ export default function CandidateDetailedProfileView({
               )}
             </TabsContent>
 
+            {/* Projects */}
             <TabsContent value='projects' className='space-y-4'>
               {projects.length === 0 ? (
                 <p className='text-muted-foreground'>No project highlights yet.</p>
               ) : (
                 <ScrollArea className='max-h-[500px] pr-3'>
                   <HighlightList
-                    title='' /* omit header */
                     icon={BookOpen}
                     items={projects}
                     renderItem={(proj) => (
@@ -425,6 +406,34 @@ export default function CandidateDetailedProfileView({
             </TabsContent>
           </Tabs>
 
+          {/* Pipeline entries – moved above credentials */}
+          {pipeline && (
+            <Card id='pipeline-entries'>
+              <CardHeader className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
+                <CardTitle>Pipeline Entries</CardTitle>
+                {pipeline.addToPipelineForm}
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                <PipelineEntriesTable
+                  rows={pipeline.rows}
+                  sort={pipeline.sort}
+                  order={pipeline.order}
+                  basePath={pipeline.pagination.basePath}
+                  initialParams={pipeline.pagination.initialParams}
+                  searchQuery={pipeline.pagination.initialParams['pipeQ'] ?? ''}
+                />
+                <TablePagination
+                  page={pipeline.pagination.page}
+                  hasNext={pipeline.pagination.hasNext}
+                  basePath={pipeline.pagination.basePath}
+                  initialParams={pipeline.pagination.initialParams}
+                  pageSize={pipeline.pagination.pageSize}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Credentials */}
           <Card id='credentials'>
             <CardHeader>
               <CardTitle className='flex flex-wrap items-center gap-2'>
@@ -454,32 +463,7 @@ export default function CandidateDetailedProfileView({
             </CardContent>
           </Card>
 
-          {pipeline && (
-            <Card id='pipeline-entries'>
-              <CardHeader className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
-                <CardTitle>Pipeline Entries</CardTitle>
-                {pipeline.addToPipelineForm}
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <PipelineEntriesTable
-                  rows={pipeline.rows}
-                  sort={pipeline.sort}
-                  order={pipeline.order}
-                  basePath={pipeline.pagination.basePath}
-                  initialParams={pipeline.pagination.initialParams}
-                  searchQuery={pipeline.pagination.initialParams['pipeQ'] ?? ''}
-                />
-                <TablePagination
-                  page={pipeline.pagination.page}
-                  hasNext={pipeline.pagination.hasNext}
-                  basePath={pipeline.pagination.basePath}
-                  initialParams={pipeline.pagination.initialParams}
-                  pageSize={pipeline.pagination.pageSize}
-                />
-              </CardContent>
-            </Card>
-          )}
-
+          {/* Skill passes */}
           <Card id='skill-passes'>
             <CardHeader>
               <CardTitle className='flex items-center gap-2'>
@@ -487,26 +471,22 @@ export default function CandidateDetailedProfileView({
                 Skill Passes
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {passes.length === 0 ? (
-                <p className='text-muted-foreground text-sm'>No passes yet.</p>
-              ) : (
-                <ul className='space-y-3'>
-                  {passes.map((p) => (
-                    <li
-                      key={p.id}
-                      className='bg-muted flex flex-wrap items-center justify-between gap-2 rounded-lg px-3 py-2'
-                    >
-                      <span className='font-medium'>
-                        Quiz #{p.quizId} • Score {p.score ?? '—'}
-                      </span>
-                      <span className='text-muted-foreground text-xs'>
-                        {usePrettyDate(p.createdAt)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <CardContent className='space-y-4'>
+              <SkillPassesTable
+                rows={passes.rows}
+                sort={passes.sort}
+                order={passes.order}
+                basePath={passes.pagination.basePath}
+                initialParams={passes.pagination.initialParams}
+                searchQuery={passes.pagination.initialParams['passQ'] ?? ''}
+              />
+              <TablePagination
+                page={passes.pagination.page}
+                hasNext={passes.pagination.hasNext}
+                basePath={passes.pagination.basePath}
+                initialParams={passes.pagination.initialParams}
+                pageSize={passes.pagination.pageSize}
+              />
             </CardContent>
           </Card>
         </main>

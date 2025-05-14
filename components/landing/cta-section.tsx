@@ -2,45 +2,79 @@
 
 import Link from 'next/link'
 
+import { motion } from 'framer-motion'
+
 import { Button } from '@/components/ui/button'
 
 export default function CTASection() {
   return (
-    <section id='cta' className='relative isolate -mx-4 overflow-hidden md:-mx-6'>
-      <div className='pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600' />
+    <section id='cta' className='relative isolate overflow-hidden px-4 py-32 sm:px-6'>
+      <Backdrop />
 
-      <div className='mx-auto max-w-4xl px-4 py-24 text-center sm:py-32'>
-        <h2 className='text-3xl font-extrabold tracking-tight text-white sm:text-4xl'>
-          Ready to Build a Verifiable Profile?
-        </h2>
-        <p className='mx-auto mt-4 max-w-2xl text-lg/relaxed text-white/90'>
-          Showcase provable achievements and let recruiters trust you instantly.
-        </p>
+      <div className='mx-auto max-w-4xl px-4 text-center'>
+        <motion.h2
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className='bg-gradient-to-r from-white via-neutral-200 to-white bg-clip-text text-4xl font-extrabold tracking-tight text-balance text-transparent sm:text-5xl md:text-6xl'
+        >
+          Bring&nbsp;Verifiable&nbsp;Trust&nbsp;to&nbsp;Hiring&nbsp;Today
+        </motion.h2>
 
-        <div className='mt-10 flex flex-wrap justify-center gap-4'>
-          <Button asChild size='lg' className='rounded-full'>
-            <Link href='/sign-up'>Get Started</Link>
-          </Button>
+        <motion.p
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
+          className='mx-auto mt-6 max-w-xl text-lg/relaxed text-white/90'
+        >
+          Launch your workspace, mint a did:cheqd identifier and start issuing proofs in minutes—no
+          blockchain knowledge required.
+        </motion.p>
 
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
+          className='mt-12'
+        >
           <Button
             asChild
             size='lg'
-            variant='outline'
-            className='rounded-full shadow-lg backdrop-blur hover:bg-white/10 hover:text-white'
+            className='relative isolate overflow-hidden rounded-full bg-white/10 px-8 py-3 font-semibold text-white shadow-xl transition-transform duration-200 hover:-translate-y-0.5 hover:bg-white/20 hover:shadow-2xl focus-visible:outline-none'
           >
-            <Link href='/sign-up?role=recruiter'>For Recruiters</Link>
+            <Link href='/sign-up'>Get&nbsp;Started</Link>
           </Button>
-
-          <Button
-            asChild
-            size='lg'
-            variant='outline'
-            className='rounded-full shadow-lg backdrop-blur hover:bg-white/10 hover:text-white'
-          >
-            <Link href='/sign-up?role=issuer'>For Issuers</Link>
-          </Button>
-        </div>
+        </motion.div>
       </div>
     </section>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                  BACKDROP                                  */
+/* -------------------------------------------------------------------------- */
+
+function Backdrop() {
+  return (
+    <div className='pointer-events-none absolute inset-0 -z-10'>
+      {/* Gradient waves */}
+      <div className='bg-viskify-gradient animate-slow-pan absolute -inset-20 opacity-60 blur-3xl' />
+      {/* Grid overlay */}
+      <div className='absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:64px_64px] opacity-10' />
+
+      <style jsx global>{`
+        @keyframes slow-pan {
+          0% {
+            transform: translate3d(0%, 0%, 0) rotate(0deg);
+          }
+          100% {
+            transform: translate3d(-20%, -10%, 0) rotate(-4deg);
+          }
+        }
+      `}</style>
+    </div>
   )
 }

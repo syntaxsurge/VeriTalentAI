@@ -1,20 +1,18 @@
-export interface PlanMeta {
-  /** Unique key used internally */
-  key: 'free' | 'base' | 'plus'
-  /** Human-friendly label */
-  name: string
-  /** Marketing feature bullets */
-  features: string[]
-  /** Highlight this card in marketing pages */
-  highlight?: boolean
-}
+import type { PlanKey, PlanMeta } from '@/lib/types/pricing'
 
 /**
- * Static copy for each pricing tier. Stripe handles live pricing; we only
- * describe qualitative differences here so both the landing & in-app pages
- * stay in sync.
+ * Subscription plan metadata shared by UI and seeders.
+ * All billing is handled by Stripe; prices are defined there, so this module
+ * concerns itself only with display order and static feature lists.
  */
-export const PLAN_META: PlanMeta[] = [
+
+export const PLAN_KEYS: readonly PlanKey[] = ['free', 'base', 'plus'] as const
+
+/**
+ * Immutable feature table.
+ * ⚠️  Keep this array **sorted** in display order for the pricing grid.
+ */
+export const PLAN_META: readonly PlanMeta[] = [
   {
     key: 'free',
     name: 'Free',
@@ -51,4 +49,16 @@ export const PLAN_META: PlanMeta[] = [
       'Priority Issuer Application Review',
     ],
   },
-]
+] as const
+
+/**
+ * Helper: return strongly-typed plan metadata for a given key.
+ */
+export function getPlanMeta(key: PlanKey): PlanMeta {
+  const meta = PLAN_META.find((p) => p.key === key)
+  if (!meta) throw new Error(`Unknown plan key: ${key}`)
+  return meta
+}
+
+/* Re-export typings for convenience */
+export type { PlanMeta }

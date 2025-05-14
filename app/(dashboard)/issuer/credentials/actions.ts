@@ -11,30 +11,21 @@ import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 
 /* -------------------------------------------------------------------------- */
-/*                               H E L P E R S                                */
-/* -------------------------------------------------------------------------- */
-
-function buildError(message: string) {
-  return { error: message }
-}
-
-/* -------------------------------------------------------------------------- */
-/*                       A P P R O V E  /  S I G N  V C                       */
+/*                         A P P R O V E  /  I S S U E                        */
 /* -------------------------------------------------------------------------- */
 
 export const approveCredentialAction = validatedActionWithUser(
   z.object({ credentialId: z.coerce.number() }),
-  async ({ credentialId }, _, user) => {
-    /* 1. issuer ownership */
+  async ({ credentialId }, _formData, user) => {
+    /* Issuer & credential ------------------------------------------------- */
     const [issuer] = await db
       .select()
       .from(issuers)
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
-    if (!issuer) return buildError('Issuer not found.')
-    if (!issuer.did) return buildError('Link a DID before approving credentials.')
+    if (!issuer) return { error: 'Issuer not found.' }
+    if (!issuer.did) return { error: 'Link a cheqd DID before approving credentials.' }
 
-    /* 2. credential row */
     const [cred] = await db
       .select()
       .from(candidateCredentials)
@@ -45,17 +36,17 @@ export const approveCredentialAction = validatedActionWithUser(
         ),
       )
       .limit(1)
-    if (!cred) return buildError('Credential not found for this issuer.')
-    if (cred.status === CredentialStatus.VERIFIED) return buildError('Credential already verified.')
+    if (!cred) return { error: 'Credential not found for this issuer.' }
+    if (cred.status === CredentialStatus.VERIFIED) return { error: 'Credential already verified.' }
 
-    /* 3. subject DID */
+    /* Candidate + subject DID -------------------------------------------- */
     const [candRow] = await db
       .select({ cand: candidates, candUser: users })
       .from(candidates)
       .leftJoin(users, eq(candidates.userId, users.id))
       .where(eq(candidates.id, cred.candidateId))
       .limit(1)
-    if (!candRow?.candUser) return buildError('Candidate user not found.')
+    if (!candRow?.candUser) return { error: 'Candidate user not found.' }
 
     const [teamRow] = await db
       .select({ did: teams.did })
@@ -63,39 +54,41 @@ export const approveCredentialAction = validatedActionWithUser(
       .leftJoin(teams, eq(teamMembers.teamId, teams.id))
       .where(eq(teamMembers.userId, candRow.candUser.id))
       .limit(1)
-    if (!teamRow?.did)
-      return buildError('Candidate has no DID - ask them to create one before verification.')
 
-    /* 4. Issue VC if not yet issued */
-    let vcJson: any = null
-    if (!cred.vcJson) {
-      try {
-        vcJson = await issueCredential({
-          issuerDid: issuer.did,
-          subjectDid: teamRow.did,
-          attributes: {
-            credentialTitle: cred.title,
-            candidateName: candRow.candUser.name || candRow.candUser.email || 'Unknown',
-          },
-          credentialName: cred.type,
-        })
-      } catch (err: any) {
-        return buildError(`Failed to issue credential: ${err?.message || String(err)}`)
-      }
+    const subjectDid = teamRow?.did
+    if (!subjectDid)
+      return { error: 'Candidate has no DID – ask them to create one before verification.' }
+
+    /* Issue VC via cheqd Studio ------------------------------------------ */
+    let credential
+    try {
+      credential = await issueCredential({
+        issuerDid: issuer.did,
+        subjectDid,
+        attributes: {
+          title: cred.title,
+          type: cred.type,
+          candidateName: candRow.candUser.name || candRow.candUser.email || 'Unknown',
+        },
+        credentialName: 'ViskifyCredential',
+      })
+    } catch (err: any) {
+      return { error: `Failed to issue credential via cheqd: ${err?.message || String(err)}` }
     }
 
-    /* 5. persist */
+    /* Persist DB changes -------------------------------------------------- */
     await db
       .update(candidateCredentials)
       .set({
         status: CredentialStatus.VERIFIED,
         verified: true,
         verifiedAt: new Date(),
-        vcJson: vcJson ? JSON.stringify(vcJson) : cred.vcJson, // preserve if already exists
+        vcJwt: credential?.proof?.jwt ?? null,
+        vcJson: JSON.stringify(credential),
       })
       .where(eq(candidateCredentials.id, cred.id))
 
-    return { success: 'Credential verified.' }
+    return { success: 'Credential verified and issued via cheqd.' }
   },
 )
 
@@ -105,13 +98,13 @@ export const approveCredentialAction = validatedActionWithUser(
 
 export const rejectCredentialAction = validatedActionWithUser(
   z.object({ credentialId: z.coerce.number() }),
-  async ({ credentialId }, _, user) => {
+  async ({ credentialId }, _formData, user) => {
     const [issuer] = await db
       .select()
       .from(issuers)
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
-    if (!issuer) return buildError('Issuer not found.')
+    if (!issuer) return { error: 'Issuer not found.' }
 
     await db
       .update(candidateCredentials)
@@ -137,13 +130,13 @@ export const rejectCredentialAction = validatedActionWithUser(
 
 export const unverifyCredentialAction = validatedActionWithUser(
   z.object({ credentialId: z.coerce.number() }),
-  async ({ credentialId }, _, user) => {
+  async ({ credentialId }, _formData, user) => {
     const [issuer] = await db
       .select()
       .from(issuers)
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
-    if (!issuer) return buildError('Issuer not found.')
+    if (!issuer) return { error: 'Issuer not found.' }
 
     const [cred] = await db
       .select()
@@ -155,9 +148,9 @@ export const unverifyCredentialAction = validatedActionWithUser(
         ),
       )
       .limit(1)
-    if (!cred) return buildError('Credential not found for this issuer.')
+    if (!cred) return { error: 'Credential not found for this issuer.' }
     if (cred.status !== CredentialStatus.VERIFIED)
-      return buildError('Only verified credentials can be unverified.')
+      return { error: 'Only verified credentials can be unverified.' }
 
     await db
       .update(candidateCredentials)

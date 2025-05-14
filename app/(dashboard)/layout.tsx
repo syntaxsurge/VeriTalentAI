@@ -11,8 +11,7 @@ import {
   Award,
   BookOpen,
   Key,
-  Settings as Cog,
-  Users as UsersIcon,
+  Settings,
   Activity,
   Shield,
   Menu,
@@ -21,9 +20,10 @@ import {
   Star,
 } from 'lucide-react'
 
-import { SidebarNav, type SidebarNavItem } from '@/components/dashboard/sidebar-nav'
+import { SidebarNav } from '@/components/dashboard/sidebar-nav'
 import { Button } from '@/components/ui/button'
 import { useUser } from '@/lib/auth'
+import { SidebarNavItem } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                         P E N D I N G   C O U N T S                        */
@@ -53,6 +53,7 @@ function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
       return [
         { href: '/recruiter/talent', icon: Users, label: 'Talent' },
         { href: '/recruiter/pipelines', icon: FolderKanban, label: 'Pipelines' },
+        { href: '/recruiter/create-did', icon: Key, label: 'Create DID' },
       ]
     case 'issuer':
       return [
@@ -63,6 +64,7 @@ function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
           badgeCount: counts?.issuerRequests,
         },
         { href: '/issuer/onboard', icon: ShieldCheck, label: 'Organisation' },
+        { href: '/issuer/create-did', icon: Key, label: 'Create DID' },
       ]
     case 'admin':
       return [
@@ -75,6 +77,7 @@ function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
           badgeCount: counts?.adminPendingIssuers,
         },
         { href: '/admin/platform-did', icon: Key, label: 'Platform DID' },
+        { href: '/admin/subscription-plans', icon: Tag, label: 'Subscription Plans' },
       ]
     default:
       return []
@@ -109,10 +112,15 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     adminPendingIssuers: 0,
   })
 
-  /* Resolve user once (suspense-safe) */
+  /* Resolve user once (supports promise OR plain object) */
   useEffect(() => {
     let mounted = true
-    userPromise.then((u) => mounted && setUser(u))
+    const maybe = userPromise as unknown
+    if (maybe && typeof maybe === 'object' && typeof (maybe as any).then === 'function') {
+      ;(maybe as Promise<any>).then((u) => mounted && setUser(u))
+    } else {
+      setUser(maybe as any)
+    }
     return () => {
       mounted = false
     }
@@ -141,8 +149,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   /* Settings navigation */
   const settingsNav: SidebarNavItem[] = [
-    { href: '/settings/general', icon: Cog, label: 'General' },
-    { href: '/settings/team', icon: UsersIcon, label: 'Team' },
+    { href: '/settings/general', icon: Settings, label: 'General' },
+    { href: '/settings/team', icon: Users, label: 'Team' },
     { href: '/settings/activity', icon: Activity, label: 'Activity' },
     { href: '/settings/security', icon: Shield, label: 'Security' },
   ]

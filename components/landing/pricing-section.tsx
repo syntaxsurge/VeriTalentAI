@@ -1,6 +1,6 @@
 import { PricingGrid } from '@/components/pricing/pricing-grid'
 
-export default async function PricingSection() {
+export default function PricingSection() {
   return (
     <section id='pricing' className='bg-muted/40 py-24'>
       <div className='mx-auto max-w-6xl px-4 text-center'>

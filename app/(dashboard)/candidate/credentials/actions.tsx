@@ -1,7 +1,5 @@
 'use server'
 
-import { redirect } from 'next/navigation'
-
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -20,16 +18,24 @@ import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 /*                               A D D  C R E D                               */
 /* -------------------------------------------------------------------------- */
 
+/** Enum wrapper keeps schema strongly typed. */
 const CategoryEnum = z.nativeEnum(CredentialCategory)
 
+/** Core payload schema – no proof fields required. */
+const AddCredentialSchema = z.object({
+  title: z.string().min(2).max(200),
+  category: CategoryEnum,
+  type: z.string().min(1).max(50),
+  fileUrl: z.string().url('Invalid URL'),
+  issuerId: z.coerce.number().optional(),
+})
+
+/* -------------------------------------------------------------------------- */
+/*                           S E R V E R   A C T I O N                        */
+/* -------------------------------------------------------------------------- */
+
 export const addCredential = validatedActionWithUser(
-  z.object({
-    title: z.string().min(2).max(200),
-    category: CategoryEnum,
-    type: z.string().min(1).max(50),
-    fileUrl: z.string().url('Invalid URL'),
-    issuerId: z.coerce.number().optional(),
-  }),
+  AddCredentialSchema,
   async ({ title, category, type, fileUrl, issuerId }, _formData, user) => {
     /* --------------------------- issuer lookup -------------------------- */
     let linkedIssuerId: number | undefined
@@ -84,6 +90,7 @@ export const addCredential = validatedActionWithUser(
       status,
     })
 
-    redirect('/candidate/credentials')
+    /* --------------------------- response ------------------------------- */
+    return { success: 'Credential added.' }
   },
 )

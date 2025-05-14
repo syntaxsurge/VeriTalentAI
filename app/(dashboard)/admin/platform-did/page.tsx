@@ -1,32 +1,24 @@
-import { redirect } from 'next/navigation'
-
 import { KeyRound } from 'lucide-react'
 
 import PageCard from '@/components/ui/page-card'
-import { getUser } from '@/lib/db/queries/queries'
+import { PLATFORM_ISSUER_DID } from '@/lib/config'
 
 import UpdateDidForm from './update-did-form'
 
 export const revalidate = 0
 
 export default async function PlatformDidPage() {
-  const user = await getUser()
-  if (!user) redirect('/sign-in')
-  if (user.role !== 'admin') redirect('/dashboard')
-
-  const existingDid = process.env.PLATFORM_ISSUER_DID ?? null
-
   return (
     <PageCard
       icon={KeyRound}
       title='Platform DID'
-      description='The platform uses this DID whenever Viskify itself issues verifiable credentials.'
+      description='The platform uses this cheqd DID whenever Viskify itself issues verifiable credentials.'
     >
       <p className='text-muted-foreground mb-6 text-sm'>
         Paste an existing DID or generate a fresh one below. The value is stored in the environment
-        file and used for credential issuance.
+        file and utilised for credential issuance on the cheqd network.
       </p>
-      <UpdateDidForm defaultDid={existingDid} />
+      <UpdateDidForm defaultDid={PLATFORM_ISSUER_DID} />
     </PageCard>
   )
 }

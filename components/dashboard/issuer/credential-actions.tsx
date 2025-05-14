@@ -14,18 +14,13 @@ import {
 } from '@/app/(dashboard)/issuer/credentials/actions'
 import { Button } from '@/components/ui/button'
 import { CredentialStatus } from '@/lib/db/schema/candidate'
+import type { CredentialActionsProps } from '@/lib/types/components'
+import type { ActionState } from '@/lib/types/forms'
 
-type ActionState = { error?: string; success?: string }
-
-interface Props {
-  credentialId: number
-  status: CredentialStatus
-}
-
-export function CredentialActions({ credentialId, status }: Props) {
+export function CredentialActions({ credentialId, status }: CredentialActionsProps) {
   const router = useRouter()
 
-  /* ------------------ approve ------------------ */
+  /* ------------------ approve ------------------ */
   const [approveState, approve, approving] = useActionState<ActionState, FormData>(
     approveCredentialAction,
     { error: '', success: '' },
@@ -69,6 +64,9 @@ export function CredentialActions({ credentialId, status }: Props) {
     startTransition(() => fn(fd))
   }
 
+  /* Label helper */
+  const approveLabel = 'Approve & Sign VC'
+
   /* ---------------- UI blocks ------------------ */
   /* Pending — approve & reject */
   if (status === CredentialStatus.PENDING || status === CredentialStatus.UNVERIFIED) {
@@ -83,7 +81,7 @@ export function CredentialActions({ credentialId, status }: Props) {
                 Processing…
               </>
             ) : (
-              'Approve & Sign VC'
+              approveLabel
             )}
           </Button>
         </form>
@@ -116,7 +114,7 @@ export function CredentialActions({ credentialId, status }: Props) {
               Processing…
             </>
           ) : (
-            'Approve & Sign VC'
+            approveLabel
           )}
         </Button>
       </form>

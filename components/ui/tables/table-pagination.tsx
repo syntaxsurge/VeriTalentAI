@@ -5,39 +5,12 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import { Button } from '@/components/ui/button'
+import { TablePaginationProps } from '@/lib/types/tables'
+import { buildLink } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
-/*                                   Props                                    */
+/*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
-
-interface TablePaginationProps {
-  /** 1‑based current page. */
-  page: number
-  /** Whether another page exists. */
-  hasNext: boolean
-  /** Route to navigate (e.g. "/settings/activity”). */
-  basePath: string
-  /** Existing query params (excluding "page”). */
-  initialParams: Record<string, string>
-  /** Current page size. */
-  pageSize: number
-  /** Options for selector (defaults to 10/20/50). */
-  pageSizeOptions?: number[]
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => {
-    if (v === '') sp.delete(k) // tidy URL
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
-}
 
 function getPages(current: number, hasNext: boolean): number[] {
   const pages: number[] = [1]
@@ -49,7 +22,7 @@ function getPages(current: number, hasNext: boolean): number[] {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                   View                                     */
+/*                                   View                                     */
 /* -------------------------------------------------------------------------- */
 
 export function TablePagination({
@@ -81,12 +54,12 @@ export function TablePagination({
 
   return (
     <div className='flex w-full flex-col gap-3 py-4 sm:flex-row sm:items-center'>
-      {/* Left — current page label */}
+      {/* Left — current page label */}
       <span className='text-muted-foreground text-sm'>Page {page}</span>
 
-      {/* Right — controls */}
+      {/* Right — controls */}
       <div className='flex items-center gap-2 sm:ml-auto'>
-        {/* Page‑size selector */}
+        {/* Page-size selector */}
         <select
           value={pageSize}
           onChange={(e) =>

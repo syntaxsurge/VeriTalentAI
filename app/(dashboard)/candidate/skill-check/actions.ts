@@ -2,23 +2,30 @@
 
 import { eq } from 'drizzle-orm'
 
+import { openAIAssess } from '@/lib/ai/openai' /* ← centralised helper */
+import { requireAuth } from '@/lib/auth/guards'
 import { issueCredential } from '@/lib/cheqd'
+import { PLATFORM_ISSUER_DID } from '@/lib/config'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
-import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/candidate'
+import { candidates, skillQuizzes } from '@/lib/db/schema/candidate'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 
-import { openAIAssess } from './openai'
-
 export async function startQuizAction(formData: FormData) {
-  const user = await getUser()
-  if (!user) return { score: 0, message: 'Not logged in.' }
+  const user = await requireAuth(['candidate'])
 
+  /* ------------------------------------------------------------------ */
+  /*                           Payload parse                            */
+  /* ------------------------------------------------------------------ */
   const quizId = formData.get('quizId')
   const answer = formData.get('answer')
-  if (!quizId || !answer) return { score: 0, message: 'Invalid request.' }
+  const seed = formData.get('seed') as string | null
 
-  /* Ensure candidate record exists */
+  if (!quizId || !answer) return { score: 0, message: 'Invalid request.' }
+  if (!seed || !/^0x[0-9a-fA-F]{1,64}$/.test(seed)) return { score: 0, message: 'Invalid seed.' }
+
+  /* ------------------------------------------------------------------ */
+  /*                     Candidate profile ensure                       */
+  /* ------------------------------------------------------------------ */
   let [candidateRow] = await db
     .select()
     .from(candidates)
@@ -26,11 +33,13 @@ export async function startQuizAction(formData: FormData) {
     .limit(1)
 
   if (!candidateRow) {
-    const [newCand] = await db.insert(candidates).values({ userId: user.id, bio: '' }).returning()
-    candidateRow = newCand
+    const [created] = await db.insert(candidates).values({ userId: user.id, bio: '' }).returning()
+    candidateRow = created
   }
 
-  /* Require team DID */
+  /* ------------------------------------------------------------------ */
+  /*                           Team DID check                           */
+  /* ------------------------------------------------------------------ */
   const [teamRow] = await db
     .select({ did: teams.did })
     .from(teamMembers)
@@ -39,11 +48,11 @@ export async function startQuizAction(formData: FormData) {
     .limit(1)
 
   const subjectDid = teamRow?.did ?? null
-  if (!subjectDid) {
-    return { score: 0, message: 'Please create your team DID before taking a quiz.' }
-  }
+  if (!subjectDid) return { score: 0, message: 'Please create your team DID before taking a quiz.' }
 
-  /* Quiz lookup */
+  /* ------------------------------------------------------------------ */
+  /*                           Quiz lookup                              */
+  /* ------------------------------------------------------------------ */
   const [quiz] = await db
     .select()
     .from(skillQuizzes)
@@ -51,40 +60,45 @@ export async function startQuizAction(formData: FormData) {
     .limit(1)
   if (!quiz) return { score: 0, message: 'Quiz not found.' }
 
-  /* AI grading */
+  /* ------------------------------------------------------------------ */
+  /*                          AI assessment                             */
+  /* ------------------------------------------------------------------ */
   const { aiScore } = await openAIAssess(String(answer), quiz.title)
   const passed = aiScore >= 70
-  let vcIssuedId: string | undefined
+
   let message = `You scored ${aiScore}. ${passed ? 'You passed!' : 'You failed.'}`
+
+  let proofJwt = ''
+  let vcJson = ''
 
   if (passed) {
     try {
-      const vc = await issueCredential({
-        issuerDid: process.env.PLATFORM_ISSUER_DID || '',
+      const credential = await issueCredential({
+        issuerDid: PLATFORM_ISSUER_DID,
         subjectDid,
         attributes: {
           skillQuiz: quiz.title,
           score: aiScore,
           candidateName: user.name || user.email,
         },
-        credentialName: 'SkillPassVC',
+        credentialName: 'SkillPass',
       })
-      vcIssuedId = vc?.proof?.jwt || 'SkillPassVC'
-      message += ' A Skill Pass VC has been issued.'
-    } catch (err: any) {
-      message += ` (VC issuance failed: ${String(err)})`
+      vcJson = JSON.stringify(credential)
+      proofJwt = credential?.proof?.jwt ?? ''
+      message += ' Your Skill Pass credential has been issued!'
+    } catch (err) {
+      console.error('Credential issuance failed:', err)
+      message += ' However, issuing your credential failed. Please try again later.'
     }
   }
 
-  /* Persist attempt */
-  await db.insert(quizAttempts).values({
-    candidateId: candidateRow.id,
-    quizId: quiz.id,
+  return {
     score: aiScore,
-    maxScore: 100,
-    pass: passed ? 1 : 0,
-    vcIssuedId,
-  })
-
-  return { score: aiScore, message }
+    message,
+    passed,
+    proofJwt,
+    vcJson,
+    quizId: quiz.id,
+    seed,
+  }
 }

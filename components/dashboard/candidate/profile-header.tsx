@@ -1,10 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { ReactNode } from 'react'
 
-import { Share2, Clipboard } from 'lucide-react'
-import { toast } from 'sonner'
+import { Share2, Clipboard, ExternalLink } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -15,28 +13,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import type { ProfileHeaderProps } from '@/lib/types/components'
+import { copyToClipboard } from '@/lib/utils'
 
-export interface Stat {
-  label: string
-  value: React.ReactNode
-}
-
-export interface Social {
-  href: string
-  icon: React.ElementType
-  label: string
-}
-
-interface ProfileHeaderProps {
-  name: string | null
-  email: string
-  avatarSrc?: string | null
-  profilePath?: string
-  showShare?: boolean
-  stats?: Stat[]
-  socials?: Social[]
-  children?: ReactNode
-}
+/* -------------------------------------------------------------------------- */
+/*                                   View                                     */
+/* -------------------------------------------------------------------------- */
 
 export default function ProfileHeader({
   name,
@@ -44,6 +26,7 @@ export default function ProfileHeader({
   avatarSrc,
   profilePath,
   showShare = false,
+  showPublicProfile = false,
   stats = [],
   socials = [],
   children,
@@ -53,11 +36,14 @@ export default function ProfileHeader({
     if (!profilePath) return
     const url =
       typeof window !== 'undefined' ? `${window.location.origin}${profilePath}` : profilePath
-    navigator.clipboard
-      .writeText(url)
-      .then(() => toast.success('Profile link copied'))
-      .catch(() => toast.error('Copy failed'))
+    copyToClipboard(url)
   }
+
+  /* --------------------- Filter invalid social links ------------------ */
+  const validSocials = socials.filter(
+    (s): s is (typeof socials)[number] & { href: string } =>
+      typeof s.href === 'string' && s.href.trim().length > 0,
+  )
 
   /* ------------------------------- view ------------------------------- */
   return (
@@ -70,10 +56,10 @@ export default function ProfileHeader({
           {/* Avatar + identity */}
           <div className='flex flex-col items-center gap-4 sm:flex-row sm:items-end'>
             <UserAvatar
-              src={avatarSrc ?? undefined}
               name={name}
               email={email}
               className='ring-background -mt-20 size-28 ring-4 sm:-mt-14'
+              src={avatarSrc ?? undefined}
             />
             <div className='text-center sm:text-left'>
               <h1 className='text-2xl leading-tight font-extrabold'>{name || 'Unnamed'}</h1>
@@ -83,23 +69,34 @@ export default function ProfileHeader({
             </div>
           </div>
 
-          {/* Share */}
-          {showShare && profilePath && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='outline' size='sm' className='gap-2'>
-                  <Share2 className='h-4 w-4' />
-                  Share
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end' className='rounded-lg p-1 shadow-lg'>
-                <DropdownMenuItem onClick={copyLink} className='cursor-pointer'>
-                  <Clipboard className='mr-2 h-4 w-4' />
-                  Copy URL
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {/* Actions */}
+          <div className='flex flex-wrap gap-2'>
+            {showShare && profilePath && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='outline' size='sm' className='gap-2'>
+                    <Share2 className='h-4 w-4' />
+                    Share
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end' className='rounded-lg p-1 shadow-lg'>
+                  <DropdownMenuItem onClick={copyLink} className='cursor-pointer'>
+                    <Clipboard className='mr-2 h-4 w-4' />
+                    Copy URL
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {showPublicProfile && profilePath && (
+              <Button asChild variant='default' size='sm' className='gap-2'>
+                <Link href={profilePath} target='_blank' rel='noopener noreferrer'>
+                  <ExternalLink className='h-4 w-4' />
+                  View Profile
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Stats */}
@@ -122,9 +119,9 @@ export default function ProfileHeader({
         )}
 
         {/* Socials */}
-        {socials.length > 0 && (
+        {validSocials.length > 0 && (
           <div className='flex flex-wrap items-center justify-center gap-2 border-t p-4'>
-            {socials.map((s) => (
+            {validSocials.map((s) => (
               <Tooltip key={s.label}>
                 <TooltipTrigger asChild>
                   <Button

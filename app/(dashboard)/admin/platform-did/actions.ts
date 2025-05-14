@@ -1,60 +1,31 @@
 'use server'
 
-import fs from 'fs/promises'
-import path from 'path'
-
 import { revalidatePath } from 'next/cache'
 
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { createCheqdDID } from '@/lib/cheqd'
+import { upsertEnv } from '@/lib/utils/env.server'
 
 /* -------------------------------------------------------------------------- */
-/*                               .env HELPERS                                 */
-/* -------------------------------------------------------------------------- */
-
-const ENV_PATH = path.resolve(process.cwd(), '.env')
-
-async function upsertEnv(key: string, value: string) {
-  let contents = ''
-  try {
-    contents = await fs.readFile(ENV_PATH, 'utf8')
-  } catch {
-    /* .env may not exist yet - will create */
-  }
-
-  const lines = contents.split('\n')
-  const regex = new RegExp(`^${key}=.*$`)
-  let found = false
-
-  const newLines = lines.map((ln) => {
-    if (regex.test(ln)) {
-      found = true
-      return `${key}=${value}`
-    }
-    return ln
-  })
-
-  if (!found) newLines.push(`${key}=${value}`)
-
-  await fs.writeFile(ENV_PATH, newLines.join('\n'), 'utf8')
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               A C T I O N                                  */
+/*                              V A L I D A T I O N                           */
 /* -------------------------------------------------------------------------- */
 
 const schema = z.object({
-  /** Optional DID - when absent we auto-generate */
+  /** Optional DID provided by admin; when absent a fresh one is created. */
   did: z
     .string()
     .trim()
     .optional()
-    .refine((v) => !v || /^did:[a-z0-9]+:[^\s]+$/i.test(v), {
-      message: 'Invalid DID format.',
+    .refine((v) => !v || /^did:cheqd:(testnet|mainnet):[0-9a-zA-Z-]{32,}$/.test(v), {
+      message: 'Invalid cheqd DID (expected did:cheqd:testnet:<uuid> or did:cheqd:mainnet:<uuid>).',
     }),
 })
+
+/* -------------------------------------------------------------------------- */
+/*                                 A C T I O N                                */
+/* -------------------------------------------------------------------------- */
 
 export const upsertPlatformDidAction = validatedActionWithUser(
   schema,
@@ -63,21 +34,21 @@ export const upsertPlatformDidAction = validatedActionWithUser(
 
     let newDid = did?.trim()
 
-    /* Create via cheqd when no DID provided */
+    /* Auto-generate when not supplied ----------------------------------- */
     if (!newDid) {
       try {
-        const res = await createCheqdDID()
-        newDid = res.did
+        const { did: generated } = await createCheqdDID('testnet')
+        newDid = generated
       } catch (err: any) {
-        return { error: `Failed to generate DID: ${String(err)}` }
+        return { error: `Failed to create cheqd DID: ${err?.message || String(err)}` }
       }
     }
 
+    /* Persist to environment -------------------------------------------- */
     try {
-      await upsertEnv('PLATFORM_ISSUER_DID', newDid!)
-      process.env.PLATFORM_ISSUER_DID = newDid!
-    } catch (err: any) {
-      return { error: `Failed to update .env: ${String(err)}` }
+      await upsertEnv('NEXT_PUBLIC_PLATFORM_ISSUER_DID', newDid!)
+    } catch (envErr: any) {
+      return { error: `Failed to persist DID to environment file: ${String(envErr)}` }
     }
 
     revalidatePath('/admin/platform-did')

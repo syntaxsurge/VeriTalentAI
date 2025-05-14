@@ -7,21 +7,17 @@ import { updateAccount } from '@/app/(auth)/actions'
 import { ActionButton } from '@/components/ui/action-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { GeneralFormProps } from '@/lib/types/forms'
 
-interface Props {
-  defaultName: string
-  defaultEmail: string
-}
-
-export default function GeneralForm({ defaultName, defaultEmail }: Props) {
+export default function GeneralForm({ defaultName, defaultEmail }: GeneralFormProps) {
   const router = useRouter()
   const [name, setName] = useState(defaultName)
   const [email, setEmail] = useState(defaultEmail)
 
   async function handleSave() {
     const fd = new FormData()
-    fd.append('name', name)
-    fd.append('email', email)
+    fd.append('name', name.trim())
+    fd.append('email', email.trim().toLowerCase())
     const res = await updateAccount({}, fd)
     if (res?.success) router.refresh()
     return res
@@ -29,6 +25,7 @@ export default function GeneralForm({ defaultName, defaultEmail }: Props) {
 
   return (
     <form onSubmit={(e) => e.preventDefault()} className='space-y-4'>
+      {/* Name */}
       <div>
         <Label htmlFor='name'>Name</Label>
         <Input
@@ -40,6 +37,7 @@ export default function GeneralForm({ defaultName, defaultEmail }: Props) {
         />
       </div>
 
+      {/* Email */}
       <div>
         <Label htmlFor='email'>Email</Label>
         <Input
@@ -52,6 +50,7 @@ export default function GeneralForm({ defaultName, defaultEmail }: Props) {
         />
       </div>
 
+      {/* Save */}
       <ActionButton onAction={handleSave} pendingLabel='Saving…'>
         Save Changes
       </ActionButton>

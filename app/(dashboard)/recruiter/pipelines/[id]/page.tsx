@@ -1,17 +1,18 @@
 import { redirect } from 'next/navigation'
 
-import { format } from 'date-fns'
 import { eq } from 'drizzle-orm'
 import { KanbanSquare } from 'lucide-react'
 
 import PipelineBoard from '@/components/dashboard/recruiter/pipeline-board'
 import PageCard from '@/components/ui/page-card'
-import { STAGES, type Stage } from '@/lib/constants/recruiter'
+import { requireAuth } from '@/lib/auth/guards'
+import { STAGES } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { candidates } from '@/lib/db/schema/candidate'
 import { users } from '@/lib/db/schema/core'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
+import { Stage } from '@/lib/types/recruiter'
+import { formatDateTime } from '@/lib/utils/time'
 
 export const revalidate = 0
 
@@ -23,10 +24,7 @@ export default async function PipelineBoardPage({ params }: { params: Promise<{ 
   const { id } = await params
   const pipelineId = Number(id)
 
-  /* --------------------------- auth guard --------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/sign-in')
-  if (user.role !== 'recruiter') redirect('/')
+  const user = await requireAuth(['recruiter'])
 
   /* --------------------- load pipeline & verify --------------------- */
   const [pipeline] = await db
@@ -78,28 +76,26 @@ export default async function PipelineBoardPage({ params }: { params: Promise<{ 
 
   /* ------------------------------ UI ------------------------------- */
   return (
-    <section className='mx-auto max-w-6xl py-10'>
-      <PageCard
-        icon={KanbanSquare}
-        title={pipeline.name}
-        description={pipeline.description || undefined}
-      >
-        <div className='space-y-6'>
-          {/* Meta */}
-          <div className='flex flex-wrap items-center gap-2 text-sm'>
-            <span className='bg-muted rounded-full px-2 py-0.5 text-xs'>
-              {totalCandidates} {totalCandidates === 1 ? 'Candidate' : 'Candidates'}
-            </span>
-            <span className='text-muted-foreground'>
-              Created {format(pipeline.createdAt, 'PPP')} • Updated{' '}
-              {format(pipeline.updatedAt, 'PPP')}
-            </span>
-          </div>
-
-          {/* Kanban board */}
-          <PipelineBoard pipelineId={pipelineId} initialData={initialData} />
+    <PageCard
+      icon={KanbanSquare}
+      title={pipeline.name}
+      description={pipeline.description || undefined}
+    >
+      <div className='space-y-6'>
+        {/* Meta */}
+        <div className='flex flex-wrap items-center gap-2 text-sm'>
+          <span className='bg-muted rounded-full px-2 py-0.5 text-xs'>
+            {totalCandidates} {totalCandidates === 1 ? 'Candidate' : 'Candidates'}
+          </span>
+          <span className='text-muted-foreground'>
+            Created {formatDateTime(pipeline.createdAt)} • Updated{' '}
+            {formatDateTime(pipeline.updatedAt)}
+          </span>
         </div>
-      </PageCard>
-    </section>
+
+        {/* Kanban board */}
+        <PipelineBoard pipelineId={pipelineId} initialData={initialData} />
+      </div>
+    </PageCard>
   )
 }

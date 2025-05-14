@@ -1,43 +1,78 @@
 import './globals.css'
-import { Manrope } from 'next/font/google'
+import { Inter } from 'next/font/google'
 
 import type { Metadata, Viewport } from 'next'
 import { Toaster } from 'sonner'
 
+import PublicEnvScript from '@/components/public-env-script'
 import SiteHeader from '@/components/site-header'
 import { ThemeProvider } from '@/components/theme-provider'
 import { UserProvider } from '@/lib/auth'
+import { isDatabaseHealthy } from '@/lib/db/health'
 import { getUser } from '@/lib/db/queries/queries'
+
+/* -------------------------------------------------------------------------- */
+/*                               M E T A D A T A                              */
+/* -------------------------------------------------------------------------- */
 
 export const metadata: Metadata = {
   title: 'Viskify',
-  description: 'AI-Assisted, Credential-Backed Hiring.',
-  icons: { icon: '/images/favicon.ico' }, // root‑relative path
+  description: 'AI-Assisted, Credential-Backed Hiring powered by cheqd.',
+  icons: { icon: '/images/favicon.ico' },
 }
 
 export const viewport: Viewport = {
   maximumScale: 1,
 }
 
-const manrope = Manrope({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] })
 
+/**
+ * Root layout — if the database is unreachable we short-circuit and render
+ * a friendly downtime screen; otherwise the normal application shell loads.
+ */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const dbOk = await isDatabaseHealthy()
+
+  /* ---------------------------------------------------------------------- */
+  /*                              D O W N T I M E                           */
+  /* ---------------------------------------------------------------------- */
+  if (!dbOk) {
+    return (
+      <html lang='en' className={`bg-background text-foreground ${inter.className}`}>
+        <body className='flex min-h-screen flex-col items-center justify-center px-4 text-center'>
+          <h1 className='text-4xl font-extrabold tracking-tight'>
+            Our database is having a nap 😴
+          </h1>
+          <p className='text-muted-foreground mt-4 max-w-md'>
+            We’re unable to reach the Viskify database right now. Please try again in a few minutes
+            while we reconnect everything behind the scenes.
+          </p>
+        </body>
+      </html>
+    )
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*                              N O R M A L                               */
+  /* ---------------------------------------------------------------------- */
   const userPromise = getUser()
 
   return (
     <html
       lang='en'
-      className={`bg-background text-foreground ${manrope.className}`}
+      className={`bg-background text-foreground ${inter.className}`}
       suppressHydrationWarning
     >
       <body className='min-h-[100dvh]'>
+        <PublicEnvScript />
+
         <ThemeProvider
           attribute='class'
           defaultTheme='system'
           enableSystem
           disableTransitionOnChange
         >
-          {/* Global toast provider */}
           <Toaster
             position='bottom-right'
             toastOptions={{
@@ -58,8 +93,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
           <UserProvider userPromise={userPromise}>
             <SiteHeader />
-
-            <main className='mx-auto max-w-7xl px-4 py-6 md:px-6'>{children}</main>
+            <main>{children}</main>
           </UserProvider>
         </ThemeProvider>
       </body>

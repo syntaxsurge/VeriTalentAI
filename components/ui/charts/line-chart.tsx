@@ -4,27 +4,8 @@ import * as React from 'react'
 
 import { CartesianGrid, Line as ReLine, LineChart as ReLineChart, XAxis, YAxis } from 'recharts'
 
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/charts/chart'
-
-interface LineChartProps<D extends Record<string, any> = any> {
-  /** Source array */
-  data: D[]
-  /** X-axis key */
-  xKey: keyof D
-  /** Y-axis key */
-  yKey: keyof D
-  /** Optional fixed Y-domain */
-  yDomain?: [number, number]
-  /** Colour / label config */
-  config: ChartConfig
-  /** Optional X-tick formatter (default: first 3 chars) */
-  xTickFormatter?: (value: any) => string
-}
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/charts/chart'
+import type { LineChartProps } from '@/lib/types/charts'
 
 export function LineChart<D extends Record<string, any> = any>({
   data,

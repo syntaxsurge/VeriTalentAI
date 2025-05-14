@@ -1,123 +1,102 @@
 'use client'
 
 import * as React from 'react'
-import { startTransition } from 'react'
+import { useState, useEffect, startTransition } from 'react'
 
-import { Pencil, Loader2, RefreshCcw, Copy } from 'lucide-react'
+import { Copy, Loader2, Pencil, RefreshCcw } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
   AlertDialog,
-  AlertDialogTrigger,
+  AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import type { DidActionState, UpdateDidFormProps } from '@/lib/types/forms'
+import { copyToClipboard } from '@/lib/utils'
 
 import { upsertPlatformDidAction } from './actions'
 
-type ActionState = { error?: string; success?: string; did?: string }
+export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
+  /* ------------------------------------------------------------------ */
+  /*                         L O C A L   S T A T E                      */
+  /* ------------------------------------------------------------------ */
+  const [currentDid, setCurrentDid] = useState<string>(defaultDid ?? '')
+  const [didInput, setDidInput] = useState<string>(currentDid)
+  const [editing, setEditing] = useState<boolean>(false)
+  const [generating, setGenerating] = useState<boolean>(false)
 
-interface Props {
-  /** Current DID pulled from the environment (may be null). */
-  defaultDid: string | null
-}
-
-/**
- * Form for displaying, copying, editing or generating the platform DID.
- */
-export default function UpdateDidForm({ defaultDid }: Props) {
-  /* -------------------------------------------------------------------------- */
-  /*                                S T A T E                                   */
-  /* -------------------------------------------------------------------------- */
-  const [currentDid, setCurrentDid] = React.useState<string>(defaultDid ?? '')
-  const [didInput, setDidInput] = React.useState<string>(currentDid)
-  const [editing, setEditing] = React.useState<boolean>(false)
-
-  const [saveState, saveAction, saving] = React.useActionState<ActionState, FormData>(
-    upsertPlatformDidAction,
-    {},
-  )
-  const [genState, genAction, generating] = React.useActionState<ActionState, FormData>(
+  const [state, action, saving] = React.useActionState<DidActionState, FormData>(
     upsertPlatformDidAction,
     {},
   )
 
-  /* -------------------------------------------------------------------------- */
-  /*                               E F F E C T S                                */
-  /* -------------------------------------------------------------------------- */
-  React.useEffect(() => {
-    if (saveState?.error) toast.error(saveState.error)
-    if (saveState?.success) {
-      toast.success(saveState.success)
-      if (saveState.did) {
-        setCurrentDid(saveState.did)
-        setDidInput(saveState.did)
+  /* ------------------------------------------------------------------ */
+  /*                              E F F E C T S                         */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    if (state?.error) toast.error(state.error)
+    if (state?.success) {
+      toast.success(state.success)
+      if (state.did) {
+        setCurrentDid(state.did)
+        setDidInput(state.did)
       }
       setEditing(false)
     }
-  }, [saveState])
+  }, [state])
 
-  React.useEffect(() => {
-    if (genState?.error) toast.error(genState.error)
-    if (genState?.success) {
-      toast.success(genState.success)
-      if (genState.did) {
-        setCurrentDid(genState.did)
-        setDidInput(genState.did)
-      }
-      setEditing(false)
+  /* Clear "generating" flag as soon as the ActionState finishes */
+  useEffect(() => {
+    if (!saving && generating) {
+      setGenerating(false)
     }
-  }, [genState])
+  }, [saving, generating])
 
-  /* -------------------------------------------------------------------------- */
-  /*                                 Helpers                                    */
-  /* -------------------------------------------------------------------------- */
+  /* ------------------------------------------------------------------ */
+  /*                              H E L P E R S                         */
+  /* ------------------------------------------------------------------ */
   function confirmSave() {
     const fd = new FormData()
     fd.append('did', didInput.trim())
-    startTransition(() => saveAction(fd))
+    startTransition(() => action(fd))
   }
 
-  function confirmGenerate() {
-    startTransition(() => genAction(new FormData()))
+  function generateDid() {
+    if (saving || generating) return
+    setGenerating(true)
+    /* Empty FormData → server generates new DID via cheqd Studio */
+    const fd = new FormData()
+    startTransition(() => action(fd))
   }
 
-  async function copyDid() {
-    try {
-      await navigator.clipboard.writeText(currentDid)
-      toast.success('Platform DID copied to clipboard.')
-    } catch {
-      toast.error('Failed to copy DID.')
-    }
-  }
-
-  /* -------------------------------------------------------------------------- */
-  /*                                   UI                                       */
-  /* -------------------------------------------------------------------------- */
+  /* ------------------------------------------------------------------ */
+  /*                                 UI                                 */
+  /* ------------------------------------------------------------------ */
   return (
     <div className='space-y-6'>
-      {/* DID field + copy button */}
+      {/* DID field ------------------------------------------------------- */}
       <div className='flex flex-col gap-3 sm:flex-row sm:items-center'>
         <Input
           value={didInput}
           onChange={(e) => setDidInput(e.target.value)}
           readOnly={!editing}
           disabled={!editing}
-          placeholder='did:cheqd:testnet:xxxx'
+          placeholder='did:cheqd:testnet:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
           className='flex-1 font-mono'
         />
 
         <Button
           variant='outline'
           size='icon'
-          onClick={copyDid}
+          onClick={() => copyToClipboard(currentDid)}
           disabled={!currentDid}
           className='shrink-0'
           type='button'
@@ -127,7 +106,7 @@ export default function UpdateDidForm({ defaultDid }: Props) {
         </Button>
       </div>
 
-      {/* Edit / Save controls */}
+      {/* Edit / Save ------------------------------------------------------ */}
       {editing ? (
         <div className='flex flex-wrap items-center gap-2'>
           <AlertDialog>
@@ -195,7 +174,7 @@ export default function UpdateDidForm({ defaultDid }: Props) {
         </AlertDialog>
       )}
 
-      {/* Divider */}
+      {/* Divider ---------------------------------------------------------- */}
       <div className='relative'>
         <span className='absolute inset-x-0 top-1/2 -translate-y-1/2 border-t' />
         <span className='bg-background text-muted-foreground relative mx-auto px-3 text-xs uppercase'>
@@ -203,10 +182,10 @@ export default function UpdateDidForm({ defaultDid }: Props) {
         </span>
       </div>
 
-      {/* Generate new DID */}
+      {/* Generate button --------------------------------------------------- */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant='outline' className='w-full sm:w-auto' disabled={generating}>
+          <Button variant='outline' className='w-full sm:w-auto' disabled={generating || saving}>
             {generating ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -222,15 +201,15 @@ export default function UpdateDidForm({ defaultDid }: Props) {
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Generate a fresh DID?</AlertDialogTitle>
+            <AlertDialogTitle>Generate a fresh cheqd DID?</AlertDialogTitle>
             <AlertDialogDescription>
-              A brand-new DID will be created via cheqd and will permanently replace the existing
-              one.
+              A brand-new identifier will be created on the cheqd network – no wallet or gas fees
+              required.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmGenerate} disabled={generating}>
+            <AlertDialogAction onClick={generateDid} disabled={generating || saving}>
               {generating ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : 'Generate'}
             </AlertDialogAction>
           </AlertDialogFooter>

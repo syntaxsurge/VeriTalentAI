@@ -1,69 +1,51 @@
-import { redirect } from 'next/navigation'
-
 import { Users } from 'lucide-react'
 
 import TalentFilters from '@/components/dashboard/recruiter/talent-filters'
-import TalentTable, { RowType } from '@/components/dashboard/recruiter/talent-table'
+import TalentTable from '@/components/dashboard/recruiter/talent-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { getUser } from '@/lib/db/queries/queries'
 import { getTalentSearchPage } from '@/lib/db/queries/recruiter-talent'
+import type { TalentRow } from '@/lib/types/tables'
+import { getTableParams, getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-type Query = Record<string, string | string[] | undefined>
-
-function getParam(params: Query, key: string): string | undefined {
-  const v = params[key]
-  return Array.isArray(v) ? v[0] : v
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                    Page                                    */
-/* -------------------------------------------------------------------------- */
-
+/**
+ * Recruiter → Talent search page with advanced filters.
+ * Utilises `getTableParams` to keep pagination, sorting and search logic DRY.
+ */
 export default async function TalentSearchPage({
   searchParams,
 }: {
-  searchParams: Promise<Query> | Query
+  searchParams?: Promise<Query>
 }) {
-  const params = (await searchParams) as Query
+  const params = await resolveSearchParams(searchParams)
 
-  const user = await getUser()
-  if (!user) redirect('/sign-in')
-  if (user.role !== 'recruiter') redirect('/')
+  /* -------------------------- Table helpers --------------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
+    params,
+    ['name', 'email', 'id'] as const,
+    'name',
+  )
 
-  /* --------------------------- Query params ------------------------------ */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sort = getParam(params, 'sort') ?? 'name'
-  const order = getParam(params, 'order') === 'desc' ? 'desc' : 'asc'
-
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
+  /* -------------- Additional numeric / boolean filters --------------- */
   const verifiedOnly = getParam(params, 'verifiedOnly') === '1'
   const skillMin = Math.max(0, Number(getParam(params, 'skillMin') ?? '0'))
   const skillMax = Math.min(100, Number(getParam(params, 'skillMax') ?? '100'))
 
-  /* ---------------------------- Data fetch ------------------------------- */
+  /* ----------------------------- Data --------------------------------- */
   const { candidates, hasNext } = await getTalentSearchPage(
     page,
     pageSize,
     sort as 'name' | 'email' | 'id',
-    order as 'asc' | 'desc',
+    order,
     searchTerm,
     verifiedOnly,
     skillMin,
     skillMax,
   )
 
-  const rows: RowType[] = candidates.map((c) => ({
+  const rows: TalentRow[] = candidates.map((c) => ({
     id: c.id,
     name: c.name,
     email: c.email,
@@ -72,19 +54,7 @@ export default async function TalentSearchPage({
     topScore: c.topScore,
   }))
 
-  /* ------------------------ Build initialParams -------------------------- */
-  const initialParams: Record<string, string> = {}
-  const add = (k: string) => {
-    const val = getParam(params, k)
-    if (val) initialParams[k] = val
-  }
-  add('size')
-  add('sort')
-  add('order')
-  add('q')
-  /* skillMin/skillMax handled separately */
-
-  /* ------------------------------- View ---------------------------------- */
+  /* ----------------------------- View --------------------------------- */
   return (
     <section className='mx-auto max-w-6xl py-10'>
       <PageCard
@@ -102,7 +72,7 @@ export default async function TalentSearchPage({
             verifiedOnly={verifiedOnly}
           />
 
-          {/* Results table */}
+          {/* Results */}
           <TalentTable
             rows={rows}
             sort={sort}

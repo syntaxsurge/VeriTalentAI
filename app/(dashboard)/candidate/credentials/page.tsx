@@ -1,38 +1,28 @@
-import { redirect } from 'next/navigation'
-
 import { eq } from 'drizzle-orm'
 import { FileText } from 'lucide-react'
 
 import AddCredentialDialog from '@/components/dashboard/candidate/add-credential-dialog'
-import CandidateCredentialsTable, {
-  RowType,
-} from '@/components/dashboard/candidate/credentials-table'
+import CandidateCredentialsTable from '@/components/dashboard/candidate/credentials-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
 import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credentials'
-import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
-
-import { addCredential } from './actions'
+import type { CandidateCredentialRow } from '@/lib/types/tables'
+import { getTableParams, resolveSearchParams } from '@/lib/utils/query'
 
 export const revalidate = 0
-
-type Query = Record<string, string | string[] | undefined>
-const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 export default async function CredentialsPage({
   searchParams,
 }: {
-  searchParams: Promise<Query> | Query
+  searchParams?: Promise<Record<string, any>>
 }) {
-  const params = (await searchParams) as Query
+  const params = await resolveSearchParams(searchParams)
+  const user = await requireAuth(['candidate'])
 
-  /* -------------------------- Auth -------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/sign-in')
-
-  /* ----------------------- DID Check ------------------------ */
+  /* ----------------------- Team DID existence --------------------------- */
   const [{ did } = {}] = await db
     .select({ did: teams.did })
     .from(teamMembers)
@@ -41,31 +31,30 @@ export default async function CredentialsPage({
     .limit(1)
   const hasDid = !!did
 
-  /* --------------------- Add Credential SA ------------------ */
+  /* ----------------------- Server-action wrapper ------------------------ */
   const addCredentialAction = async (formData: FormData): Promise<{ error?: string } | void> => {
     'use server'
-    return await addCredential({}, formData)
+    return await (await import('./actions')).addCredential({}, formData)
   }
 
-  /* ------------------------ Params ------------------------- */
-  const page = Math.max(1, Number(first(params, 'page') ?? '1'))
-  const sizeRaw = Number(first(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = first(params, 'sort') ?? 'status'
-  const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
+  /* ------------------- Table parameters via helper ---------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
+    params,
+    ['status', 'title', 'issuer', 'category', 'type', 'id'] as const,
+    'status',
+  )
 
-  /* ------------------- Data fetch -------------------------- */
+  /* ------------------------------ Data ---------------------------------- */
   const { rows: credentialRows, hasNext } = await getCandidateCredentialsPage(
     user.id,
     page,
     pageSize,
     sort as any,
-    order as any,
-    searchTerm,
+    order,
+    searchTerm.toLowerCase(),
   )
 
-  const rows: RowType[] = credentialRows.map((c) => ({
+  const rows: CandidateCredentialRow[] = credentialRows.map((c) => ({
     id: c.id,
     title: c.title,
     category: c.category,
@@ -73,21 +62,11 @@ export default async function CredentialsPage({
     issuer: c.issuer ?? null,
     status: c.status,
     fileUrl: null,
+    vcJwt: c.vcJwt ?? null,
     vcJson: c.vcJson ?? null,
   }))
 
-  /* ------------ Preserve existing query params ------------ */
-  const initialParams: Record<string, string> = {}
-  const copy = (k: string) => {
-    const v = first(params, k)
-    if (v) initialParams[k] = v
-  }
-  copy('size')
-  copy('sort')
-  copy('order')
-  if (searchTerm) initialParams.q = searchTerm
-
-  /* --------------------------- UI -------------------------- */
+  /* ------------------------------ View ---------------------------------- */
   return (
     <PageCard
       icon={FileText}
@@ -99,7 +78,7 @@ export default async function CredentialsPage({
         <CandidateCredentialsTable
           rows={rows}
           sort={sort}
-          order={order as 'asc' | 'desc'}
+          order={order}
           basePath='/candidate/credentials'
           initialParams={initialParams}
           searchQuery={searchTerm}

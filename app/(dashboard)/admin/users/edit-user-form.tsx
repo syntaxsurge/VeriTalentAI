@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
-import { useActionState, startTransition } from 'react'
+import { startTransition } from 'react'
 
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -10,20 +10,11 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { EditUserFormProps, ActionState } from '@/lib/types/forms'
 
 import { updateUserAction } from './actions'
 
 const ROLES = ['candidate', 'recruiter', 'issuer', 'admin'] as const
-
-export interface EditUserFormProps {
-  id: number
-  defaultName: string | null
-  defaultEmail: string
-  defaultRole: string
-  onDone: () => void
-}
-
-type ActionState = { error?: string; success?: string }
 
 export default function EditUserForm({
   id,
@@ -32,7 +23,7 @@ export default function EditUserForm({
   defaultRole,
   onDone,
 }: EditUserFormProps) {
-  const [state, action, pending] = useActionState<ActionState, FormData>(updateUserAction, {
+  const [state, action, pending] = React.useActionState<ActionState, FormData>(updateUserAction, {
     error: '',
     success: '',
   })

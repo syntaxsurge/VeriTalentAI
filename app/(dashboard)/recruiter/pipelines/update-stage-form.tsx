@@ -4,16 +4,16 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import { ActionButton } from '@/components/ui/action-button'
-import { STAGES, type Stage } from '@/lib/constants/recruiter'
+import { STAGES } from '@/lib/constants/recruiter'
+import type { UpdateStageFormProps } from '@/lib/types/forms'
+import { Stage } from '@/lib/types/recruiter'
 
 import { updateCandidateStageAction } from './actions'
 
-interface Props {
-  pipelineCandidateId: number
-  initialStage: Stage
-}
-
-export default function UpdateStageForm({ pipelineCandidateId, initialStage }: Props) {
+export default function UpdateStageForm({
+  pipelineCandidateId,
+  initialStage,
+}: UpdateStageFormProps) {
   const [stage, setStage] = React.useState<Stage>(initialStage)
   const router = useRouter()
 

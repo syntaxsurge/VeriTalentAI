@@ -1,39 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import * as React from 'react'
-
-interface Props {
-  basePath: string
-  initialParams: Record<string, string>
-  categories: string[]
-  industries: string[]
-  selectedCategory: string
-  selectedIndustry: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                Helpers                                     */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => {
-    if (v === '' || v == null) {
-      sp.delete(k) // remove when blank / reset
-    } else {
-      sp.set(k, String(v))
-    }
-  })
-  // Always reset to first page on filter change
-  sp.delete('page')
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                   View                                     */
-/* -------------------------------------------------------------------------- */
+import { useFilterNavigation } from '@/lib/hooks/use-filter-navigation'
+import type { IssuerFiltersProps } from '@/lib/types/components'
 
 export default function IssuerFilters({
   basePath,
@@ -42,13 +10,8 @@ export default function IssuerFilters({
   industries,
   selectedCategory,
   selectedIndustry,
-}: Props) {
-  const router = useRouter()
-
-  function handleChange(type: 'category' | 'industry', value: string) {
-    const href = buildLink(basePath, initialParams, { [type]: value })
-    router.push(href, { scroll: false })
-  }
+}: IssuerFiltersProps) {
+  const handleChange = useFilterNavigation(basePath, initialParams)
 
   return (
     <div className='flex flex-wrap items-center gap-4'>

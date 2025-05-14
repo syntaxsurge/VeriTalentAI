@@ -2,24 +2,23 @@
 
 import * as React from 'react'
 
+import { KeyRound } from 'lucide-react'
+
 import AddCredentialForm from '@/app/(dashboard)/candidate/credentials/add/add-credential-form'
-import { DidRequiredModal } from '@/components/dashboard/candidate/did-required-modal'
+import { AppModal } from '@/components/ui/app-modal'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-
-interface Props {
-  /** Server action wrapper passed from the parent server component */
-  addCredentialAction: (formData: FormData) => Promise<{ error?: string } | void>
-  /** Whether the current user’s team already has a DID */
-  hasDid: boolean
-}
+import type { AddCredentialDialogProps } from '@/lib/types/components'
 
 /**
  * Renders an "Add Credential” button that opens a modal with the full
  * AddCredentialForm. If the user lacks a team DID, a blocking modal
  * prompts them to create one instead of showing the form.
  */
-export default function AddCredentialDialog({ addCredentialAction, hasDid }: Props) {
+export default function AddCredentialDialog({
+  addCredentialAction,
+  hasDid,
+}: AddCredentialDialogProps) {
   const [open, setOpen] = React.useState(false)
   const [showDidModal, setShowDidModal] = React.useState(false)
 
@@ -48,7 +47,16 @@ export default function AddCredentialDialog({ addCredentialAction, hasDid }: Pro
       </Dialog>
 
       {/* DID requirement modal */}
-      {showDidModal && !hasDid && <DidRequiredModal />}
+      {showDidModal && !hasDid && (
+        <AppModal
+          icon={KeyRound}
+          title='DID Required'
+          description='You need to create a Decentralised Identifier (DID) for your team before adding credentials.'
+          buttonText='Create DID'
+          redirectTo='/candidate/create-did'
+          required
+        />
+      )}
     </>
   )
 }

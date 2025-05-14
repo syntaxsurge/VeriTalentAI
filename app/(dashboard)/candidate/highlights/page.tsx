@@ -1,16 +1,12 @@
-import { redirect } from 'next/navigation'
-
 import { asc, eq } from 'drizzle-orm'
 import { Star } from 'lucide-react'
 
-import HighlightsBoard, {
-  type Credential as HighlightCredential,
-} from '@/components/dashboard/candidate/highlights-board'
+import HighlightsBoard from '@/components/dashboard/candidate/highlights-board'
 import ProfileHeader from '@/components/dashboard/candidate/profile-header'
-import { ProfileRequiredModal } from '@/components/dashboard/candidate/profile-required-modal'
+import { AppModal } from '@/components/ui/app-modal'
 import PageCard from '@/components/ui/page-card'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import {
   candidateCredentials,
   CredentialCategory,
@@ -18,13 +14,12 @@ import {
   candidates,
 } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
+import { HighlightCredential } from '@/lib/types/components'
 
 export const revalidate = 0
 
 export default async function CandidateHighlightsSettings() {
-  /* ------------------------- Auth ------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/sign-in')
+  const user = await requireAuth(['candidate'])
 
   const [candRow] = await db
     .select({ id: candidates.id, bio: candidates.bio })
@@ -33,7 +28,17 @@ export default async function CandidateHighlightsSettings() {
     .limit(1)
 
   /* ------------------ Require profile setup ---------------- */
-  if (!candRow) return <ProfileRequiredModal />
+  if (!candRow)
+    return (
+      <AppModal
+        iconKey='userround'
+        title='Profile Required'
+        description='Please complete your candidate profile before accessing Profile Highlights.'
+        buttonText='Complete Profile'
+        redirectTo='/candidate/profile'
+        required
+      />
+    )
 
   /* --------------- Credentials + highlights -------------- */
   const creds = await db
@@ -101,6 +106,8 @@ export default async function CandidateHighlightsSettings() {
         name={user.name ?? null}
         email={user.email ?? ''}
         avatarSrc={(user as any)?.image ?? undefined}
+        profilePath={`/candidates/${candRow.id}`}
+        showPublicProfile
       />
 
       <PageCard

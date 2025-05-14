@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, type ReactNode } from 'react'
+import { useState } from 'react'
 
 import { toast } from 'sonner'
 
@@ -13,28 +13,32 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { STAGES, type Stage } from '@/lib/constants/recruiter'
-
-interface Props {
-  pipelineCandidateId: number
-  currentStage: Stage
-  children: ReactNode
-}
+import { STAGES } from '@/lib/constants/recruiter'
+import type { EditCandidateModalProps } from '@/lib/types/components'
+import { Stage } from '@/lib/types/recruiter'
 
 /**
  * Reusable modal wrapper around updateCandidateStageAction.
  */
-export default function EditCandidateModal({ pipelineCandidateId, currentStage, children }: Props) {
+export default function EditCandidateModal({
+  pipelineCandidateId,
+  currentStage,
+  children,
+}: EditCandidateModalProps) {
   const [open, setOpen] = useState(false)
   const [stage, setStage] = useState<Stage>(currentStage)
-  const [isPending, startTransition] = useTransition()
+  const [saving, setSaving] = useState(false)
 
-  function handleSave() {
-    startTransition(async () => {
+  /** Async action bound to the ActionButton. */
+  async function handleSave(): Promise<any> {
+    setSaving(true)
+    try {
       const fd = new FormData()
       fd.append('pipelineCandidateId', String(pipelineCandidateId))
       fd.append('stage', stage)
+
       const res = await updateCandidateStageAction({}, fd)
+
       if (res?.error) {
         toast.error(res.error)
       } else {
@@ -43,11 +47,15 @@ export default function EditCandidateModal({ pipelineCandidateId, currentStage, 
         /* Mild refresh to keep board in sync; heavy reload avoided intentionally */
         window.location.reload()
       }
-    })
+
+      return res
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !isPending && setOpen(v)}>
+    <Dialog open={open} onOpenChange={(v) => !saving && setOpen(v)}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -73,7 +81,7 @@ export default function EditCandidateModal({ pipelineCandidateId, currentStage, 
             </select>
           </div>
 
-          <ActionButton onAction={handleSave} pendingLabel='Saving…' disabled={isPending}>
+          <ActionButton onAction={handleSave} pendingLabel='Saving…' disabled={saving}>
             Save Changes
           </ActionButton>
         </div>

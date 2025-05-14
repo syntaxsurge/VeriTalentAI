@@ -6,18 +6,8 @@ import { Loader2, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import type { IssuerOption } from '@/lib/types/components'
 import { cn } from '@/lib/utils'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-interface Issuer {
-  id: number
-  name: string
-  category: string
-  industry: string
-}
 
 /* -------------------------------------------------------------------------- */
 /*                              Combobox State                                */
@@ -25,8 +15,8 @@ interface Issuer {
 
 export default function IssuerSelect() {
   const [query, setQuery] = React.useState('')
-  const [options, setOptions] = React.useState<Issuer[]>([])
-  const [selected, setSelected] = React.useState<Issuer | null>(null)
+  const [options, setOptions] = React.useState<IssuerOption[]>([])
+  const [selected, setSelected] = React.useState<IssuerOption | null>(null)
   const [open, setOpen] = React.useState(false)
   const [isLoading, setLoading] = React.useState(false)
   const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
@@ -46,7 +36,7 @@ export default function IssuerSelect() {
           cache: 'no-store',
         })
         const data = await res.json()
-        setOptions(data.results as Issuer[])
+        setOptions(data.results as IssuerOption[])
       } catch {
         setOptions([])
       } finally {
@@ -57,7 +47,7 @@ export default function IssuerSelect() {
   }, [query])
 
   /* ---------------------------- Option click ------------------------------ */
-  function handleSelect(issuer: Issuer) {
+  function handleSelect(issuer: IssuerOption) {
     setSelected(issuer)
     setQuery(issuer.name)
     setOpen(false)

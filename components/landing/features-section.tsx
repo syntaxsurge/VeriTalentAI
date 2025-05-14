@@ -1,56 +1,59 @@
 'use client'
 
-import { Users, Mail, Lock, FolderKanban } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { CheckCircle2, Wallet, ShieldCheck, Key } from 'lucide-react'
 
 const features = [
   {
-    icon: Users,
-    title: 'Team Management',
-    description: 'Invite colleagues and manage roles seamlessly within your organisation.',
+    icon: Key,
+    title: 'cheqd DIDs',
+    description: 'Privacy-preserving identities rooted in the cheqd network.',
   },
   {
-    icon: Mail,
-    title: 'Issuer Workflow',
-    description: 'Streamline credential requests and approvals with real issuers.',
+    icon: ShieldCheck,
+    title: 'Tamper-Evident Proofs',
+    description: 'Credential integrity anchored on a public ledger.',
   },
   {
-    icon: Lock,
-    title: 'Secure & Private',
-    description: 'All data & credentials are encrypted and under your control.',
+    icon: Wallet,
+    title: 'Web2-Friendly APIs',
+    description: 'Issue and verify credentials with simple HTTPS requests—no wallets required.',
   },
   {
-    icon: FolderKanban,
-    title: 'Organised Dashboard',
-    description: 'Navigate profiles, credentials and pipelines with ease.',
+    icon: CheckCircle2,
+    title: 'Instant Issuance',
+    description: 'Spin up verifiable credentials in a single API call.',
   },
 ]
 
 export default function FeaturesSection() {
   return (
-    <section id='features' className='bg-muted/50 py-20'>
+    <section id='features' className='bg-background py-24'>
       <div className='mx-auto max-w-6xl px-4 text-center'>
         <h2 className='text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl'>
-          Core Features
+          Built&nbsp;for&nbsp;Trust
         </h2>
 
-        <div className='mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4'>
-          {features.map(({ icon: Icon, title, description }) => (
-            <div
+        <div className='mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4'>
+          {features.map(({ icon: Icon, title, description }, i) => (
+            <motion.div
               key={title}
-              className='group border-border/60 bg-background/70 relative flex flex-col items-center overflow-hidden rounded-2xl border p-8 backdrop-blur transition-transform hover:-translate-y-1 hover:shadow-2xl'
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.05 }}
+              whileHover={{ y: -6 }}
+              className='group border-border/60 bg-background/70 relative overflow-hidden rounded-2xl border p-8 backdrop-blur'
             >
-              <div className='mb-4 inline-flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500 text-white shadow-lg'>
-                <Icon className='h-6 w-6' />
+              <div className='bg-viskify-gradient absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-15' />
+              <div className='relative z-10 flex flex-col items-center'>
+                <div className='bg-viskify-gradient mb-4 inline-flex size-12 items-center justify-center rounded-full text-white shadow-lg'>
+                  <Icon className='h-6 w-6' />
+                </div>
+                <h3 className='text-foreground text-lg font-semibold'>{title}</h3>
+                <p className='text-muted-foreground mt-2 text-sm leading-relaxed'>{description}</p>
               </div>
-
-              <h3 className='text-foreground text-lg font-semibold'>{title}</h3>
-              <p className='text-muted-foreground mt-2 text-sm leading-relaxed'>{description}</p>
-
-              {/* Hover glow */}
-              <div className='pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-15'>
-                <div className='absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500 blur-3xl' />
-              </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

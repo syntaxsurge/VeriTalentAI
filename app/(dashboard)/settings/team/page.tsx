@@ -1,26 +1,14 @@
-import { redirect } from 'next/navigation'
-
 import { eq } from 'drizzle-orm'
 
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { getTeamMembersPage } from '@/lib/db/queries/team-members'
 import { teamMembers, teams } from '@/lib/db/schema/core'
+import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 import { Settings } from './settings'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-type Query = Record<string, string | string[] | undefined>
-
-function getParam(params: Query, key: string): string | undefined {
-  const v = params[key]
-  return Array.isArray(v) ? v[0] : v
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */
@@ -29,14 +17,13 @@ function getParam(params: Query, key: string): string | undefined {
 export default async function TeamSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<Query> | Query
+  searchParams?: Promise<Query>
 }) {
-  const params = (await searchParams) as Query
+  const params = await resolveSearchParams(searchParams)
 
-  const user = await getUser()
-  if (!user) redirect('/sign-in')
+  const user = await requireAuth()
 
-  /* --------------------------- Locate team -------------------------------- */
+  /* --------------------------- Locate team ------------------------------- */
   const [membership] = await db
     .select({ teamId: teamMembers.teamId, role: teamMembers.role })
     .from(teamMembers)
@@ -65,17 +52,14 @@ export default async function TeamSettingsPage({
     .where(eq(teams.id, teamId))
     .limit(1)
 
-  /* --------------------------- Query params ------------------------------ */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
+  /* -------------------- Pagination / sort / search ---------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
+    params,
+    ['name', 'email', 'role', 'joinedAt'] as const,
+    'joinedAt',
+  )
 
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sort = getParam(params, 'sort') ?? 'joinedAt'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
-
-  /* ---------------------------- Data fetch -------------------------------- */
+  /* ------------------------------ Data ---------------------------------- */
   const { members, hasNext } = await getTeamMembersPage(
     teamId,
     page,
@@ -90,23 +74,12 @@ export default async function TeamSettingsPage({
     name: m.name ?? '—',
     email: m.email,
     role: m.role,
-    joinedAt: m.joinedAt.toISOString(),
+    joinedAt: new Date(m.joinedAt).toISOString(),
   }))
-
-  /* ------------------------ Build initialParams -------------------------- */
-  const initialParams: Record<string, string> = {}
-  const add = (k: string) => {
-    const val = getParam(params, k)
-    if (val) initialParams[k] = val
-  }
-  add('size')
-  add('sort')
-  add('order')
-  if (searchTerm) initialParams['q'] = searchTerm
 
   const isOwner = membership?.role === 'owner'
 
-  /* ------------------------------ View ----------------------------------- */
+  /* ------------------------------ View ---------------------------------- */
   return (
     <Settings
       team={team}

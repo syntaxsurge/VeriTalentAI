@@ -3,29 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import type { LucideIcon } from 'lucide-react'
-
+import type { SidebarNavItem } from '@/lib/types/components'
 import { cn } from '@/lib/utils'
-
-/* -------------------------------------------------------------------------- */
-/*                                  TYPES                                     */
-/* -------------------------------------------------------------------------- */
-
-export interface SidebarNavItem {
-  href: string
-  icon: LucideIcon
-  label: string
-  /** Optional numeric badge - hidden when zero/undefined */
-  badgeCount?: number
-}
-
-interface SidebarNavProps {
-  /** Optional small heading shown above this group */
-  title?: string
-  items: SidebarNavItem[]
-  /** Extra classes for the wrapper */
-  className?: string
-}
 
 /* -------------------------------------------------------------------------- */
 /*                            S I D E B A R   N A V                           */
@@ -33,9 +12,19 @@ interface SidebarNavProps {
 
 /**
  * Vertical navigation list designed for the dashboard sidebar.
- * Active items receive a primary-colour left border and background tint.
+ * Active items receive a primary‐colour left border and background tint.
  */
-export function SidebarNav({ title, items, className }: SidebarNavProps) {
+export function SidebarNav({
+  title,
+  items,
+  className,
+}: {
+  /** Optional small heading shown above this group */
+  title?: string
+  items: SidebarNavItem[]
+  /** Extra classes for the wrapper */
+  className?: string
+}) {
   const pathname = usePathname()
 
   if (items.length === 0) return null
@@ -50,7 +39,8 @@ export function SidebarNav({ title, items, className }: SidebarNavProps) {
 
       <ul className='mt-2 space-y-1'>
         {items.map(({ href, icon: Icon, label, badgeCount }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`)
+          const active = pathname === href || (href !== '/' && pathname.startsWith(`${href}/`))
+
           return (
             <li key={href}>
               <Link

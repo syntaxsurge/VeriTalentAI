@@ -2,17 +2,20 @@ import { NextResponse } from 'next/server'
 
 import { buildResumeData, generateResumePdf } from '@/lib/resume/resume-builder'
 
-interface Params {
-  params: { candidateId: string }
-}
-
-export async function GET(_req: Request, { params }: Params) {
-  const candidateId = Number(params.candidateId)
+/**
+ * GET /api/candidates/[candidateId]/resume
+ *
+ * Generates a résumé PDF for the specified candidate.
+ */
+export async function GET(_req: Request, { params }: { params: Promise<{ candidateId: string }> }) {
+  /* Await dynamic segment */
+  const { candidateId: idStr } = await params
+  const candidateId = Number(idStr)
   if (Number.isNaN(candidateId)) {
     return NextResponse.json({ error: 'Invalid candidate id.' }, { status: 400 })
   }
 
-  /* Build resume */
+  /* Build résumé data */
   const data = await buildResumeData(candidateId)
   if (!data) {
     return NextResponse.json({ error: 'Candidate not found.' }, { status: 404 })
@@ -20,8 +23,7 @@ export async function GET(_req: Request, { params }: Params) {
 
   /* Generate PDF */
   const pdfBytes = await generateResumePdf(data)
-
-  const fileName = `${data.name.replace(/\s+/g, '_').toLowerCase() || 'resume'}.pdf`
+  const fileName = `${(data.name || 'resume').replace(/\s+/g, '_').toLowerCase()}.pdf`
 
   return new NextResponse(pdfBytes, {
     status: 200,

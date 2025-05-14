@@ -1,51 +1,18 @@
 'use client'
 
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { ArrowUpDown, FileText } from 'lucide-react'
+import { Clipboard, FileText } from 'lucide-react'
 
-import StatusBadge from '@/components/ui/status-badge'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
-import { CredentialStatus } from '@/lib/db/schema/candidate'
+import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import type { TableProps, RecruiterCredentialRow } from '@/lib/types/tables'
+import { copyToClipboard } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  title: string
-  category: string
-  issuer: string | null
-  status: CredentialStatus
-  fileUrl: string | null
-}
-
-interface CredentialsTableProps {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => !v && sp.delete(k))
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
+/*                     Recruiter → Candidate Credentials                      */
 /* -------------------------------------------------------------------------- */
 
 export default function CredentialsTable({
@@ -55,40 +22,43 @@ export default function CredentialsTable({
   basePath,
   initialParams,
   searchQuery,
-}: CredentialsTableProps) {
-  const router = useRouter()
-  const [search, setSearch] = React.useState(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+}: TableProps<RecruiterCredentialRow>) {
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  /* --------------------------- Server search ---------------------------- */
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
+  /* -------------------------- Row-actions helper -------------------------- */
+  const makeActions = React.useCallback(
+    (row: RecruiterCredentialRow): TableRowAction<RecruiterCredentialRow>[] => {
+      const acts: TableRowAction<RecruiterCredentialRow>[] = []
 
-  /* ----------------------------- Sorting -------------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
+      /* View original file ------------------------------------------------- */
+      if (row.fileUrl) {
+        acts.push({ label: 'View file', icon: FileText, href: row.fileUrl })
+      }
 
-  /* ----------------------------- Columns -------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(
-    () => [
+      /* Copy raw VC JSON --------------------------------------------------- */
+      if (row.vcJson) {
+        acts.push({
+          label: 'Copy VC JSON',
+          icon: Clipboard,
+          onClick: () => copyToClipboard(row.vcJson!),
+        })
+      }
+
+      return acts
+    },
+    [],
+  )
+
+  /* ----------------------------- Columns ---------------------------------- */
+  const columns = React.useMemo<Column<RecruiterCredentialRow>[]>(() => {
+    return [
       {
         key: 'title',
         header: sortableHeader('Title', 'title'),
@@ -111,33 +81,19 @@ export default function CredentialsTable({
         key: 'status',
         header: sortableHeader('Status', 'status'),
         sortable: false,
-        render: (v) => <StatusBadge status={v as string} />,
+        render: (v) => <StatusBadge status={String(v)} />,
       },
       {
-        key: 'fileUrl',
-        header: 'File',
+        key: 'id',
+        header: '',
         enableHiding: false,
         sortable: false,
-        render: (v) =>
-          v ? (
-            <a
-              href={v as string}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary inline-flex items-center gap-1 underline'
-            >
-              <FileText className='h-4 w-4' />
-              View
-            </a>
-          ) : (
-            '—'
-          ),
+        render: (_v, row) => <TableRowActions row={row} actions={makeActions(row)} />,
       },
-    ],
-    [sort, order, basePath, initialParams, search],
-  )
+    ]
+  }, [sortableHeader, makeActions])
 
-  /* ------------------------------- View ---------------------------------- */
+  /* ------------------------------- View ----------------------------------- */
   return (
     <DataTable
       columns={columns}
@@ -145,6 +101,7 @@ export default function CredentialsTable({
       filterKey='title'
       filterValue={search}
       onFilterChange={handleSearchChange}
+      /* All pagination handled server-side in parent */
       pageSize={rows.length}
       pageSizeOptions={[rows.length]}
       hidePagination

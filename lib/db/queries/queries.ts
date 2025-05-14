@@ -2,10 +2,15 @@ import { cookies } from 'next/headers'
 
 import { desc, and, eq, isNull } from 'drizzle-orm'
 
+import { requireAuth } from '@/lib/auth/guards'
 import { verifyToken } from '@/lib/auth/session'
 
 import { db } from '../drizzle'
 import { activityLogs, teamMembers, teams, users } from '../schema'
+
+/* -------------------------------------------------------------------------- */
+/*                              U S E R  H E L P E R                          */
+/* -------------------------------------------------------------------------- */
 
 export async function getUser() {
   const sessionCookie = (await cookies()).get('session')
@@ -63,6 +68,10 @@ export async function updateTeamSubscription(
     .where(eq(teams.id, teamId))
 }
 
+/* -------------------------------------------------------------------------- */
+/*                              U S E R  &  T E A M                           */
+/* -------------------------------------------------------------------------- */
+
 export async function getUserWithTeam(userId: number) {
   const result = await db
     .select({
@@ -78,10 +87,7 @@ export async function getUserWithTeam(userId: number) {
 }
 
 export async function getActivityLogs() {
-  const user = await getUser()
-  if (!user) {
-    throw new Error('User not authenticated')
-  }
+  const user = await requireAuth()
 
   return await db
     .select({

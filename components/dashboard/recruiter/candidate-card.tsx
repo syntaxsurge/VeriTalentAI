@@ -17,19 +17,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { type Stage } from '@/lib/constants/recruiter'
+import type { PipelineCandidateCard } from '@/lib/types/components'
 
 import EditCandidateModal from './edit-candidate-modal'
 
-export interface Candidate {
-  id: number
-  candidateId: number
-  name: string
-  email: string
-  stage: Stage
-}
-
-export default function CandidateCard({ candidate }: { candidate: Candidate }) {
+export default function CandidateCard({ candidate }: { candidate: PipelineCandidateCard }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
@@ -80,7 +72,11 @@ export default function CandidateCard({ candidate }: { candidate: Candidate }) {
 
       <CardContent className='pt-0'>
         <Button asChild variant='link' size='sm' className='text-primary h-6 px-0 text-xs'>
-          <Link href={`/recruiter/talent/${candidate.candidateId}`} scroll={false}>
+          <Link
+            href={`/candidates/${candidate.candidateId}`}
+            target='_blank'
+            rel='noopener noreferrer'
+          >
             <Info className='mr-1 h-3 w-3' />
             View Details
           </Link>

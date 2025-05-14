@@ -1,50 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
-
-import { ArrowUpDown } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { UserAvatar } from '@/components/ui/user-avatar'
-
-/* -------------------------------------------------------------------------- */
-/*                                 T Y P E S                                  */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  name: string | null
-  email: string
-  verified: number
-}
-
-interface Props {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               H E L P E R S                                */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(base: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => !v && sp.delete(k))
-  const qs = sp.toString()
-  return `${base}${qs ? `?${qs}` : ''}`
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import type { TableProps, CandidateDirectoryRow } from '@/lib/types/tables'
 
 export default function CandidatesTable({
   rows,
@@ -53,40 +16,23 @@ export default function CandidatesTable({
   basePath,
   initialParams,
   searchQuery,
-}: Props) {
-  const router = useRouter()
-  const [search, setSearch] = React.useState(searchQuery)
-  const debounce = React.useRef<NodeJS.Timeout | null>(null)
+}: TableProps<CandidateDirectoryRow>) {
+  /* ---------------------------------------------------------------------- */
+  /* Centralised navigation helpers                                         */
+  /* ---------------------------------------------------------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  /* --------------------------- Server-side search ------------------------ */
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounce.current) clearTimeout(debounce.current)
-    debounce.current = setTimeout(() => {
-      router.push(buildLink(basePath, initialParams, { q: value, page: 1 }), { scroll: false })
-    }, 400)
-  }
-
-  /* --------------------------- Sortable headers ------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const next = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: next,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label}
-        <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
-
-  /* ------------------------------- Columns ------------------------------ */
-  const columns = React.useMemo<Column<RowType>[]>(
-    () => [
+  /* ---------------------------------------------------------------------- */
+  /* Column definitions                                                     */
+  /* ---------------------------------------------------------------------- */
+  const columns = React.useMemo<Column<CandidateDirectoryRow>[]>(() => {
+    return [
       {
         key: 'name',
         header: sortableHeader('Name', 'name'),
@@ -122,11 +68,12 @@ export default function CandidatesTable({
           </Button>
         ),
       },
-    ],
-    [sort, order, basePath, initialParams, search],
-  )
+    ]
+  }, [sortableHeader])
 
-  /* ------------------------------- View --------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /* Render                                                                 */
+  /* ---------------------------------------------------------------------- */
   return (
     <DataTable
       columns={columns}

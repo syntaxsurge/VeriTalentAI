@@ -1,77 +1,45 @@
-import { redirect } from 'next/navigation'
+import { Activity } from 'lucide-react'
 
-import { Activity as ActivityIcon } from 'lucide-react'
-
-import ActivityLogsTable, { RowType } from '@/components/dashboard/settings/activity-logs-table'
+import ActivityLogsTable from '@/components/dashboard/settings/activity-logs-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { requireAuth } from '@/lib/auth/guards'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
-import { getUser } from '@/lib/db/queries/queries'
-import { ActivityType } from '@/lib/db/schema'
+import type { ActivityLogRow } from '@/lib/types/tables'
+import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
-type Query = Record<string, string | string[] | undefined>
+export default async function ActivityPage({ searchParams }: { searchParams?: Promise<Query> }) {
+  const params = await resolveSearchParams(searchParams)
 
-function getParam(params: Query, key: string): string | undefined {
-  const v = params[key]
-  return Array.isArray(v) ? v[0] : v
-}
+  const user = await requireAuth()
 
-export default async function ActivityPage({
-  searchParams,
-}: {
-  searchParams: Promise<Query> | Query
-}) {
-  const params = (await searchParams) as Query
+  /* ------------------------- Table parameters ---------------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
+    params,
+    ['timestamp', 'action'] as const,
+    'timestamp',
+  )
 
-  const user = await getUser()
-  if (!user) redirect('/sign-in')
-
-  /* ---------------------- Query parameters ---------------------- */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sort = getParam(params, 'sort') ?? 'timestamp'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
-
-  /* ------------------------- Data fetch ------------------------- */
+  /* ---------------------------- Data fetch ------------------------------- */
   const { logs, hasNext } = await getActivityLogsPage(
     user.id,
     page,
     pageSize,
-    sort as 'timestamp' | 'action',
+    sort as 'timestamp' | 'action' | undefined,
     order as 'asc' | 'desc',
     searchTerm,
   )
 
-  const rows: RowType[] = logs.map((log) => ({
-    id: log.id,
-    type: log.action as ActivityType,
-    ipAddress: log.ipAddress,
-    timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : String(log.timestamp),
-  }))
+  const rows: ActivityLogRow[] = logs
 
-  /* -------------------- Preserve query state -------------------- */
-  const initialParams: Record<string, string> = {}
-  const add = (k: string) => {
-    const val = getParam(params, k)
-    if (val) initialParams[k] = val
-  }
-  add('size')
-  add('sort')
-  add('order')
-  if (searchTerm) initialParams['q'] = searchTerm
-
-  /* ----------------------------- UI ----------------------------- */
+  /* ------------------------------ View ----------------------------------- */
   return (
     <PageCard
-      icon={ActivityIcon}
+      icon={Activity}
       title='Activity Log'
-      description='Review your recent account activity and sign-ins.'
+      description='Review your recent account activity.'
     >
       <div className='space-y-4 overflow-x-auto'>
         <ActivityLogsTable

@@ -1,53 +1,23 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { ArrowUpDown } from 'lucide-react'
-
+import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import { UserAvatar } from '@/components/ui/user-avatar'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import type { TableProps, TalentRow } from '@/lib/types/tables'
 
 /* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
+/*                          R E C R U I T E R – T A L E N T                   */
 /* -------------------------------------------------------------------------- */
 
-export interface RowType {
-  id: number
-  name: string | null
-  email: string
-  bio: string | null
-  verified: number
-  topScore: number | null
-}
-
-interface TalentTableProps {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => {
-    if (v === '') sp.delete(k)
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
-
+/**
+ * Tabular results for recruiter talent-search.
+ * Clicking "View Profile” now opens the public candidate page in a new tab
+ * to simplify the recruiter workflow.
+ */
 export default function TalentTable({
   rows,
   sort,
@@ -55,63 +25,48 @@ export default function TalentTable({
   basePath,
   initialParams,
   searchQuery,
-}: TalentTableProps) {
-  const router = useRouter()
-  const [search, setSearch] = React.useState<string>(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+}: TableProps<TalentRow>) {
+  /* ----------------------- Navigation helpers ------------------------ */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  /* --------------------------- Search (server) --------------------------- */
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
-
-  /* --------------------------- Sort helpers ----------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
-
-  /* --------------------------- Column defs ------------------------------ */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  /* --------------------------- Columns ------------------------------- */
+  const columns = React.useMemo<Column<TalentRow>[]>(() => {
     return [
       {
         key: 'name',
         header: sortableHeader('Name', 'name'),
         sortable: false,
-        render: (v) => <span className='font-medium'>{v || '—'}</span>,
+        render: (v, row) => (
+          <div className='flex items-center gap-2'>
+            <UserAvatar name={row.name} email={row.email} className='size-7' />
+            <span className='font-medium'>{v || 'Unnamed'}</span>
+          </div>
+        ),
       },
       {
         key: 'email',
         header: sortableHeader('Email', 'email'),
         sortable: false,
         render: (v) => v as string,
+        className: 'break-all',
       },
       {
         key: 'verified',
-        header: 'Verified Credentials',
+        header: sortableHeader('Verified Creds', 'verified'),
         sortable: false,
-        render: (v) => v as number,
+        render: (v) => ((v as number) > 0 ? v : '—'),
       },
       {
         key: 'topScore',
-        header: 'Top Skill Score',
+        header: sortableHeader('Top Score', 'topScore'),
         sortable: false,
-        render: (v) => (v === null ? '—' : v),
+        render: (v) => (v === null || v === undefined ? '—' : `${v as number}%`),
       },
       {
         key: 'id',
@@ -119,15 +74,17 @@ export default function TalentTable({
         enableHiding: false,
         sortable: false,
         render: (_v, row) => (
-          <Link href={`/recruiter/talent/${row.id}`} className='text-primary underline'>
-            View Profile
-          </Link>
+          <Button asChild variant='link' size='sm' className='text-primary'>
+            <Link href={`/candidates/${row.id}`} target='_blank' rel='noopener noreferrer'>
+              View Profile
+            </Link>
+          </Button>
         ),
       },
     ]
-  }, [sort, order, basePath, initialParams, search])
+  }, [sortableHeader])
 
-  /* ------------------------------- View --------------------------------- */
+  /* ---------------------------- Render ------------------------------- */
   return (
     <DataTable
       columns={columns}

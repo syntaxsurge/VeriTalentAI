@@ -1,268 +1,23 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import {
-  ArrowUpDown,
-  MoreHorizontal,
-  ShieldCheck,
-  ShieldX,
-  XCircle,
-  Trash2,
-  Loader2,
-  type LucideProps,
-} from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
   updateIssuerStatusAction,
   deleteIssuerAction,
 } from '@/app/(dashboard)/admin/issuers/actions'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu'
+import { VerifyIcon, UnverifyIcon, RejectIcon } from '@/components/ui/colored-icons'
 import { StatusBadge } from '@/components/ui/status-badge'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
-import { cn } from '@/lib/utils'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  name: string
-  domain: string
-  owner: string
-  category: string
-  industry: string
-  status: string
-}
-
-interface IssuersTableProps {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => {
-    if (v === '') sp.delete(k) // tidy URL
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
-}
-
-/* -------------------------------------------------------------------------- */
-/*                            C O L O R  E D   I C O N S                      */
-/* -------------------------------------------------------------------------- */
-
-const VerifyIcon = ({ className, ...props }: LucideProps) => (
-  <ShieldCheck
-    {...props}
-    className={cn('mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400', className)}
-  />
-)
-
-const UnverifyIcon = ({ className, ...props }: LucideProps) => (
-  <ShieldX
-    {...props}
-    className={cn('mr-2 h-4 w-4 text-amber-600 dark:text-amber-400', className)}
-  />
-)
-
-const RejectIcon = ({ className, ...props }: LucideProps) => (
-  <XCircle {...props} className={cn('mr-2 h-4 w-4 text-rose-600 dark:text-rose-400', className)} />
-)
-
-/* -------------------------------------------------------------------------- */
-/*                               Row Actions                                  */
-/* -------------------------------------------------------------------------- */
-
-function RowActions({ id, status }: { id: number; status: string }) {
-  const router = useRouter()
-  const [isPending, startTransition] = React.useTransition()
-
-  async function mutate(next: keyof typeof IssuerStatus, reason?: string) {
-    startTransition(async () => {
-      const toastId = toast.loading('Updating issuer…')
-      const fd = new FormData()
-      fd.append('issuerId', id.toString())
-      fd.append('status', next)
-      if (reason) fd.append('rejectionReason', reason)
-      const res = await updateIssuerStatusAction({}, fd)
-
-      res?.error
-        ? toast.error(res.error, { id: toastId })
-        : toast.success(res?.success ?? 'Issuer updated.', { id: toastId })
-      router.refresh()
-    })
-  }
-
-  async function destroy() {
-    startTransition(async () => {
-      const toastId = toast.loading('Deleting issuer…')
-      const fd = new FormData()
-      fd.append('issuerId', id.toString())
-      const res = await deleteIssuerAction({}, fd)
-
-      res?.error
-        ? toast.error(res.error, { id: toastId })
-        : toast.success(res?.success ?? 'Issuer deleted.', { id: toastId })
-      router.refresh()
-    })
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
-          {isPending ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            <MoreHorizontal className='h-4 w-4' />
-          )}
-          <span className='sr-only'>Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-        {status !== 'ACTIVE' && (
-          <DropdownMenuItem
-            onClick={() => mutate(IssuerStatus.ACTIVE)}
-            disabled={isPending}
-            className='hover:bg-emerald-500/10 focus:bg-emerald-500/10'
-          >
-            <VerifyIcon />
-            Verify
-          </DropdownMenuItem>
-        )}
-
-        {status === 'ACTIVE' && (
-          <DropdownMenuItem
-            onClick={() => mutate(IssuerStatus.PENDING)}
-            disabled={isPending}
-            className='hover:bg-amber-500/10 focus:bg-amber-500/10'
-          >
-            <UnverifyIcon />
-            Unverify
-          </DropdownMenuItem>
-        )}
-
-        {status !== 'REJECTED' && (
-          <DropdownMenuItem
-            onClick={() => mutate(IssuerStatus.REJECTED, 'Rejected by admin')}
-            disabled={isPending}
-            className='hover:bg-rose-500/10 focus:bg-rose-500/10'
-          >
-            <RejectIcon />
-            Reject
-          </DropdownMenuItem>
-        )}
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem
-          onClick={destroy}
-          disabled={isPending}
-          className='font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
-        >
-          <Trash2 className='mr-2 h-4 w-4' />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/*                           Bulk-Selection Actions                           */
-/* -------------------------------------------------------------------------- */
-
-function useBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, _] = React.useTransition()
-
-  async function bulkUpdate(
-    selected: RowType[],
-    status: keyof typeof IssuerStatus,
-    reason?: string,
-  ) {
-    const toastId = toast.loading('Updating issuers…')
-    await Promise.all(
-      selected.map(async (row) => {
-        const fd = new FormData()
-        fd.append('issuerId', row.id.toString())
-        fd.append('status', status)
-        if (reason) fd.append('rejectionReason', reason)
-        return updateIssuerStatusAction({}, fd)
-      }),
-    )
-    toast.success('Issuers updated.', { id: toastId })
-    router.refresh()
-  }
-
-  async function bulkDelete(selected: RowType[]) {
-    const toastId = toast.loading('Deleting issuers…')
-    await Promise.all(
-      selected.map(async (row) => {
-        const fd = new FormData()
-        fd.append('issuerId', row.id.toString())
-        return deleteIssuerAction({}, fd)
-      }),
-    )
-    toast.success('Issuers deleted.', { id: toastId })
-    router.refresh()
-  }
-
-  return [
-    {
-      label: 'Verify',
-      icon: VerifyIcon as any,
-      onClick: (sel) => bulkUpdate(sel, IssuerStatus.ACTIVE),
-    },
-    {
-      label: 'Unverify',
-      icon: UnverifyIcon as any,
-      onClick: (sel) => bulkUpdate(sel, IssuerStatus.PENDING),
-    },
-    {
-      label: 'Reject',
-      icon: RejectIcon as any,
-      onClick: (sel) => bulkUpdate(sel, IssuerStatus.REJECTED, 'Bulk reject'),
-    },
-    {
-      label: 'Delete',
-      icon: Trash2,
-      variant: 'destructive',
-      onClick: bulkDelete,
-      isDisabled: () => isPending,
-    },
-  ]
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import type { TableProps, AdminIssuerRow } from '@/lib/types/tables'
 
 export default function AdminIssuersTable({
   rows,
@@ -271,42 +26,177 @@ export default function AdminIssuersTable({
   basePath,
   initialParams,
   searchQuery,
-}: IssuersTableProps) {
+}: TableProps<AdminIssuerRow>) {
   const router = useRouter()
-  const bulkActions = useBulkActions(router)
 
-  /* ----------------------------- Search ----------------------------------- */
-  const [search, setSearch] = React.useState<string>(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+  /* -------------------------- Bulk-selection actions ---------------------- */
+  const bulkActions = useBulkActions<AdminIssuerRow>([
+    {
+      label: 'Verify',
+      icon: VerifyIcon,
+      handler: async (selected) => {
+        const toastId = toast.loading('Updating issuers…')
+        await Promise.all(
+          selected.map(async (row) => {
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.ACTIVE)
+            return updateIssuerStatusAction({}, fd)
+          }),
+        )
+        toast.success('Issuers updated.', { id: toastId })
+        router.refresh()
+      },
+    },
+    {
+      label: 'Unverify',
+      icon: UnverifyIcon,
+      handler: async (selected) => {
+        const toastId = toast.loading('Updating issuers…')
+        await Promise.all(
+          selected.map(async (row) => {
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.PENDING)
+            return updateIssuerStatusAction({}, fd)
+          }),
+        )
+        toast.success('Issuers updated.', { id: toastId })
+        router.refresh()
+      },
+    },
+    {
+      label: 'Reject',
+      icon: RejectIcon,
+      variant: 'destructive',
+      handler: async (selected) => {
+        const toastId = toast.loading('Updating issuers…')
+        await Promise.all(
+          selected.map(async (row) => {
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.REJECTED)
+            fd.append('rejectionReason', 'Bulk reject')
+            return updateIssuerStatusAction({}, fd)
+          }),
+        )
+        toast.success('Issuers updated.', { id: toastId })
+        router.refresh()
+      },
+    },
+    {
+      label: 'Delete',
+      icon: Trash2,
+      variant: 'destructive',
+      handler: async (selected) => {
+        const toastId = toast.loading('Deleting issuers…')
+        await Promise.all(
+          selected.map(async (row) => {
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            return deleteIssuerAction({}, fd)
+          }),
+        )
+        toast.success('Issuers deleted.', { id: toastId })
+        router.refresh()
+      },
+    },
+  ])
 
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
+  /* --------------------- Centralised navigation helpers ------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  /* ----------------------------- Headers ---------------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
+  /* ----------------------- Row-level actions builder ---------------------- */
+  const makeActions = React.useCallback(
+    (row: AdminIssuerRow): TableRowAction<AdminIssuerRow>[] => {
+      const actions: TableRowAction<AdminIssuerRow>[] = []
 
-  /* ----------------------------- Columns ---------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(
-    () => [
+      if (row.status !== 'ACTIVE') {
+        actions.push({
+          label: 'Verify',
+          icon: VerifyIcon,
+          onClick: async () => {
+            const toastId = toast.loading('Updating issuer…')
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.ACTIVE)
+            const res = await updateIssuerStatusAction({}, fd)
+            res?.error
+              ? toast.error(res.error, { id: toastId })
+              : toast.success(res?.success ?? 'Issuer updated.', { id: toastId })
+            router.refresh()
+          },
+        })
+      }
+
+      if (row.status === 'ACTIVE') {
+        actions.push({
+          label: 'Unverify',
+          icon: UnverifyIcon,
+          onClick: async () => {
+            const toastId = toast.loading('Updating issuer…')
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.PENDING)
+            const res = await updateIssuerStatusAction({}, fd)
+            res?.error
+              ? toast.error(res.error, { id: toastId })
+              : toast.success(res?.success ?? 'Issuer updated.', { id: toastId })
+            router.refresh()
+          },
+        })
+      }
+
+      if (row.status !== 'REJECTED') {
+        actions.push({
+          label: 'Reject',
+          icon: RejectIcon,
+          variant: 'destructive',
+          onClick: async () => {
+            const toastId = toast.loading('Updating issuer…')
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.REJECTED)
+            fd.append('rejectionReason', 'Rejected by admin')
+            const res = await updateIssuerStatusAction({}, fd)
+            res?.error
+              ? toast.error(res.error, { id: toastId })
+              : toast.success(res?.success ?? 'Issuer updated.', { id: toastId })
+            router.refresh()
+          },
+        })
+      }
+
+      actions.push({
+        label: 'Delete',
+        icon: Trash2,
+        variant: 'destructive',
+        onClick: async () => {
+          const toastId = toast.loading('Deleting issuer…')
+          const fd = new FormData()
+          fd.append('issuerId', row.id.toString())
+          const res = await deleteIssuerAction({}, fd)
+          res?.error
+            ? toast.error(res.error, { id: toastId })
+            : toast.success(res?.success ?? 'Issuer deleted.', { id: toastId })
+          router.refresh()
+        },
+      })
+
+      return actions
+    },
+    [router],
+  )
+
+  /* ------------------------------- Columns -------------------------------- */
+  const columns = React.useMemo<Column<AdminIssuerRow>[]>(() => {
+    return [
       {
         key: 'name',
         header: sortableHeader('Name / Domain', 'name'),
@@ -350,13 +240,12 @@ export default function AdminIssuersTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <RowActions id={row.id} status={row.status} />,
+        render: (_v, row) => <TableRowActions row={row} actions={makeActions(row)} />,
       },
-    ],
-    [sort, order, basePath, initialParams, search],
-  )
+    ]
+  }, [sortableHeader, makeActions])
 
-  /* All rows fit on one client page - paging handled server‑side */
+  /* ----------------------------- Render ----------------------------------- */
   return (
     <DataTable
       columns={columns}

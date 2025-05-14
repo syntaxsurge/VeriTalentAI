@@ -1,74 +1,76 @@
 'use client'
 
-import { Database, Award, Code2, CreditCard } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Cpu, Layers3, Rocket, Globe } from 'lucide-react'
 
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-const items = [
+const FEATURES = [
   {
-    icon: Database,
-    title: 'Trusted Credentials',
-    text: 'Issue and verify credentials on-chain with cheqd integration.',
+    icon: Rocket,
+    title: 'One-Tap Issuance',
+    desc: 'Mint verifiable credentials in seconds—zero crypto setup required.',
   },
   {
-    icon: Award,
-    title: 'AI Skill Checks',
-    text: 'Objective quizzes graded by OpenAI for real skill validation.',
+    icon: Layers3,
+    title: 'Data-Layer Agnostic',
+    desc: 'Self-host or BYO database while the cheqd network anchors the proofs.',
   },
   {
-    icon: Code2,
-    title: 'Developer Friendly',
-    text: 'Built with Next.js, TypeScript and Tailwind.',
+    icon: Cpu,
+    title: 'AI-Driven Scoring',
+    desc: 'GPT-powered evaluations grade skills with deterministic validators.',
   },
   {
-    icon: CreditCard,
-    title: 'Flexible Billing',
-    text: 'Stripe subscriptions and pay-per-verification options.',
+    icon: Globe,
+    title: 'Borderless Trust',
+    desc: 'did:cheqd identifiers resolve instantly across any compatible marketplace.',
   },
-]
+] as const
 
 export default function OverviewSection() {
   return (
-    <section id='overview' className='bg-background py-24'>
+    <section
+      id='overview'
+      className='bg-muted/40 relative isolate overflow-hidden py-28'
+      aria-label='Platform pillars'
+    >
+      <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(0,255,190,0.15)_0%,transparent_70%)] dark:bg-[radial-gradient(circle_at_top,rgba(0,255,190,0.07)_0%,transparent_70%)]' />
+
       <div className='mx-auto max-w-6xl px-4'>
-        <header className='mb-14 text-center'>
-          <h2 className='text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl'>
-            Why Viskify?
+        <header className='mb-20 text-center'>
+          <h2 className='text-foreground text-3xl font-extrabold tracking-tight text-balance sm:text-4xl'>
+            Why&nbsp;Viskify?
           </h2>
-          <p className='text-muted-foreground mx-auto mt-4 max-w-2xl'>
-            Eliminate tedious background checks with blockchain-backed credentials and AI
-            assessments.
+          <p className='text-muted-foreground mx-auto mt-4 max-w-2xl text-lg/relaxed'>
+            Every primitive you need to graduate from hopeful claims to bullet-proof proofs.
           </p>
         </header>
 
-        {/* New horizontal card list with side accent bar */}
-        <div className='grid gap-8 md:grid-cols-2'>
-          {items.map(({ icon: Icon, title, text }) => (
-            <Card
+        <ul className='grid gap-10 md:grid-cols-2'>
+          {FEATURES.map(({ icon: Icon, title, desc }, i) => (
+            <motion.li
               key={title}
-              className='group bg-background/70 relative flex overflow-hidden rounded-3xl backdrop-blur transition-shadow hover:shadow-xl'
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: i * 0.05, ease: 'easeOut' }}
+              className='group'
             >
-              {/* Gradient accent bar */}
-              <span className='absolute top-0 left-0 h-full w-1.5 rounded-tr-lg rounded-br-lg bg-gradient-to-b from-indigo-500 via-purple-500 to-fuchsia-500' />
-
-              <CardHeader className='flex flex-row items-center gap-4 pl-8'>
-                <div className='flex size-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/40 dark:text-indigo-300'>
-                  <Icon className='h-6 w-6' />
-                </div>
-                <CardTitle className='text-lg font-semibold'>{title}</CardTitle>
-              </CardHeader>
-
-              <CardContent className='-mt-4 pr-6 pb-6 pl-8'>
-                <p className='text-muted-foreground text-sm leading-relaxed'>{text}</p>
-              </CardContent>
-
-              {/* Subtle hover glow */}
-              <div className='pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-10'>
-                <div className='h-full w-full bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500 blur-3xl' />
-              </div>
-            </Card>
+              <Card className='bg-background/70 border-border/60 rounded-3xl border backdrop-blur transition-shadow hover:shadow-2xl'>
+                <CardHeader className='flex flex-row items-center gap-4 p-8'>
+                  <div className='bg-primary/10 text-primary flex size-14 shrink-0 items-center justify-center rounded-2xl shadow-inner'>
+                    <Icon className='h-7 w-7' />
+                  </div>
+                  <CardTitle className='text-lg font-semibold'>{title}</CardTitle>
+                </CardHeader>
+                <CardContent className='-mt-4 pr-8 pb-8 pl-[4.5rem]'>
+                  <p className='text-muted-foreground text-sm leading-relaxed'>{desc}</p>
+                </CardContent>
+              </Card>
+            </motion.li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   )

@@ -2,27 +2,10 @@
 
 import React from 'react'
 
-import { Bar as ReBar, BarChart as ReBarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart as ReBarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/charts/chart'
-
-interface BarChartProps<D extends Record<string, any> = any> {
-  /** Source data array */
-  data: D[]
-  /** Categorical X-axis key */
-  xKey: keyof D
-  /** Numeric Y-axis key */
-  yKey: keyof D
-  /** Colour / label configuration map */
-  config: ChartConfig
-  /** Optional X-tick formatter (default: full label) */
-  xTickFormatter?: (value: any) => string
-}
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/charts/chart'
+import type { BarChartProps } from '@/lib/types/charts'
 
 export function BarChart<D extends Record<string, any> = any>({
   data,
@@ -46,7 +29,7 @@ export function BarChart<D extends Record<string, any> = any>({
         />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} />
         <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-        <ReBar dataKey={yKey as string} fill={colourVar} radius={[4, 4, 0, 0]} />
+        <Bar dataKey={yKey as string} fill={colourVar} radius={[4, 4, 0, 0]} />
       </ReBarChart>
     </ChartContainer>
   )

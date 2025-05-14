@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import { useActionState, startTransition } from 'react'
 
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -10,40 +9,29 @@ import { Button } from '@/components/ui/button'
 
 import { createDidAction } from './actions'
 
-/* -------------------------------------------------------------------------- */
-/*                               T Y P E S                                    */
-/* -------------------------------------------------------------------------- */
-
-type ActionState = {
-  success?: string
-  error?: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                   VIEW                                     */
-/* -------------------------------------------------------------------------- */
-
+/**
+ * Triggers server-side cheqd DID creation for the current team.
+ */
 export function CreateDidButton() {
-  /* Track server action */
-  const [state, action, pending] = useActionState<ActionState, void>(createDidAction, {
-    success: '',
-    error: undefined,
-  })
+  const [pending, startTransition] = React.useTransition()
 
-  /* Toast handling */
-  const toastId = React.useRef<string | number | undefined>(undefined)
+  async function handleClick() {
+    if (pending) return
 
-  function handleClick() {
-    toastId.current = toast.loading('Creating DID…')
-    startTransition(() => action())
+    const toastId = toast.loading('Creating DID…')
+    startTransition(async () => {
+      try {
+        const res = await createDidAction({}, new FormData())
+        if (res && 'error' in res && res.error) {
+          toast.error(res.error, { id: toastId })
+        } else {
+          toast.success(res?.success ?? 'Team DID created successfully.', { id: toastId })
+        }
+      } catch (err: any) {
+        toast.error(err?.message ?? 'Something went wrong.', { id: toastId })
+      }
+    })
   }
-
-  React.useEffect(() => {
-    if (!pending && toastId.current !== undefined) {
-      if (state.error) toast.error(state.error, { id: toastId.current })
-      else if (state.success) toast.success(state.success, { id: toastId.current })
-    }
-  }, [state, pending])
 
   return (
     <Button onClick={handleClick} disabled={pending} className='w-full md:w-max'>

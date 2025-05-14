@@ -10,7 +10,6 @@ export const users = pgTable('users', {
   name: varchar('name', { length: 100 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
-  // One of: 'admin', 'recruiter', 'issuer', 'candidate'
   role: varchar('role', { length: 20 }).notNull().default('candidate'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -23,7 +22,7 @@ export const users = pgTable('users', {
 
 export const teams = pgTable('teams', {
   id: serial('id').primaryKey(),
-  /** New — permanent owner / creator of the team */
+  /** Permanent owner / creator of the team */
   creatorUserId: integer('creator_user_id')
     .notNull()
     .references(() => users.id),
@@ -35,7 +34,6 @@ export const teams = pgTable('teams', {
   stripeProductId: text('stripe_product_id'),
   planName: varchar('plan_name', { length: 50 }),
   subscriptionStatus: varchar('subscription_status', { length: 20 }),
-  // Optional cheqd DID for VC signing
   did: text('did'),
 })
 
@@ -160,7 +158,7 @@ export type Invitation = typeof invitations.$inferSelect
 export type NewInvitation = typeof invitations.$inferInsert
 export type TeamDataWithMembers = Team & {
   teamMembers: (TeamMember & {
-    user: Pick<User, 'id' | 'name' | 'email'>
+    user: Pick<User, 'id' | 'name' | 'email' | 'passwordHash'>
   })[]
 }
 
@@ -179,4 +177,5 @@ export enum ActivityType {
   REMOVE_TEAM_MEMBER = 'REMOVE_TEAM_MEMBER',
   INVITE_TEAM_MEMBER = 'INVITE_TEAM_MEMBER',
   ACCEPT_INVITATION = 'ACCEPT_INVITATION',
+  SUBSCRIPTION_PAID = 'SUBSCRIPTION_PAID',
 }
