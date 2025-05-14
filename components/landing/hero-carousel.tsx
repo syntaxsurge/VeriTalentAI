@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
+import ImageLightbox from '@/components/ui/images/image-lightbox'
 
 /* -------------------------------------------------------------------------- */
 /*                                    DATA                                    */
@@ -33,11 +34,13 @@ const SLIDES = [
 /* -------------------------------------------------------------------------- */
 
 /**
- * HeroCarousel shows one slide at a time with automatic cycling
- * and manual dot navigation; slides fade / scale for polished effect.
+ * HeroCarousel now shows a single slide with fade/scale animation,
+ * offers clearly-labeled buttons for direct role navigation, and
+ * opens an ImageLightbox when the screenshot is clicked.
  */
 export default function HeroCarousel() {
   const [index, setIndex] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   /* ------------------------ Auto-advance every 6 s ----------------------- */
   useEffect(() => {
@@ -45,8 +48,13 @@ export default function HeroCarousel() {
     return () => clearInterval(t)
   }, [])
 
-  /* ---------------------------- Manual select ---------------------------- */
+  /* -------------------------- Navigation handlers ------------------------ */
   const select = useCallback((i: number) => setIndex(i), [])
+  const handleNext = useCallback(() => setIndex((i) => (i + 1) % SLIDES.length), [])
+  const handlePrev = useCallback(
+    () => setIndex((i) => (i === 0 ? SLIDES.length - 1 : i - 1)),
+    [],
+  )
 
   /* ------------------------------- View ---------------------------------- */
   const slide = SLIDES[index]
@@ -63,7 +71,10 @@ export default function HeroCarousel() {
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className='relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-1 backdrop-blur'
         >
-          <div className='relative overflow-hidden rounded-[inherit]'>
+          <div
+            className='relative cursor-zoom-in overflow-hidden rounded-[inherit]'
+            onClick={() => setLightboxOpen(true)}
+          >
             {/* Screenshot */}
             <Image
               src={slide.src}
@@ -81,25 +92,36 @@ export default function HeroCarousel() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Dots */}
-      <div className='mt-4 flex justify-center gap-2'>
-        {SLIDES.map((_s, i) => (
+      {/* Role buttons */}
+      <div className='mt-6 flex flex-wrap justify-center gap-3'>
+        {SLIDES.map((s, i) => (
           <Button
-            key={i}
+            key={s.role}
+            size='sm'
+            variant={i === index ? 'default' : 'outline'}
             onClick={() => select(i)}
-            variant='ghost'
-            size='icon'
-            className='h-3 w-3 rounded-full p-0'
-            aria-label={`Show ${_s.role} screenshot`}
+            className='gap-1'
           >
-            <span
-              className={`block h-2 w-2 rounded-full transition-colors ${
-                i === index ? 'bg-primary' : 'bg-white/30 hover:bg-white/60'
-              }`}
-            />
+            {s.role}
           </Button>
         ))}
       </div>
+
+      {/* Lightbox */}
+      <ImageLightbox
+        images={SLIDES.map((s) => s.src)}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        startIndex={index}
+      />
+
+      {/* Hide prev/next handlers from accessibility tree */}
+      <button type='button' className='sr-only' onClick={handlePrev}>
+        Previous slide
+      </button>
+      <button type='button' className='sr-only' onClick={handleNext}>
+        Next slide
+      </button>
     </div>
   )
 }
