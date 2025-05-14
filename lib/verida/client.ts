@@ -1,11 +1,17 @@
-import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
+import { VERIDA_API_URL } from '@/lib/config'
+
+/* -------------------------------------------------------------------------- */
+/*                        V E R I D A   C L I E N T   (B R O W S E R)         */
+/* -------------------------------------------------------------------------- */
 
 const isBrowser = typeof window !== 'undefined'
 
+/** Trim any trailing slash so we can safely concatenate paths. */
+const BASE_URL = VERIDA_API_URL.endsWith('/') ? VERIDA_API_URL.slice(0, -1) : VERIDA_API_URL
+
 /**
- * Read the auth token saved by the Verida callback (stored by frontend
- * code after a successful connect flow). Returns <code>null</code> when
- * the user has not connected Verida in this browser session.
+ * Retrieve the auth token persisted to <code>localStorage</code> after a
+ * successful Vault connect flow. Returns <code>null</code> when absent.
  */
 function getStoredToken(): string | null {
   if (!isBrowser) return null
@@ -16,15 +22,37 @@ function getStoredToken(): string | null {
   }
 }
 
+export interface VeridaFetchOptions {
+  /**
+   * When <code>true</code> the <code>endpoint</code> argument is treated as a
+   * fully-qualified URL and will <strong>not</strong> be prefixed with
+   * {@link VERIDA_API_URL}. Useful for the Vault-generated redirect URL or
+   * other absolute targets.
+   */
+  raw?: boolean
+}
+
 /**
- * Lightweight wrapper that mirrors the Verida docs. Prepends the base API
- * URL/version and injects the Bearer token retrieved from <code>localStorage</code>.
+ * Lightweight helper that prefixes requests with the Verida REST base URL and
+ * injects the Bearer token stored on the client. The returned Promise resolves
+ * with the parsed JSON body of the response.
+ *
+ * @param endpoint Path beginning with <code>/</code> such as
+ *                 <code>/search/universal?keywords=foo</code>.
+ * @param init     Standard <code>fetch()</code> request options.
+ * @param options  Set <code>{ raw:true }</code> to skip URL prefixing.
  */
-async function veridaFetch<T>(endpoint: string, init: RequestInit = {}): Promise<T> {
+async function veridaFetch<T>(
+  endpoint: string,
+  init: RequestInit = {},
+  { raw = false }: VeridaFetchOptions = {},
+): Promise<T> {
   const token = getStoredToken()
   if (!token) throw new Error('Verida is not connected in this browser session.')
 
-  const res = await fetch(`${VERIDA_API_URL}/${VERIDA_API_VERSION}${endpoint}`, {
+  const url = raw ? endpoint : `${BASE_URL}${endpoint}`
+
+  const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -46,14 +74,11 @@ async function veridaFetch<T>(endpoint: string, init: RequestInit = {}): Promise
 /* -------------------------------------------------------------------------- */
 
 /**
- * Universal Search helper exactly as shown in the Verida REST examples.
+ * Universal Search helper mirroring the Verida REST examples.
  *
  * @param keywords Search query string.
  */
-export async function searchUniversal(
-  keywords: string,
-  _userId?: number,
-): Promise<Record<string, any>> {
+export async function searchUniversal(keywords: string): Promise<Record<string, any>> {
   const qs = new URLSearchParams({ keywords }).toString()
   return veridaFetch(`/search/universal?${qs}`)
 }
