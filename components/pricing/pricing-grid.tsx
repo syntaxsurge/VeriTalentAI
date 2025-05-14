@@ -120,9 +120,9 @@ function PricingCard({
 
       {isCurrent ? (
         <Button
-          variant='secondary'
+          variant='default'
           disabled
-          className='w-full cursor-default rounded-full opacity-60'
+          className='w-full cursor-default rounded-full'
         >
           Current Plan
         </Button>
