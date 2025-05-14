@@ -1,20 +1,17 @@
 import 'server-only'
 
-import { VERIDA_API_URL } from '@/lib/config'
+import { buildVeridaUrl } from './common'
 import { getVeridaToken } from '@/lib/db/queries/queries'
 
 /* -------------------------------------------------------------------------- */
 /*                       V E R I D A   S E R V E R   H E L P E R              */
 /* -------------------------------------------------------------------------- */
 
-/** Ensure no trailing slash so we can safely concatenate paths. */
-const BASE_URL = VERIDA_API_URL.endsWith('/') ? VERIDA_API_URL.slice(0, -1) : VERIDA_API_URL
-
 export interface VeridaFetchOptions {
   /**
    * When <code>true</code>, the supplied <code>path</code> will be treated as a
-   * fully-qualified URL and will <strong>not</strong> be prefixed with
-   * {@link VERIDA_API_URL}.
+   * fully-qualified URL and will <strong>not</strong> be prefixed with the
+   * default Verida base URL.
    */
   raw?: boolean
 }
@@ -39,7 +36,7 @@ export async function veridaFetch<T = any>(
   if (!tokenRow) throw new Error('User has not connected a Verida account.')
 
   /* Resolve the final request URL */
-  const url = raw ? path : `${BASE_URL}${path}`
+  const url = buildVeridaUrl(path, raw)
 
   /* Issue the request with Bearer authentication */
   const res = await fetch(url, {

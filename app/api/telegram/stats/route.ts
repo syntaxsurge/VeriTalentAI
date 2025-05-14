@@ -6,6 +6,7 @@ import {
   countDatastore,
   queryDatastore,
 } from '@/lib/verida/datastore'
+import { parseUserId, jsonError } from '@/lib/utils/api'
 
 const KEYWORDS = ['cluster', 'protocol', 'ai', 'defi', 'crypto', 'web3'] as const
 
@@ -14,15 +15,8 @@ const KEYWORDS = ['cluster', 'protocol', 'ai', 'defi', 'crypto', 'web3'] as cons
  * Returns group/message counts and keyword frequencies.
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const { searchParams } = new URL(request.url)
-  const userId = Number(searchParams.get('userId'))
-
-  if (!userId) {
-    return NextResponse.json(
-      { success: false, error: 'Missing or invalid userId' },
-      { status: 400 },
-    )
-  }
+  const userId = parseUserId(request)
+  if (!userId) return jsonError('Missing or invalid userId')
 
   try {
     const [groupCount, sampleMessages] = await Promise.all([
@@ -59,6 +53,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     })
   } catch (err: any) {
     console.error('Error fetching Telegram stats:', err)
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 })
+    return jsonError(err.message ?? 'Internal error', 500)
   }
 }

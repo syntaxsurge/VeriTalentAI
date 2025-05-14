@@ -1,5 +1,4 @@
-import { VERIDA_API_URL } from '@/lib/config'
-
+import { VERIDA_BASE_URL, buildVeridaUrl } from './common'
 import { base64 } from '../utils'
 
 /* -------------------------------------------------------------------------- */
@@ -7,9 +6,6 @@ import { base64 } from '../utils'
 /* -------------------------------------------------------------------------- */
 
 const isBrowser = typeof window !== 'undefined'
-
-/** Ensure no trailing slash so we can safely concatenate paths. */
-const BASE_URL = VERIDA_API_URL.endsWith('/') ? VERIDA_API_URL.slice(0, -1) : VERIDA_API_URL
 
 /**
  * Retrieve the auth token persisted to <code>localStorage</code> after a
@@ -28,8 +24,7 @@ export interface VeridaFetchOptions {
   /**
    * When <code>true</code> the <code>endpoint</code> argument is treated as a
    * fully-qualified URL and will <strong>not</strong> be prefixed with
-   * {@link VERIDA_API_URL}. Useful for the Vault-generated redirect URL or
-   * other absolute targets.
+   * {@link VERIDA_BASE_URL}.
    */
   raw?: boolean
 }
@@ -52,7 +47,7 @@ async function veridaFetch<T>(
   const token = getStoredToken()
   if (!token) throw new Error('Verida is not connected in this browser session.')
 
-  const url = raw ? endpoint : `${BASE_URL}${endpoint}`
+  const url = buildVeridaUrl(endpoint, raw)
 
   const res = await fetch(url, {
     headers: {
