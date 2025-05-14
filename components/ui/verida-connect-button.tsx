@@ -1,6 +1,6 @@
 'use client'
 
-import { buildAuthUrl } from '@/lib/verida'
+import { buildAuthUrl } from '@/lib/verida/client'
 
 type VeridaConnectButtonProps = {
   /** True when the user has an existing Verida auth_token */

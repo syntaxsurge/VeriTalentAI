@@ -14,7 +14,7 @@ import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, CandidateCredentialRow } from '@/lib/types/tables'
 import { copyToClipboard } from '@/lib/utils'
-import { searchUniversal } from '@/lib/verida'
+import { searchUniversal } from '@/lib/verida/client'
 
 /* -------------------------------------------------------------------------- */
 /*                        Candidate Credentials Table                         */
