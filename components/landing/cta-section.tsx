@@ -19,7 +19,7 @@ export default function CTASection() {
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className='bg-gradient-to-r from-white via-neutral-200 to-white bg-clip-text text-4xl font-extrabold tracking-tight text-balance text-transparent sm:text-5xl md:text-6xl'
         >
-          Bring&nbsp;Verifiable&nbsp;Trust&nbsp;to&nbsp;Hiring&nbsp;Today
+          Bring Verifiable Trust to Hiring Today
         </motion.h2>
 
         <motion.p
