@@ -45,12 +45,13 @@ export async function veridaFetch<T = any>(
     ...(init.headers || {}),
   }
 
-  const url = `${VERIDA_API_URL}/${VERIDA_API_VERSION}/${endpoint.replace(/^\\/+/, '')}`
+  // Remove any leading slashes so we don't end up with double //
+  const url = `${VERIDA_API_URL}/${VERIDA_API_VERSION}/${endpoint.replace(/^\/+/, '')}`
 
   const res = await fetch(url, { ...init, headers })
   if (!res.ok) {
     const body = await res.text().catch(() => '')
-    throw new Error(\`Verida request failed (\${res.status}): \${body}\`)
+    throw new Error(`Verida request failed (${res.status}): ${body}`)
   }
   return res.json() as Promise<T>
 }
@@ -60,12 +61,12 @@ export async function veridaFetch<T = any>(
 /* -------------------------------------------------------------------------- */
 
 export function searchUniversal(keywords: string) {
-  return veridaFetch(\`search/universal?keywords=\${encodeURIComponent(keywords)}\`)
+  return veridaFetch(`search/universal?keywords=${encodeURIComponent(keywords)}`)
 }
 
 export function queryDatastore(dsShortcut: string, filters: Record<string, unknown>) {
   return veridaFetch(
-    \`ds/query/\${encodeURIComponent(dsShortcut)}\`,
+    `ds/query/${encodeURIComponent(dsShortcut)}`,
     {
       method: 'POST',
       body: JSON.stringify({ filters }),

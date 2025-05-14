@@ -14,8 +14,9 @@ import { activityLogs, teamMembers, teams, users, veridaTokens } from '../schema
 /* -------------------------------------------------------------------------- */
 
 export async function getUser() {
-  const { cookies } = await import('next/headers')
-  const sessionCookie = cookies().get('session')
+  // Next 14+ returns a Promise<ReadonlyRequestCookies>
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('session')
   if (!sessionCookie || !sessionCookie.value) {
     return null
   }
