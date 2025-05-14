@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import { Trash2, FileText, Clipboard, Search } from 'lucide-react'
+import SearchTelegramModal from './search-telegram-modal'
 import { toast } from 'sonner'
 
 import { StatusBadge } from '@/components/ui/status-badge'
@@ -14,7 +15,6 @@ import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, CandidateCredentialRow } from '@/lib/types/tables'
 import { copyToClipboard } from '@/lib/utils'
-import { searchUniversal } from '@/lib/verida/client'
 
 /* -------------------------------------------------------------------------- */
 /*                        Candidate Credentials Table                         */
@@ -30,6 +30,8 @@ export default function CandidateCredentialsTable({
   veridaConnected = false,
 }: TableProps<CandidateCredentialRow> & { veridaConnected?: boolean }) {
   const router = useRouter()
+  /* ---------------------- Verida search modal state ---------------------- */
+  const [searchOpen, setSearchOpen] = React.useState(false)
 
   /* ------------------------ Bulk-selection actions ----------------------- */
   const bulkActions = useBulkActions<CandidateCredentialRow>([
@@ -71,24 +73,7 @@ export default function CandidateCredentialsTable({
         actions.push({
           label: 'Search My Verida Data',
           icon: Search,
-          onClick: async () => {
-            const keywords = prompt('Enter keywords to search your Verida data')?.trim()
-            if (!keywords) return
-            const toastId = toast.loading('Searching Verida…')
-            try {
-              const res: any = await searchUniversal(keywords)
-              const count = Array.isArray(res?.items)
-                ? res.items.length
-                : Array.isArray(res?.results)
-                  ? res.results.length
-                  : 0
-              toast.success(`Found ${count} matching item${count === 1 ? '' : 's'}.`, {
-                id: toastId,
-              })
-            } catch (err: any) {
-              toast.error(err?.message ?? 'Verida search failed.', { id: toastId })
-            }
-          },
+          onClick: () => setSearchOpen(true),
         })
       }
 
@@ -176,6 +161,8 @@ export default function CandidateCredentialsTable({
 
   /* ------------------------------ Render ------------------------------- */
   return (
+    <>
+      <SearchTelegramModal open={searchOpen} onOpenChange={setSearchOpen} />
     <DataTable
       columns={columns}
       rows={rows}
@@ -188,5 +175,6 @@ export default function CandidateCredentialsTable({
       pageSizeOptions={[rows.length]}
       hidePagination
     />
+    </>
   )
 }

@@ -1,3 +1,4 @@
+// noinspection JSUnusedGlobalSymbols
 import { VERIDA_API_URL } from '@/lib/config'
 
 /* -------------------------------------------------------------------------- */
@@ -6,8 +7,16 @@ import { VERIDA_API_URL } from '@/lib/config'
 
 const isBrowser = typeof window !== 'undefined'
 
-/** Trim any trailing slash so we can safely concatenate paths. */
+/** Ensure no trailing slash so we can safely concatenate paths. */
 const BASE_URL = VERIDA_API_URL.endsWith('/') ? VERIDA_API_URL.slice(0, -1) : VERIDA_API_URL
+
+/**
+ * Cross-runtime <code>btoa</code> with graceful fallback for Node environments.
+ */
+function base64(str: string): string {
+  if (isBrowser) return window.btoa(str)
+  return Buffer.from(str).toString('base64')
+}
 
 /**
  * Retrieve the auth token persisted to <code>localStorage</code> after a
@@ -81,4 +90,24 @@ async function veridaFetch<T>(
 export async function searchUniversal(keywords: string): Promise<Record<string, any>> {
   const qs = new URLSearchParams({ keywords }).toString()
   return veridaFetch(`/search/universal?${qs}`)
+}
+
+/**
+ * Convenience helper to issue a datastore query for the supplied JSON schema.
+ *
+ * @param schemaUrl Full schema URL (eg:   https://common.schemas.verida.io/social/chat/message/v0.1.0/schema.json).
+ * @param body      Query / options object to POST to <code>/ds/query</code>.
+ *                  See Verida REST docs for full details.
+ * @returns The <code>items</code> array, defaulting to <code>[]</code>.
+ */
+export async function queryDatastore<T = any>(
+  schemaUrl: string,
+  body: { query: Record<string, any>; options?: Record<string, any> },
+): Promise<T[]> {
+  const encoded = base64(schemaUrl)
+  const res = await veridaFetch<{ items?: T[] }>(`/ds/query/${encoded}`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  return Array.isArray(res.items) ? res.items : []
 }
