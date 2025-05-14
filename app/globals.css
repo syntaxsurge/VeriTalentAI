@@ -87,7 +87,7 @@
     --popover-foreground: 222.2 84% 4.9%;
 
     /* Cheqd purple primary */
-    --primary: 265 90% 68%;
+    --primary: 265 90% 88%;
     --primary-foreground: 0 0% 10%;
 
     /* Verida aqua secondary */
@@ -187,7 +187,7 @@
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(240 10% 3.9%);
 
-  --primary: hsl(265 90% 68%);
+  --primary: hsl(265 90% 88%);
   --primary-foreground: hsl(0 0% 10%);
 
   --secondary: hsl(170 100% 45%);
