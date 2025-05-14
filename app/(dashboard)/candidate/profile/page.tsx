@@ -1,6 +1,8 @@
 import { eq } from 'drizzle-orm'
 import { User } from 'lucide-react'
 
+import VeridaConnectButton from '@/components/ui/verida-connect-button'
+import { veridaTokens } from '@/lib/db/schema/verida'
 import ProfileHeader from '@/components/dashboard/candidate/profile-header'
 import PageCard from '@/components/ui/page-card'
 import { requireAuth } from '@/lib/auth/guards'
@@ -20,6 +22,14 @@ export default async function ProfilePage() {
     .where(eq(candidates.userId, user.id))
     .limit(1)
 
+  const [tokenRow] = await db
+    .select()
+    .from(veridaTokens)
+    .where(eq(veridaTokens.userId, user.id))
+    .limit(1)
+
+  const hasVeridaToken = !!tokenRow
+
   const profilePath = candidate ? `/candidates/${candidate.id}` : undefined
   const showPublicProfile = !!candidate
 
@@ -31,7 +41,9 @@ export default async function ProfilePage() {
         avatarSrc={(user as any)?.image ?? undefined}
         profilePath={profilePath}
         showPublicProfile={showPublicProfile}
-      />
+      >
+        <VeridaConnectButton connected={hasVeridaToken} />
+      </ProfileHeader>
 
       <PageCard
         icon={User}
