@@ -6,8 +6,8 @@ import PageCard from '@/components/ui/page-card'
 import VeridaConnectButton from '@/components/ui/verida-connect-button'
 import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { candidates } from '@/lib/db/schema/candidate'
 import { getVeridaToken } from '@/lib/db/queries/queries'
+import { candidates } from '@/lib/db/schema/candidate'
 
 import ProfileForm from './profile-form'
 

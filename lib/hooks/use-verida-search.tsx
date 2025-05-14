@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+
 import { searchUniversal } from '@/lib/verida/client'
 
 type SearchState<T = any> = {

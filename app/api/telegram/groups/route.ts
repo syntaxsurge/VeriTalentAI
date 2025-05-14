@@ -11,11 +11,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const userId = Number(searchParams.get('userId'))
 
   if (!userId) {
-    return NextResponse.json({ success: false, error: 'Missing or invalid userId' }, { status: 400 })
+    return NextResponse.json(
+      { success: false, error: 'Missing or invalid userId' },
+      { status: 400 },
+    )
   }
 
-  const schemaUrl =
-    'https://common.schemas.verida.io/social/chat/group/v0.1.0/schema.json'
+  const schemaUrl = 'https://common.schemas.verida.io/social/chat/group/v0.1.0/schema.json'
   const encodedSchema = Buffer.from(schemaUrl).toString('base64')
 
   try {

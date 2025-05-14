@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import { Trash2, FileText, Clipboard, Search } from 'lucide-react'
-import SearchTelegramModal from './search-telegram-modal'
 import { toast } from 'sonner'
 
 import { StatusBadge } from '@/components/ui/status-badge'
@@ -15,6 +14,8 @@ import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, CandidateCredentialRow } from '@/lib/types/tables'
 import { copyToClipboard } from '@/lib/utils'
+
+import SearchTelegramModal from './search-telegram-modal'
 
 /* -------------------------------------------------------------------------- */
 /*                        Candidate Credentials Table                         */
@@ -163,18 +164,18 @@ export default function CandidateCredentialsTable({
   return (
     <>
       <SearchTelegramModal open={searchOpen} onOpenChange={setSearchOpen} />
-    <DataTable
-      columns={columns}
-      rows={rows}
-      filterKey='title'
-      filterValue={search}
-      onFilterChange={handleSearchChange}
-      bulkActions={bulkActions}
-      /* Disable client-side pagination – handled by server TablePagination */
-      pageSize={rows.length}
-      pageSizeOptions={[rows.length]}
-      hidePagination
-    />
+      <DataTable
+        columns={columns}
+        rows={rows}
+        filterKey='title'
+        filterValue={search}
+        onFilterChange={handleSearchChange}
+        bulkActions={bulkActions}
+        /* Disable client-side pagination – handled by server TablePagination */
+        pageSize={rows.length}
+        pageSizeOptions={[rows.length]}
+        hidePagination
+      />
     </>
   )
 }

@@ -1,6 +1,10 @@
 'use client'
 
 import * as React from 'react'
+
+import { toast } from 'sonner'
+
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -10,10 +14,8 @@ import {
   DialogClose,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useVeridaSearch } from '@/lib/hooks/use-verida-search'
-import { toast } from 'sonner'
 
 type SearchTelegramModalProps = {
   open: boolean
@@ -62,15 +64,13 @@ export default function SearchTelegramModal({
 
         <div className='mt-4'>
           <h4 className='text-sm font-medium'>
-            {loading
-              ? 'Searching…'
-              : `Results ${results.length > 0 ? `(${results.length})` : ''}`}
+            {loading ? 'Searching…' : `Results ${results.length > 0 ? `(${results.length})` : ''}`}
           </h4>
           <ScrollArea className='mt-2 h-64 rounded border p-2'>
             {results.length === 0 && !loading ? (
               <p className='text-muted-foreground text-sm'>No results found.</p>
             ) : (
-              <pre className='whitespace-pre-wrap break-words text-xs'>
+              <pre className='text-xs break-words whitespace-pre-wrap'>
                 {JSON.stringify(results, null, 2)}
               </pre>
             )}

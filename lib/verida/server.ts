@@ -8,9 +8,7 @@ import { getVeridaToken } from '@/lib/db/queries/queries'
 /* -------------------------------------------------------------------------- */
 
 /** Ensure no trailing slash so we can safely concatenate paths. */
-const BASE_URL = VERIDA_API_URL.endsWith('/')
-  ? VERIDA_API_URL.slice(0, -1)
-  : VERIDA_API_URL
+const BASE_URL = VERIDA_API_URL.endsWith('/') ? VERIDA_API_URL.slice(0, -1) : VERIDA_API_URL
 
 export interface VeridaFetchOptions {
   /**
