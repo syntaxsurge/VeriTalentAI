@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Rocket, Sparkles, ShieldCheck } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import HeroCarousel from './hero-carousel'
 
 /* -------------------------------------------------------------------------- */
 /*                                    DATA                                    */
@@ -34,11 +34,12 @@ export default function HeroSection() {
         className='absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_30%,rgba(0,255,190,0.12)_0%,transparent_60%)]'
       />
 
-      <div className='mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:items-center'>
+      <div className='mx-auto grid max-w-6xl gap-16 px-4 sm:px-6 lg:grid-cols-2 lg:items-center'>
         {/* ── Copy block ─────────────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 32 }}
-          animate={{ opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.7, ease: 'easeOut' }}
           className='text-center lg:text-left'
         >
@@ -74,24 +75,8 @@ export default function HeroSection() {
           </div>
         </motion.div>
 
-        {/* ── Screenshot mockup ─────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.94 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          className='relative mx-auto w-full max-w-lg rounded-3xl border border-white/10 bg-white/5 p-1 backdrop-blur'
-        >
-          <div className='bg-background relative overflow-hidden rounded-[inherit]'>
-            <Image
-              src='/images/dashboard-screenshot.png'
-              alt='Viskify dashboard screenshot'
-              width={1024}
-              height={768}
-              priority
-              className='h-auto w-full rounded-[inherit] object-cover'
-            />
-          </div>
-        </motion.div>
+        {/* ── Interactive carousel ───────────────────────────────────────── */}
+        <HeroCarousel />
       </div>
     </section>
   )
