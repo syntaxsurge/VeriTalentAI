@@ -94,6 +94,16 @@ export default function ImageLightbox({
     }
   }, [open, startIndex, images.length])
 
+  // Lock page scroll while the lightbox is open
+  useEffect(() => {
+    if (!open) return
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = originalOverflow
+    }
+  }, [open])
+
   // next/prev
   const handleNext = useCallback(() => {
     setFitScale(1)
@@ -121,6 +131,10 @@ export default function ImageLightbox({
 
   // Wheel-based zoom
   function handleWheel(e: React.WheelEvent) {
+    // Prevent page from scrolling while zooming the image
+    e.preventDefault()
+    e.stopPropagation()
+
     if (e.deltaY < 0) {
       // zoom in
       setZoomDelta((z) => Math.min(z + 0.1, 5))
