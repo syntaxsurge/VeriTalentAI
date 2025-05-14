@@ -2,50 +2,49 @@
 
 import React, { useState, useTransition } from 'react'
 
-import { BadgeCheck, CheckCircle2, XCircle, Clipboard } from 'lucide-react'
+import { Fingerprint, Clipboard, CheckCircle2, XCircle } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import StatusBadge from '@/components/ui/status-badge'
 import { verifyCredential, resolveDid } from '@/lib/cheqd'
 import { copyToClipboard } from '@/lib/utils'
 
-/**
- * Public tool to verify a Verifiable Credential or resolve a DID using cheqd Studio.
- * If the input starts with "did:" it performs DID resolution, otherwise it treats
- * the input as a VC (JWT or JSON) and verifies it.
- */
+/* -------------------------------------------------------------------------- */
+/*                                   P A G E                                  */
+/* -------------------------------------------------------------------------- */
+
 export default function VerifyCredentialPage() {
   const [input, setInput] = useState('')
-  const [result, setResult] =
-    useState<'verified' | 'failed' | 'found' | 'notfound' | null>(null)
+  const [result, setResult] = useState<
+    'verified' | 'failed' | 'found' | 'notfound' | null
+  >(null)
   const [message, setMessage] = useState('')
   const [isPending, startTransition] = useTransition()
 
-  /* ------------------------------------------------------------------ */
-  /*                              Handlers                              */
-  /* ------------------------------------------------------------------ */
-  function handleVerify(e: React.FormEvent<HTMLFormElement>) {
+  /* ----------------------------- Handlers -------------------------------- */
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const value = input.trim()
     if (!value) return
 
     startTransition(async () => {
-      /* DID resolution --------------------------------------------------- */
+      /* DID ---------------------------------------------------------------- */
       if (value.startsWith('did:')) {
         const { found } = await resolveDid(value)
         if (found) {
           setResult('found')
-          setMessage('DID Document found and resolved successfully.')
+          setMessage('DID Document resolved successfully.')
         } else {
           setResult('notfound')
-          setMessage('DID not found on cheqd network.')
+          setMessage('DID not found on the cheqd network.')
         }
         return
       }
 
-      /* VC verification --------------------------------------------------- */
+      /* VC ----------------------------------------------------------------- */
       const { verified } = await verifyCredential(value)
       setResult(verified ? 'verified' : 'failed')
       setMessage(
@@ -56,72 +55,76 @@ export default function VerifyCredentialPage() {
     })
   }
 
-  /* ------------------------------------------------------------------ */
-  /*                              Helpers                               */
-  /* ------------------------------------------------------------------ */
-  const status =
-    result === 'verified' || result === 'found'
-      ? 'success'
-      : result === 'failed' || result === 'notfound'
-        ? 'error'
-        : null
+  function pasteFromClipboard() {
+    navigator.clipboard
+      .readText()
+      .then((text) => setInput(text))
+      .catch(() => toast.error('Clipboard read failed.'))
+  }
 
-  /* ------------------------------------------------------------------ */
-  /*                                View                                */
-  /* ------------------------------------------------------------------ */
+  /* ------------------------------- UI ----------------------------------- */
+
+  const success = result === 'verified' || result === 'found'
+  const status = success ? 'verified' : 'failed'
+
   return (
     <PageCard
-      icon={BadgeCheck}
+      icon={Fingerprint}
       title='Verify Credential or DID'
-      description='Validate a Verifiable Credential JWT/JSON or resolve a did:cheqd identifier.'
+      description='Validate a Verifiable Credential JWT / JSON or resolve a did:cheqd identifier.'
     >
-      <div className='space-y-8'>
-        <Card>
-          <CardHeader>
-            <CardTitle>Verification Tool</CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-6'>
-            <form onSubmit={handleVerify} className='space-y-4'>
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                rows={8}
-                required
-                placeholder='Paste VC JWT / JSON or did:cheqd:…'
-                className='border-border focus-visible:ring-primary w-full rounded-md border p-3 text-sm focus-visible:ring-2'
-              />
-              <Button type='submit' disabled={isPending}>
-                {isPending ? 'Verifying…' : 'Verify'}
-              </Button>
-            </form>
+      <div className='space-y-6'>
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            rows={5}
+            required
+            spellCheck={false}
+            placeholder='Paste VC JWT / JSON — or — did:cheqd:…'
+            className='border-border w-full resize-y rounded-md border p-3 font-mono text-xs leading-tight focus-visible:ring-2 focus-visible:ring-primary'
+          />
 
-            {result && (
-              <div className='flex items-center gap-3'>
-                {status === 'success' ? (
-                  <CheckCircle2 className='text-primary h-6 w-6 shrink-0' />
-                ) : (
-                  <XCircle className='text-destructive h-6 w-6 shrink-0' />
-                )}
-                <p className='flex-1 text-sm'>{message}</p>
-                {input && (
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    onClick={() => copyToClipboard(input)}
-                  >
-                    <Clipboard className='h-4 w-4' />
-                    <span className='sr-only'>Copy</span>
-                  </Button>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          <div className='flex flex-wrap gap-2'>
+            <Button type='submit' disabled={isPending}>
+              {isPending ? 'Checking…' : 'Check'}
+            </Button>
+
+            <Button
+              type='button'
+              variant='outline'
+              onClick={pasteFromClipboard}
+              title='Paste from clipboard'
+            >
+              <Clipboard className='mr-2 h-4 w-4' />
+              Paste
+            </Button>
+          </div>
+        </form>
 
         {result && (
-          <div className='flex justify-center'>
-            <StatusBadge status={status === 'success' ? 'verified' : 'failed'} showIcon />
+          <div className='flex items-center gap-2'>
+            {success ? (
+              <CheckCircle2 className='h-5 w-5 text-emerald-600' />
+            ) : (
+              <XCircle className='h-5 w-5 text-rose-600' />
+            )}
+
+            <StatusBadge status={status} />
+            <span className='text-sm'>{message}</span>
+
+            {input && (
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon'
+                onClick={() => copyToClipboard(input)}
+                title='Copy input'
+              >
+                <Clipboard className='h-4 w-4' />
+                <span className='sr-only'>Copy</span>
+              </Button>
+            )}
           </div>
         )}
       </div>
