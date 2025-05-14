@@ -6,7 +6,7 @@ import { requireAuth } from '@/lib/auth/guards'
 import { verifyToken } from '@/lib/auth/session'
 
 import { db } from '../drizzle'
-import { activityLogs, teamMembers, teams, users } from '../schema'
+import { activityLogs, teamMembers, teams, users, veridaTokens } from '../schema'
 
 /* -------------------------------------------------------------------------- */
 /*                              U S E R  H E L P E R                          */
@@ -131,4 +131,27 @@ export async function getTeamForUser(userId: number) {
   })
 
   return result?.teamMembers[0]?.team || null
+}
+
+/* -------------------------------------------------------------------------- */
+/*                      V E R I D A   T O K E N   U P S E R T                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Upsert a Verida auth_token for a user, replacing any previous token rows.
+ */
+export async function upsertVeridaToken(
+  userId: number,
+  authToken: string,
+  scopes: string[],
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.delete(veridaTokens).where(eq(veridaTokens.userId, userId))
+    await tx.insert(veridaTokens).values({
+      userId,
+      authToken,
+      scopes,
+      issuedAt: new Date(),
+    })
+  })
 }

@@ -1,62 +1,53 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-import { and, eq } from 'drizzle-orm'
+import { getUser, upsertVeridaToken } from '@/lib/db/queries/queries'
+import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
 
-import { requireAuth } from '@/lib/auth/guards'
-import { db } from '@/lib/db/drizzle'
-import { invitations } from '@/lib/db/schema'
-import { candidateCredentials, CredentialStatus } from '@/lib/db/schema/candidate'
-import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
+/**
+ * Handles the redirect from Verida Vault, storing the received `auth_token`
+ * and its granted scopes against the authenticated user.
+ */
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  const url = new URL(request.url)
+  const authToken = url.searchParams.get('auth_token')
+  const state = url.searchParams.get('state') ?? '/dashboard'
 
-export async function GET() {
-  const user = await requireAuth()
-
-  /* ------------------------- Invitations ------------------------- */
-  const invitationsCount = (
-    await db
-      .select({ id: invitations.id })
-      .from(invitations)
-      .where(and(eq(invitations.email, user.email), eq(invitations.status, 'pending')))
-  ).length
-
-  /* ---------------------- Issuer Requests ----------------------- */
-  let issuerRequestsCount = 0
-  if (user.role === 'issuer') {
-    const [issuer] = await db
-      .select()
-      .from(issuers)
-      .where(eq(issuers.ownerUserId, user.id))
-      .limit(1)
-
-    if (issuer) {
-      issuerRequestsCount = (
-        await db
-          .select({ id: candidateCredentials.id })
-          .from(candidateCredentials)
-          .where(
-            and(
-              eq(candidateCredentials.issuerId, issuer.id),
-              eq(candidateCredentials.status, CredentialStatus.PENDING),
-            ),
-          )
-      ).length
-    }
+  /* Require an existing session */
+  const user = await getUser()
+  if (!user) {
+    return NextResponse.redirect(new URL('/sign-in', request.url))
   }
 
-  /* -------------------- Admin Pending Issuers ------------------- */
-  const adminPendingIssuersCount =
-    user.role === 'admin'
-      ? (
-          await db
-            .select({ id: issuers.id })
-            .from(issuers)
-            .where(eq(issuers.status, IssuerStatus.PENDING))
-        ).length
-      : 0
+  /* Missing token – noop redirect */
+  if (!authToken) {
+    return NextResponse.redirect(new URL(state, request.url))
+  }
 
-  return NextResponse.json({
-    invitations: invitationsCount,
-    issuerRequests: issuerRequestsCount,
-    adminPendingIssuers: adminPendingIssuersCount,
-  })
+  /* ------------------------------------------------------------------ */
+  /*                 Retrieve granted scopes for the token              */
+  /* ------------------------------------------------------------------ */
+  let scopes: string[] = []
+  try {
+    const res = await fetch(`${VERIDA_API_URL}/${VERIDA_API_VERSION}/scopes`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data.scopes)) scopes = data.scopes
+    }
+  } catch (err) {
+    console.error('Failed to fetch Verida scopes', err)
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*                           Persist token                            */
+  /* ------------------------------------------------------------------ */
+  await upsertVeridaToken(user.id, authToken, scopes)
+
+  /* Redirect back to original state or dashboard */
+  return NextResponse.redirect(new URL(state, request.url))
 }

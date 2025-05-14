@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { NextRequest, NextResponse } from 'next/server'
 
 import { z } from 'zod'
 
@@ -71,4 +72,32 @@ export function withTeam<T>(action: ActionWithTeamFunction<T>) {
 
     return action(formData, team)
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                  V E R I D A   A U T H   T O K E N   I N T E R C E P T O R */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Middleware helper to capture an `auth_token` query param returned by Verida,
+ * stash it in a temporary HTTP-only cookie and redirect to the callback route.
+ * Call this from your project-level `middleware.ts`.
+ */
+export function interceptVeridaAuthToken(request: NextRequest): NextResponse | void {
+  const authToken = request.nextUrl.searchParams.get('auth_token')
+  if (!authToken) return
+
+  const callbackUrl = new URL('/api/verida/callback', request.url)
+  const response = NextResponse.redirect(callbackUrl)
+
+  response.cookies.set({
+    name: 'verida_tmp_token',
+    value: authToken,
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 600, // 10 minutes
+  })
+
+  return response
 }

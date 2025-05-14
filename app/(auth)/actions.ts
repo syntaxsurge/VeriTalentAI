@@ -24,6 +24,8 @@ import {
   invitations,
 } from '@/lib/db/schema'
 import { createCheckoutSession } from '@/lib/payments/stripe'
+import { upsertVeridaToken } from '@/lib/db/queries/queries'
+import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
 
 /* -------------------------------------------------------------------------- */
 /*                               H E L P E R S                                */
@@ -89,6 +91,35 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
     setSession(foundUser),
     logActivity(foundTeam?.id, foundUser.id, ActivityType.SIGN_IN),
   ])
+
+  /* Persist Verida token parked by middleware (if any) */
+  {
+    const cookieStore = cookies()
+    const tmpToken = cookieStore.get('verida_tmp_token')
+    if (tmpToken?.value) {
+      try {
+        let scopes: string[] = []
+        try {
+          const res = await fetch(`${VERIDA_API_URL}/${VERIDA_API_VERSION}/scopes`, {
+            headers: {
+              Authorization: `Bearer ${tmpToken.value}`,
+              'Content-Type': 'application/json',
+            },
+            cache: 'no-store',
+          })
+          if (res.ok) {
+            const data = await res.json()
+            if (Array.isArray(data.scopes)) scopes = data.scopes
+          }
+        } catch (err) {
+          console.error('Failed to fetch Verida scopes', err)
+        }
+        await upsertVeridaToken(foundUser.id, tmpToken.value, scopes)
+      } finally {
+        cookieStore.delete('verida_tmp_token')
+      }
+    }
+  }
 
   const redirectTo = formData.get('redirect') as string | null
   if (redirectTo === 'checkout') {
@@ -185,6 +216,35 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   /* ------------------------------------------------------------------ */
   await setSession(createdUser)
   await logActivity(personalTeam.id, createdUser.id, ActivityType.SIGN_UP)
+
+  /* Persist Verida token parked by middleware (if any) */
+  {
+    const cookieStore = cookies()
+    const tmpToken = cookieStore.get('verida_tmp_token')
+    if (tmpToken?.value) {
+      try {
+        let scopes: string[] = []
+        try {
+          const res = await fetch(`${VERIDA_API_URL}/${VERIDA_API_VERSION}/scopes`, {
+            headers: {
+              Authorization: `Bearer ${tmpToken.value}`,
+              'Content-Type': 'application/json',
+            },
+            cache: 'no-store',
+          })
+          if (res.ok) {
+            const data = await res.json()
+            if (Array.isArray(data.scopes)) scopes = data.scopes
+          }
+        } catch (err) {
+          console.error('Failed to fetch Verida scopes', err)
+        }
+        await upsertVeridaToken(createdUser.id, tmpToken.value, scopes)
+      } finally {
+        cookieStore.delete('verida_tmp_token')
+      }
+    }
+  }
 
   const redirectTo = formData.get('redirect') as string | null
   if (redirectTo === 'checkout') {
