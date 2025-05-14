@@ -1,9 +1,4 @@
 import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
-import { buildAuthUrl } from '@/lib/verida/public'
-
-/* -------------------------------------------------------------------------- */
-/*                  B R O W S E R – S A F E   U T I L I T I E S               */
-/* -------------------------------------------------------------------------- */
 
 const isBrowser = typeof window !== 'undefined'
 
@@ -62,6 +57,3 @@ export async function searchUniversal(
   const qs = new URLSearchParams({ keywords }).toString()
   return veridaFetch(`/search/universal?${qs}`)
 }
-
-/* Re-export the canonical buildAuthUrl from public.ts for convenience */
-export { buildAuthUrl }

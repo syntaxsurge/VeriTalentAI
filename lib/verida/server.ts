@@ -3,11 +3,11 @@ import 'server-only'
 import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
 import { getVeridaToken } from '@/lib/db/queries/queries'
 
-/* -------------------------------------------------------------------------- */
-/*                       S E R V E R   F E T C H   H E L P E R                */
-/* -------------------------------------------------------------------------- */
-
-async function veridaFetch<T>(userId: number, endpoint: string, init: RequestInit = {}): Promise<T> {
+async function veridaFetch<T>(
+  userId: number,
+  endpoint: string,
+  init: RequestInit = {},
+): Promise<T> {
   const tokenRow = await getVeridaToken(userId)
   if (!tokenRow) throw new Error('User has not connected a Verida account.')
 
@@ -28,10 +28,6 @@ async function veridaFetch<T>(userId: number, endpoint: string, init: RequestIni
 
   return (await res.json()) as T
 }
-
-/* -------------------------------------------------------------------------- */
-/*                                P U B L I C                                 */
-/* -------------------------------------------------------------------------- */
 
 /**
  * Server-side Universal Search that automatically injects the current user’s
