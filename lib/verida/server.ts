@@ -29,7 +29,7 @@ export interface VeridaFetchOptions {
  * @param init     Standard <code>fetch()</code> options.
  * @param options  Set <code>{ raw:true }</code> to bypass URL prefixing.
  */
-async function veridaFetch<T>(
+export async function veridaFetch<
   userId: number,
   path: string,
   init: RequestInit = {},
