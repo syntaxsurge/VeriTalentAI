@@ -20,3 +20,12 @@ export interface Pagination {
   /** Query-string params to persist across navigation */
   initialParams: Record<string, string>
 }
+
+/* -------------------------------------------------------------------------- */
+/*                             Verida scope type                              */
+/* -------------------------------------------------------------------------- */
+
+export type VeridaScope =
+  | 'api:search-universal'
+  | 'ds:r:social-email'
+  | 'ds:r:file'
