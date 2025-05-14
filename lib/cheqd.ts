@@ -111,24 +111,67 @@ export async function issueCredential(params: {
 /**
  * Verify a VC using cheqd Studio.
  */
-export async function verifyCredential(vcJwtOrObj: any): Promise<{ verified: boolean }> {
+export async function verifyCredential(
+  vcJwtOrObj: unknown,
+): Promise<{ verified: boolean }> {
+  /* ------------------------ Basic guardrails -------------------------- */
   if (!CHEQD_API_URL || !CHEQD_API_URL.startsWith('http') || !CHEQD_API_KEY) {
     return { verified: false }
   }
 
+  /* -------------------------------------------------------------------- */
+  /*                  Detect input type & extract credential              */
+  /* -------------------------------------------------------------------- */
+  function extractJwt(obj: any): string | null {
+    if (obj && typeof obj === 'object' && typeof (obj as any)?.proof?.jwt === 'string') {
+      return (obj as any).proof.jwt
+    }
+    return null
+  }
+
+  let credential: string
+
+  /* String input -------------------------------------------------------- */
+  if (typeof vcJwtOrObj === 'string') {
+    const trimmed = vcJwtOrObj.trim()
+
+    // Treat as JSON if it looks like an object literal
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        const jwt = extractJwt(parsed)
+        credential = jwt ?? JSON.stringify(parsed)
+      } catch {
+        // Fallback – assume raw JWT string
+        credential = trimmed
+      }
+    } else {
+      // Raw JWT
+      credential = trimmed
+    }
+  } else {
+    // Non-string input – expect an object
+    const jwt = extractJwt(vcJwtOrObj)
+    credential = jwt ?? JSON.stringify(vcJwtOrObj)
+  }
+
+  /* -------------------------- API request ----------------------------- */
   const formData = new URLSearchParams()
-  formData.append('credential', JSON.stringify(vcJwtOrObj))
+  formData.append('credential', credential)
   formData.append('policies', JSON.stringify({}))
 
-  const res = await fetch(`${CHEQD_API_URL}/credential/verify?verifyStatus=false`, {
-    method: 'POST',
-    headers: {
-      'x-api-key': CHEQD_API_KEY,
-      'Content-Type': 'application/x-www-form-urlencoded',
+  const res = await fetch(
+    `${CHEQD_API_URL}/credential/verify?verifyStatus=false`,
+    {
+      method: 'POST',
+      headers: {
+        'x-api-key': CHEQD_API_KEY,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData,
+      cache: 'no-store',
     },
-    body: formData,
-    cache: 'no-store',
-  })
+  )
 
   if (!res.ok) return { verified: false }
   const data = await res.json()
