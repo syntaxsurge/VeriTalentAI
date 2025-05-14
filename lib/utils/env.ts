@@ -18,7 +18,11 @@ export function getEnv(
   let raw: string | undefined
 
   if (isBrowser) {
-    raw = (window as any).__NEXT_PUBLIC_ENV__?.[name] ?? process.env[name]
+    const publicEnv = (window as any).__NEXT_PUBLIC_ENV__ ?? {}
+    raw =
+      publicEnv?.[name] ??
+      publicEnv?.[`NEXT_PUBLIC_${name}`] ??
+      process.env[name]
   } else {
     raw = process.env[name]
   }
