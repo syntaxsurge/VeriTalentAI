@@ -13,7 +13,8 @@ import { activityLogs, teamMembers, teams, users, veridaTokens } from '../schema
 /* -------------------------------------------------------------------------- */
 
 export async function getUser() {
-  const sessionCookie = (await cookies()).get('session')
+  const { cookies } = await import('next/headers')
+  const sessionCookie = cookies().get('session')
   if (!sessionCookie || !sessionCookie.value) {
     return null
   }
