@@ -6,19 +6,23 @@ import { storeVeridaToken, resolveState } from '@/lib/verida/token'
 /**
  * Final Verida Vault redirect target.
  *
- * Reads the temporary <code>verida_tmp_token</code> cookie set by middleware, persists
- * the token for the authenticated user, and then redirects to the original
- * <code>state</code> location (or <code>/dashboard</code> when absent or blank).
+ * Accepts the `auth_token` via either the temporary `verida_tmp_token` cookie
+ * (set by middleware) **or** directly from the query string when the cookie is
+ * missing – ensuring the token is always persisted for the authenticated user.
+ * After storing the token and its granted scopes, the user is redirected to the
+ * original `state` location (defaulting to `/dashboard`).
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const url = new URL(request.url)
   const state = resolveState(url.searchParams.get('state'))
 
-  /* Extract the auth token stashed by middleware */
+  /* Retrieve token from middleware cookie (preferred) or fallback to query */
   const tmpCookie = request.cookies.get('verida_tmp_token')
-  const authToken = tmpCookie?.value
+  const cookieToken = tmpCookie?.value ?? null
+  const queryToken = url.searchParams.get('auth_token')
+  const authToken = cookieToken ?? (queryToken && queryToken.trim().length > 0 ? queryToken : null)
 
-  /* Missing token – noop redirect */
+  /* If no token was supplied, just redirect back to the state path */
   if (!authToken) {
     return NextResponse.redirect(new URL(state, request.url))
   }
@@ -27,15 +31,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const user = await getUser()
   if (!user) {
     const res = NextResponse.redirect(new URL('/sign-in', request.url))
-    res.cookies.delete('verida_tmp_token')
+    if (tmpCookie) res.cookies.delete('verida_tmp_token')
     return res
   }
 
-  /* Persist token and granted scopes */
+  /* Persist token (and its granted scopes) for the user */
   await storeVeridaToken(user.id, authToken)
 
-  /* Clear the temporary cookie and redirect */
+  /* Clear temporary cookie (if present) and redirect */
   const response = NextResponse.redirect(new URL(state, request.url))
-  response.cookies.delete('verida_tmp_token')
+  if (tmpCookie) response.cookies.delete('verida_tmp_token')
   return response
 }
