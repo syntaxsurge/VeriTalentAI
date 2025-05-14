@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import ImageLightbox from '@/components/ui/images/image-lightbox'
 
 /* -------------------------------------------------------------------------- */
@@ -93,7 +94,19 @@ export default function HeroCarousel() {
       </AnimatePresence>
 
       {/* Role buttons */}
-      <div className='mt-6 flex flex-wrap justify-center gap-3'>
+      <div className='mt-6 flex flex-wrap items-center justify-center gap-3'>
+        {/* Previous */}
+        <Button
+          variant='outline'
+          size='icon'
+          onClick={handlePrev}
+          aria-label='Previous role'
+          className='flex-shrink-0'
+        >
+          <ChevronLeft className='h-4 w-4' />
+        </Button>
+
+        {/* Role buttons */}
         {SLIDES.map((s, i) => (
           <Button
             key={s.role}
@@ -105,6 +118,17 @@ export default function HeroCarousel() {
             {s.role}
           </Button>
         ))}
+
+        {/* Next */}
+        <Button
+          variant='outline'
+          size='icon'
+          onClick={handleNext}
+          aria-label='Next role'
+          className='flex-shrink-0'
+        >
+          <ChevronRight className='h-4 w-4' />
+        </Button>
       </div>
 
       {/* Lightbox */}
