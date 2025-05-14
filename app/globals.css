@@ -87,8 +87,8 @@
     --popover-foreground: 222.2 84% 4.9%;
 
     /* Cheqd purple primary */
-    --primary: 264 100% 60%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 265 90% 68%;
+    --primary-foreground: 0 0% 10%;
 
     /* Verida aqua secondary */
     --secondary: 170 100% 45%;
@@ -137,8 +137,8 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 264 100% 70%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 265 100% 60%;
+    --primary-foreground: 0 0% 98%;
 
     --secondary: 170 100% 55%;
     --secondary-foreground: 210 40% 98%;
@@ -187,8 +187,8 @@
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(240 10% 3.9%);
 
-  --primary: hsl(264 100% 60%);
-  --primary-foreground: hsl(0 0% 98%);
+  --primary: hsl(265 90% 68%);
+  --primary-foreground: hsl(0 0% 10%);
 
   --secondary: hsl(170 100% 45%);
   --secondary-foreground: hsl(0 0% 98%);
@@ -247,8 +247,8 @@
   --popover: hsl(240 10% 3.9%);
   --popover-foreground: hsl(0 0% 98%);
 
-  --primary: hsl(264 100% 70%);
-  --primary-foreground: hsl(0 0% 0%);
+  --primary: hsl(265 100% 60%);
+  --primary-foreground: hsl(0 0% 98%);
 
   --secondary: hsl(170 100% 55%);
   --secondary-foreground: hsl(0 0% 98%);
