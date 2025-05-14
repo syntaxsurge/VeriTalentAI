@@ -17,9 +17,7 @@ import { copyToClipboard } from '@/lib/utils'
 
 export default function VerifyCredentialPage() {
   const [input, setInput] = useState('')
-  const [result, setResult] = useState<
-    'verified' | 'failed' | 'found' | 'notfound' | null
-  >(null)
+  const [result, setResult] = useState<'verified' | 'failed' | 'found' | 'notfound' | null>(null)
   const [message, setMessage] = useState('')
   const [isPending, startTransition] = useTransition()
 
@@ -47,11 +45,7 @@ export default function VerifyCredentialPage() {
       /* VC ----------------------------------------------------------------- */
       const { verified } = await verifyCredential(value)
       setResult(verified ? 'verified' : 'failed')
-      setMessage(
-        verified
-          ? 'Credential signature is valid.'
-          : 'Credential signature is NOT valid.',
-      )
+      setMessage(verified ? 'Credential signature is valid.' : 'Credential signature is NOT valid.')
     })
   }
 
@@ -82,7 +76,7 @@ export default function VerifyCredentialPage() {
             required
             spellCheck={false}
             placeholder='Paste VC JWT / JSON — or — did:cheqd:…'
-            className='border-border w-full resize-y rounded-md border p-3 font-mono text-xs leading-tight focus-visible:ring-2 focus-visible:ring-primary'
+            className='border-border focus-visible:ring-primary w-full resize-y rounded-md border p-3 font-mono text-xs leading-tight focus-visible:ring-2'
           />
 
           <div className='flex flex-wrap gap-2'>

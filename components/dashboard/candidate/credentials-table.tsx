@@ -7,7 +7,6 @@ import { Trash2, FileText, Clipboard, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { StatusBadge } from '@/components/ui/status-badge'
-import { searchUniversal } from '@/lib/verida'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { deleteCredentialAction } from '@/lib/actions/delete'
@@ -15,6 +14,7 @@ import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, CandidateCredentialRow } from '@/lib/types/tables'
 import { copyToClipboard } from '@/lib/utils'
+import { searchUniversal } from '@/lib/verida'
 
 /* -------------------------------------------------------------------------- */
 /*                        Candidate Credentials Table                         */
@@ -77,9 +77,14 @@ export default function CandidateCredentialsTable({
             const toastId = toast.loading('Searching Verida…')
             try {
               const res: any = await searchUniversal(keywords)
-              const count =
-                Array.isArray(res?.items) ? res.items.length : Array.isArray(res?.results) ? res.results.length : 0
-              toast.success(`Found ${count} matching item${count === 1 ? '' : 's'}.`, { id: toastId })
+              const count = Array.isArray(res?.items)
+                ? res.items.length
+                : Array.isArray(res?.results)
+                  ? res.results.length
+                  : 0
+              toast.success(`Found ${count} matching item${count === 1 ? '' : 's'}.`, {
+                id: toastId,
+              })
             } catch (err: any) {
               toast.error(err?.message ?? 'Verida search failed.', { id: toastId })
             }

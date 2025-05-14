@@ -1,11 +1,13 @@
 'use client'
 
 import Link from 'next/link'
+
 import { motion } from 'framer-motion'
 import { Rocket, Sparkles, ShieldCheck } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+
 import HeroCarousel from './hero-carousel'
 
 /* -------------------------------------------------------------------------- */
@@ -26,7 +28,7 @@ export default function HeroSection() {
   return (
     <section
       id='hero'
-      className='relative isolate overflow-hidden bg-gradient-to-br from-[#0b0f19] via-[#141b2d] to-[#0b0f19] pb-32 pt-15'
+      className='relative isolate overflow-hidden bg-gradient-to-br from-[#0b0f19] via-[#141b2d] to-[#0b0f19] pt-15 pb-32'
     >
       {/* Radial backdrop */}
       <div
@@ -43,8 +45,9 @@ export default function HeroSection() {
           transition={{ duration: 0.7, ease: 'easeOut' }}
           className='text-center lg:text-left'
         >
-          <h1 className='bg-gradient-to-r from-white to-neutral-300 bg-clip-text text-balance text-5xl font-extrabold leading-tight text-transparent sm:text-6xl'>
-            Proof-First Hiring<br />
+          <h1 className='bg-gradient-to-r from-white to-neutral-300 bg-clip-text text-5xl leading-tight font-extrabold text-balance text-transparent sm:text-6xl'>
+            Proof-First Hiring
+            <br />
             for Every Team
           </h1>
 

@@ -119,11 +119,7 @@ function PricingCard({
       </ul>
 
       {isCurrent ? (
-        <Button
-          variant='default'
-          disabled
-          className='w-full cursor-default rounded-full'
-        >
+        <Button variant='default' disabled className='w-full cursor-default rounded-full'>
           Current Plan
         </Button>
       ) : meta.key === 'free' ? (

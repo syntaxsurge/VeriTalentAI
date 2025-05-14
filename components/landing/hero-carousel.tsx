@@ -2,10 +2,11 @@
 
 import Image from 'next/image'
 import { useState, useEffect, useCallback } from 'react'
+
 import { AnimatePresence, motion } from 'framer-motion'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import ImageLightbox from '@/components/ui/images/image-lightbox'
 
 /* -------------------------------------------------------------------------- */
@@ -52,10 +53,7 @@ export default function HeroCarousel() {
   /* -------------------------- Navigation handlers ------------------------ */
   const select = useCallback((i: number) => setIndex(i), [])
   const handleNext = useCallback(() => setIndex((i) => (i + 1) % SLIDES.length), [])
-  const handlePrev = useCallback(
-    () => setIndex((i) => (i === 0 ? SLIDES.length - 1 : i - 1)),
-    [],
-  )
+  const handlePrev = useCallback(() => setIndex((i) => (i === 0 ? SLIDES.length - 1 : i - 1)), [])
 
   /* ------------------------------- View ---------------------------------- */
   const slide = SLIDES[index]
@@ -86,7 +84,7 @@ export default function HeroCarousel() {
               className='h-auto w-full rounded-[inherit] object-cover'
             />
             {/* Role label */}
-            <span className='bg-background/70 absolute bottom-4 left-4 rounded-md px-3 py-1 text-sm font-semibold uppercase tracking-wide text-foreground backdrop-blur'>
+            <span className='bg-background/70 text-foreground absolute bottom-4 left-4 rounded-md px-3 py-1 text-sm font-semibold tracking-wide uppercase backdrop-blur'>
               {slide.role}
             </span>
           </div>

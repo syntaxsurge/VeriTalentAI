@@ -1,13 +1,13 @@
 import { eq } from 'drizzle-orm'
 import { User } from 'lucide-react'
 
-import VeridaConnectButton from '@/components/ui/verida-connect-button'
-import { veridaTokens } from '@/lib/db/schema/verida'
 import ProfileHeader from '@/components/dashboard/candidate/profile-header'
 import PageCard from '@/components/ui/page-card'
+import VeridaConnectButton from '@/components/ui/verida-connect-button'
 import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
 import { candidates } from '@/lib/db/schema/candidate'
+import { veridaTokens } from '@/lib/db/schema/verida'
 
 import ProfileForm from './profile-form'
 

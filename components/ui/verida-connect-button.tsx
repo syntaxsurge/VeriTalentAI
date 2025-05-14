@@ -11,9 +11,7 @@ type VeridaConnectButtonProps = {
  * Displays the official "Connect Verida" image when disconnected and a green
  * "Verida Connected" badge once an auth_token is stored for the current user.
  */
-export default function VeridaConnectButton({
-  connected = false,
-}: VeridaConnectButtonProps) {
+export default function VeridaConnectButton({ connected = false }: VeridaConnectButtonProps) {
   if (connected) {
     return (
       <span className='inline-flex items-center rounded-full bg-green-600 px-3 py-1 text-xs font-semibold text-white'>

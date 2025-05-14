@@ -165,9 +165,7 @@ export async function getStripeProducts() {
     name: product.name,
     description: product.description,
     defaultPriceId:
-      typeof product.default_price === 'string'
-        ? product.default_price
-        : product.default_price?.id,
+      typeof product.default_price === 'string' ? product.default_price : product.default_price?.id,
   }))
 }
 
@@ -186,9 +184,7 @@ export async function setPlanPrice({
 }): Promise<string> {
   /* ---------------------- Locate product by name ----------------------- */
   const prods = await stripe.products.list({ active: true })
-  const product = prods.data.find(
-    (p) => p.name.toLowerCase() === productName.toLowerCase(),
-  )
+  const product = prods.data.find((p) => p.name.toLowerCase() === productName.toLowerCase())
   if (!product) throw new Error(`Stripe product "${productName}" not found.`)
 
   /* ------------------------ Create new price --------------------------- */

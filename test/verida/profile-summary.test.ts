@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+
 import * as verida from '@/lib/verida'
 
 /* -------------------------------------------------------------------------- */
@@ -28,12 +29,6 @@ const { buildProfileContext } = await import('@/lib/ai/openai')
 const ctx = await buildProfileContext(42)
 
 /* The stub data should survive JSON-stringify and truncation to ≤1000 chars */
-assert.ok(
-  ctx.includes('foo'),
-  'Profile context should include serialized stub payload',
-)
+assert.ok(ctx.includes('foo'), 'Profile context should include serialized stub payload')
 
-assert.ok(
-  ctx.length <= 1000,
-  'Profile context must be truncated to a maximum of 1000 characters',
-)
+assert.ok(ctx.length <= 1000, 'Profile context must be truncated to a maximum of 1000 characters')

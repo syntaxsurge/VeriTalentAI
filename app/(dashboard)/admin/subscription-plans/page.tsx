@@ -6,8 +6,8 @@ import { db } from '@/lib/db/drizzle'
 import { planFeatures } from '@/lib/db/schema/pricing'
 import { getStripePrices, getStripeProducts } from '@/lib/payments/stripe'
 
-import UpdatePlanPricingForm from './update-plan-pricing-form'
 import UpdatePlanFeaturesForm from './update-plan-features-form'
+import UpdatePlanPricingForm from './update-plan-pricing-form'
 
 export const revalidate = 0
 

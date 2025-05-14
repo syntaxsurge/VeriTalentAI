@@ -8,12 +8,6 @@ import { buildAuthUrl } from '@/lib/verida'
  */
 const url = buildAuthUrl()
 
-assert.ok(
-  url.includes('/auth/auth'),
-  'buildAuthUrl() must contain the auth/auth endpoint path',
-)
+assert.ok(url.includes('/auth/auth'), 'buildAuthUrl() must contain the auth/auth endpoint path')
 
-assert.ok(
-  url.includes('scopes='),
-  'buildAuthUrl() must include at least one "scopes=" query param',
-)
+assert.ok(url.includes('scopes='), 'buildAuthUrl() must include at least one "scopes=" query param')

@@ -76,11 +76,7 @@ export async function veridaFetch<T = any>(
  * Requires api:search-universal scope.
  */
 export function searchUniversal(keywords: string, userId?: number) {
-  return veridaFetch(
-    `search/universal?keywords=${encodeURIComponent(keywords)}`,
-    {},
-    userId,
-  )
+  return veridaFetch(`search/universal?keywords=${encodeURIComponent(keywords)}`, {}, userId)
 }
 
 /**

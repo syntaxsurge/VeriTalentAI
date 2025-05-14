@@ -6,8 +6,8 @@ import { openAIAssess } from '@/lib/ai/openai' /* ← centralised helper */
 import { requireAuth } from '@/lib/auth/guards'
 import { issueCredential } from '@/lib/cheqd'
 import { PLATFORM_ISSUER_DID } from '@/lib/config'
-import { getVeridaToken } from '@/lib/db/queries/queries'
 import { db } from '@/lib/db/drizzle'
+import { getVeridaToken } from '@/lib/db/queries/queries'
 import { candidates, skillQuizzes } from '@/lib/db/schema/candidate'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 

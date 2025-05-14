@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getUser, upsertVeridaToken } from '@/lib/db/queries/queries'
 import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
+import { getUser, upsertVeridaToken } from '@/lib/db/queries/queries'
 
 /**
  * Handles the redirect from Verida Vault, storing the received `auth_token`

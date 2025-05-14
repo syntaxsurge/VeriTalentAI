@@ -217,7 +217,7 @@
 
   --radius: 0.6rem;
 
-  --viskify-gradient: linear-gradient(90deg, #7F3DFF 0%, #00E5C4 100%);
+  --viskify-gradient: linear-gradient(90deg, #7f3dff 0%, #00e5c4 100%);
 }
 
 @layer utilities {

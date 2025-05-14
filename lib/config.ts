@@ -15,6 +15,8 @@ export const PLATFORM_ISSUER_DID = getEnv('NEXT_PUBLIC_PLATFORM_ISSUER_DID') as 
 
 export const VERIDA_API_URL = getEnv('VERIDA_API_URL') as string
 export const VERIDA_API_VERSION = getEnv('VERIDA_API_VERSION') as string
-export const VERIDA_DEFAULT_SCOPES = (getEnv('NEXT_PUBLIC_VERIDA_DEFAULT_SCOPES') as string).split(',')
+export const VERIDA_DEFAULT_SCOPES = (getEnv('NEXT_PUBLIC_VERIDA_DEFAULT_SCOPES') as string).split(
+  ',',
+)
 export const VERIDA_AUTH_ENDPOINT = `${VERIDA_API_URL}/${VERIDA_API_VERSION}/auth/auth`
 export const VERIDA_APP_REDIRECT_URL = getEnv('NEXT_PUBLIC_VERIDA_APP_REDIRECT_URL') as string

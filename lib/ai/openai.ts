@@ -7,8 +7,8 @@ import {
 } from '@/lib/ai/prompts'
 import { validateCandidateFitJson, validateQuizScoreResponse } from '@/lib/ai/validators'
 import { OPENAI_API_KEY } from '@/lib/config'
-import { searchUniversal } from '@/lib/verida'
 import { getVeridaToken } from '@/lib/db/queries/queries'
+import { searchUniversal } from '@/lib/verida'
 
 /* -------------------------------------------------------------------------- */
 /*                           S I N G L E T O N   C L I E N T                  */

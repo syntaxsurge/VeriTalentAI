@@ -111,9 +111,7 @@ export async function issueCredential(params: {
 /**
  * Verify a VC using cheqd Studio.
  */
-export async function verifyCredential(
-  vcJwtOrObj: unknown,
-): Promise<{ verified: boolean }> {
+export async function verifyCredential(vcJwtOrObj: unknown): Promise<{ verified: boolean }> {
   /* ------------------------ Basic guardrails -------------------------- */
   if (!CHEQD_API_URL || !CHEQD_API_URL.startsWith('http') || !CHEQD_API_KEY) {
     return { verified: false }
@@ -160,18 +158,15 @@ export async function verifyCredential(
   formData.append('credential', credential)
   formData.append('policies', JSON.stringify({}))
 
-  const res = await fetch(
-    `${CHEQD_API_URL}/credential/verify?verifyStatus=false`,
-    {
-      method: 'POST',
-      headers: {
-        'x-api-key': CHEQD_API_KEY,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: formData,
-      cache: 'no-store',
+  const res = await fetch(`${CHEQD_API_URL}/credential/verify?verifyStatus=false`, {
+    method: 'POST',
+    headers: {
+      'x-api-key': CHEQD_API_KEY,
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-  )
+    body: formData,
+    cache: 'no-store',
+  })
 
   if (!res.ok) return { verified: false }
   const data = await res.json()

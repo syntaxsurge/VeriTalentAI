@@ -8,8 +8,9 @@ import { z } from 'zod'
 
 import { validatedAction, validatedActionWithUser } from '@/lib/auth/middleware'
 import { comparePasswords, hashPassword, setSession } from '@/lib/auth/session'
+import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
 import { db } from '@/lib/db/drizzle'
-import { getUser, getUserWithTeam } from '@/lib/db/queries/queries'
+import { getUser, getUserWithTeam, upsertVeridaToken } from '@/lib/db/queries/queries'
 import {
   User,
   users,
@@ -24,8 +25,6 @@ import {
   invitations,
 } from '@/lib/db/schema'
 import { createCheckoutSession } from '@/lib/payments/stripe'
-import { upsertVeridaToken } from '@/lib/db/queries/queries'
-import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
 
 /* -------------------------------------------------------------------------- */
 /*                               H E L P E R S                                */

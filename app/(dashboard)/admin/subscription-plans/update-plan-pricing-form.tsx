@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+
 import { updatePlanPricingAction } from './actions'
 
 interface Props {
@@ -23,10 +24,7 @@ export default function UpdatePlanPricingForm({ defaultPricing }: Props) {
   const [base, setBase] = React.useState(defaultPricing.base.toString())
   const [plus, setPlus] = React.useState(defaultPricing.plus.toString())
 
-  const [state, action, pending] = React.useActionState<any, FormData>(
-    updatePlanPricingAction,
-    {},
-  )
+  const [state, action, pending] = React.useActionState<any, FormData>(updatePlanPricingAction, {})
 
   React.useEffect(() => {
     if (state?.error) toast.error(state.error)
