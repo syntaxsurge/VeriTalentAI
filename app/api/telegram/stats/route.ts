@@ -41,13 +41,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     KEYWORDS.forEach((kw) => {
       keywordCounts[kw] = sampleMessages.filter((m) =>
         String(
-          (m.messageText ??
-            m.message ??
-            m.text ??
-            m.body ??
-            m.content ??
-            '')
-            .toLowerCase(),
+          (m.messageText ?? m.message ?? m.text ?? m.body ?? m.content ?? '').toLowerCase(),
         ).includes(kw),
       ).length
     })

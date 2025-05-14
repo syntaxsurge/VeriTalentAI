@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
-import { getUser, upsertVeridaToken } from '@/lib/db/queries/queries'
-
-/** Normalise state parameter, defaulting to <code>/dashboard</code>. */
-function resolveState(stateParam: string | null): string {
-  return stateParam && stateParam.trim().length > 0 ? stateParam : '/dashboard'
-}
+import { getUser } from '@/lib/db/queries/queries'
+import { storeVeridaToken, resolveState } from '@/lib/verida/token'
 
 /**
  * Handles the redirect from Verida Vault, storing the received <code>auth_token</code>
@@ -28,30 +23,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(new URL(state, request.url))
   }
 
-  /* ------------------------------------------------------------------ */
-  /*                 Retrieve granted scopes for the token              */
-  /* ------------------------------------------------------------------ */
-  let scopes: string[] = []
-  try {
-    const res = await fetch(`${VERIDA_API_URL}/${VERIDA_API_VERSION}/scopes`, {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    })
-    if (res.ok) {
-      const data = await res.json()
-      if (Array.isArray(data.scopes)) scopes = data.scopes
-    }
-  } catch (err) {
-    console.error('Failed to fetch Verida scopes', err)
-  }
-
-  /* ------------------------------------------------------------------ */
-  /*                           Persist token                            */
-  /* ------------------------------------------------------------------ */
-  await upsertVeridaToken(user.id, authToken, scopes)
+  /* Persist token and scopes */
+  await storeVeridaToken(user.id, authToken)
 
   /* Redirect back to original state or dashboard */
   return NextResponse.redirect(new URL(state, request.url))

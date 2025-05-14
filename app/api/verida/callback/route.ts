@@ -1,23 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { VERIDA_API_URL } from '@/lib/config'
-import { getUser, upsertVeridaToken } from '@/lib/db/queries/queries'
-
-/**
- * Resolve the desired post-connect redirect location.
- * Falls back to <code>/dashboard</code> when <code>state</code> is null, undefined, or an empty string.
- */
-function resolveState(stateParam: string | null): string {
-  return stateParam && stateParam.trim().length > 0 ? stateParam : '/dashboard'
-}
+import { getUser } from '@/lib/db/queries/queries'
+import { storeVeridaToken, resolveState } from '@/lib/verida/token'
 
 /**
  * Final Verida Vault redirect target.
  *
- * Reads the temporary <code>verida_tmp_token</code> cookie set by middleware, retrieves
- * the granted scopes from the Verida REST <code>/scopes</code> endpoint, persists the
- * token for the authenticated user and then redirects to the original <code>state</code>
- * location (or <code>/dashboard</code> when absent or blank).
+ * Reads the temporary <code>verida_tmp_token</code> cookie set by middleware, persists
+ * the token for the authenticated user, and then redirects to the original
+ * <code>state</code> location (or <code>/dashboard</code> when absent or blank).
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const url = new URL(request.url)
@@ -40,30 +31,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return res
   }
 
-  /* ------------------------------------------------------------------ */
-  /*                 Retrieve granted scopes for the token              */
-  /* ------------------------------------------------------------------ */
-  let scopes: string[] = []
-  try {
-    const res = await fetch(`${VERIDA_API_URL}/scopes`, {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    })
-    if (res.ok) {
-      const data = await res.json()
-      if (Array.isArray(data.scopes)) scopes = data.scopes
-    }
-  } catch (err) {
-    console.error('Failed to fetch Verida scopes', err)
-  }
-
-  /* ------------------------------------------------------------------ */
-  /*                           Persist token                            */
-  /* ------------------------------------------------------------------ */
-  await upsertVeridaToken(user.id, authToken, scopes)
+  /* Persist token and granted scopes */
+  await storeVeridaToken(user.id, authToken)
 
   /* Clear the temporary cookie and redirect */
   const response = NextResponse.redirect(new URL(state, request.url))

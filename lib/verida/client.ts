@@ -1,5 +1,6 @@
-// noinspection JSUnusedGlobalSymbols
 import { VERIDA_API_URL } from '@/lib/config'
+
+import { base64 } from '../utils'
 
 /* -------------------------------------------------------------------------- */
 /*                        V E R I D A   C L I E N T   (B R O W S E R)         */
@@ -9,14 +10,6 @@ const isBrowser = typeof window !== 'undefined'
 
 /** Ensure no trailing slash so we can safely concatenate paths. */
 const BASE_URL = VERIDA_API_URL.endsWith('/') ? VERIDA_API_URL.slice(0, -1) : VERIDA_API_URL
-
-/**
- * Cross-runtime <code>btoa</code> with graceful fallback for Node environments.
- */
-function base64(str: string): string {
-  if (isBrowser) return window.btoa(str)
-  return Buffer.from(str).toString('base64')
-}
 
 /**
  * Retrieve the auth token persisted to <code>localStorage</code> after a
@@ -95,7 +88,7 @@ export async function searchUniversal(keywords: string): Promise<Record<string, 
 /**
  * Convenience helper to issue a datastore query for the supplied JSON schema.
  *
- * @param schemaUrl Full schema URL (eg:   https://common.schemas.verida.io/social/chat/message/v0.1.0/schema.json).
+ * @param schemaUrl Full schema URL (eg: https://common.schemas.verida.io/social/chat/message/v0.1.0/schema.json).
  * @param body      Query / options object to POST to <code>/ds/query</code>.
  *                  See Verida REST docs for full details.
  * @returns The <code>items</code> array, defaulting to <code>[]</code>.

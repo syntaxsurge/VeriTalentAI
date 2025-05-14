@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { veridaFetch } from './server'
+import { base64 } from '../utils'
 
 /* -------------------------------------------------------------------------- */
 /*                         D A T A S T O R E   U T I L S                      */
@@ -11,11 +12,6 @@ export const TELEGRAM_GROUP_SCHEMA =
 export const TELEGRAM_MESSAGE_SCHEMA =
   'https://common.schemas.verida.io/social/chat/message/v0.1.0/schema.json'
 
-/** Base64‐encode helper mirroring browser <code>btoa</code> behaviour. */
-export function b64(str: string): string {
-  return Buffer.from(str).toString('base64')
-}
-
 /**
  * Generic datastore query helper returning the <code>items</code> array.
  */
@@ -25,7 +21,7 @@ export async function queryDatastore<T = any>(
   query: Record<string, any> = {},
   options: Record<string, any> = {},
 ): Promise<T[]> {
-  const encoded = b64(schemaUrl)
+  const encoded = base64(schemaUrl)
   const res = await veridaFetch<{ items?: T[] }>(userId, `/ds/query/${encoded}`, {
     method: 'POST',
     body: JSON.stringify({ query, options }),
@@ -41,7 +37,7 @@ export async function countDatastore(
   schemaUrl: string,
   query: Record<string, any> = {},
 ): Promise<number> {
-  const encoded = b64(schemaUrl)
+  const encoded = base64(schemaUrl)
   const res = await veridaFetch<Record<string, any>>(userId, `/ds/count/${encoded}`, {
     method: 'POST',
     body: JSON.stringify({ query }),
@@ -60,12 +56,10 @@ export async function fetchTelegramGroups<T = any>(
   userId: number,
   { limit = 100_000 }: { limit?: number } = {},
 ): Promise<T[]> {
-  return queryDatastore<T>(
-    userId,
-    TELEGRAM_GROUP_SCHEMA,
-    TELEGRAM_QUERY,
-    { sort: [{ _id: 'desc' }], limit },
-  )
+  return queryDatastore<T>(userId, TELEGRAM_GROUP_SCHEMA, TELEGRAM_QUERY, {
+    sort: [{ _id: 'desc' }],
+    limit,
+  })
 }
 
 /** Fetch Telegram chat messages for a user. */
@@ -73,10 +67,8 @@ export async function fetchTelegramMessages<T = any>(
   userId: number,
   { limit = 100_000 }: { limit?: number } = {},
 ): Promise<T[]> {
-  return queryDatastore<T>(
-    userId,
-    TELEGRAM_MESSAGE_SCHEMA,
-    TELEGRAM_QUERY,
-    { sort: [{ _id: 'desc' }], limit },
-  )
+  return queryDatastore<T>(userId, TELEGRAM_MESSAGE_SCHEMA, TELEGRAM_QUERY, {
+    sort: [{ _id: 'desc' }],
+    limit,
+  })
 }

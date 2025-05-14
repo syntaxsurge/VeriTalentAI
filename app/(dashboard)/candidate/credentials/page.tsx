@@ -8,6 +8,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
 import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credentials'
+import { getVeridaToken } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import type { CandidateCredentialRow } from '@/lib/types/tables'
 import { getTableParams, resolveSearchParams } from '@/lib/utils/query'
@@ -30,6 +31,10 @@ export default async function CredentialsPage({
     .where(eq(teamMembers.userId, user.id))
     .limit(1)
   const hasDid = !!did
+
+  /* ----------------------- Verida connection state ---------------------- */
+  const tokenRow = await getVeridaToken(user.id)
+  const veridaConnected = !!tokenRow
 
   /* ----------------------- Server-action wrapper ------------------------ */
   const addCredentialAction = async (formData: FormData): Promise<{ error?: string } | void> => {
@@ -82,6 +87,7 @@ export default async function CredentialsPage({
           basePath='/candidate/credentials'
           initialParams={initialParams}
           searchQuery={searchTerm}
+          veridaConnected={veridaConnected}
         />
 
         <TablePagination

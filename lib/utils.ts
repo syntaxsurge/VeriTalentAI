@@ -34,3 +34,12 @@ export function buildLink(
 export function prettify(text?: string | null): string {
   return text ? text.replaceAll('_', ' ').toLowerCase() : '—'
 }
+/**
+ * Cross-runtime base64 encoder mirroring browser <btoa> with Node fallback.
+ */
+export function base64(str: string): string {
+  if (typeof window !== 'undefined' && typeof window.btoa === 'function') {
+    return window.btoa(str)
+  }
+  return Buffer.from(str).toString('base64')
+}
