@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import type { ReactElement } from 'react'
 
 import { toast } from 'sonner'
 
@@ -25,7 +26,7 @@ type SearchTelegramModalProps = {
 export default function SearchTelegramModal({
   open,
   onOpenChange,
-}: SearchTelegramModalProps): JSX.Element {
+}: SearchTelegramModalProps): ReactElement {
   const [keywords, setKeywords] = React.useState('')
   const { loading, results, error, search } = useVeridaSearch<any>()
 
