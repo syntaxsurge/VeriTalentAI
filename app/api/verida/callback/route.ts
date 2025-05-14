@@ -4,16 +4,24 @@ import { VERIDA_API_URL } from '@/lib/config'
 import { getUser, upsertVeridaToken } from '@/lib/db/queries/queries'
 
 /**
+ * Resolve the desired post-connect redirect location.
+ * Falls back to <code>/dashboard</code> when <code>state</code> is null, undefined, or an empty string.
+ */
+function resolveState(stateParam: string | null): string {
+  return stateParam && stateParam.trim().length > 0 ? stateParam : '/dashboard'
+}
+
+/**
  * Final Verida Vault redirect target.
  *
- * Reads the temporary `verida_tmp_token` cookie set by middleware, retrieves
- * the granted scopes from the Verida REST `/scopes` endpoint, persists the
- * token for the authenticated user and then redirects to the original `state`
- * location (or `/dashboard` when absent).
+ * Reads the temporary <code>verida_tmp_token</code> cookie set by middleware, retrieves
+ * the granted scopes from the Verida REST <code>/scopes</code> endpoint, persists the
+ * token for the authenticated user and then redirects to the original <code>state</code>
+ * location (or <code>/dashboard</code> when absent or blank).
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const url = new URL(request.url)
-  const state = url.searchParams.get('state') ?? '/dashboard'
+  const state = resolveState(url.searchParams.get('state'))
 
   /* Extract the auth token stashed by middleware */
   const tmpCookie = request.cookies.get('verida_tmp_token')

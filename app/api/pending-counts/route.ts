@@ -3,14 +3,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
 import { getUser, upsertVeridaToken } from '@/lib/db/queries/queries'
 
+/** Normalise state parameter, defaulting to <code>/dashboard</code>. */
+function resolveState(stateParam: string | null): string {
+  return stateParam && stateParam.trim().length > 0 ? stateParam : '/dashboard'
+}
+
 /**
- * Handles the redirect from Verida Vault, storing the received `auth_token`
+ * Handles the redirect from Verida Vault, storing the received <code>auth_token</code>
  * and its granted scopes against the authenticated user.
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const url = new URL(request.url)
   const authToken = url.searchParams.get('auth_token')
-  const state = url.searchParams.get('state') ?? '/dashboard'
+  const state = resolveState(url.searchParams.get('state'))
 
   /* Require an existing session */
   const user = await getUser()
