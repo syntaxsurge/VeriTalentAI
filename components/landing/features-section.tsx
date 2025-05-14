@@ -6,23 +6,23 @@ import { CheckCircle2, Wallet, ShieldCheck, Key } from 'lucide-react'
 const features = [
   {
     icon: Key,
-    title: 'cheqd DIDs',
-    description: 'Privacy-preserving identities rooted in the cheqd network.',
+    title: 'Deterministic cheqd DIDs',
+    description: 'Own a stable on-ledger identity without wallets or seed phrases.',
   },
   {
     icon: ShieldCheck,
-    title: 'Tamper-Evident Proofs',
-    description: 'Credential integrity anchored on a public ledger.',
+    title: 'Auditable Proofs',
+    description: 'Credentials are cryptographically signed and publicly verifiable 24/7.',
   },
   {
     icon: Wallet,
-    title: 'Web2-Friendly APIs',
-    description: 'Issue and verify credentials with simple HTTPS requests—no wallets required.',
+    title: 'AI Skill Validation',
+    description: 'GPT-powered graders convert raw answers into objective scores.',
   },
   {
     icon: CheckCircle2,
-    title: 'Instant Issuance',
-    description: 'Spin up verifiable credentials in a single API call.',
+    title: 'One-Click Team Workspaces',
+    description: 'Spin up a shared space with billing and role management baked in.',
   },
 ]
 
