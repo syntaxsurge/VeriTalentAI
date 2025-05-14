@@ -155,3 +155,17 @@ export async function upsertVeridaToken(
     })
   })
 }
+
+/**
+ * Retrieve the most recent Verida auth_token row for a user.
+ */
+export async function getVeridaToken(userId: number) {
+  const row = await db
+    .select()
+    .from(veridaTokens)
+    .where(eq(veridaTokens.userId, userId))
+    .orderBy(desc(veridaTokens.issuedAt))
+    .limit(1)
+
+  return row.length > 0 ? row[0] : null
+}

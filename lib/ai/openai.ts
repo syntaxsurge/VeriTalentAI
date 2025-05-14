@@ -7,6 +7,8 @@ import {
 } from '@/lib/ai/prompts'
 import { validateCandidateFitJson, validateQuizScoreResponse } from '@/lib/ai/validators'
 import { OPENAI_API_KEY } from '@/lib/config'
+import { searchUniversal } from '@/lib/verida'
+import { getVeridaToken } from '@/lib/db/queries/queries'
 
 /* -------------------------------------------------------------------------- */
 /*                           S I N G L E T O N   C L I E N T                  */
@@ -115,8 +117,45 @@ export async function openAIAssess(
 /*                      C A N D I D A T E   P R O F I L E                     */
 /* -------------------------------------------------------------------------- */
 
-export async function summariseCandidateProfile(profile: string, words = 120): Promise<string> {
-  return await chatCompletion(summariseProfileMessages(profile, words))
+/* -------------------------------------------------------------------------- */
+/*                  V E R I D A   C O N T E X T   H E L P E R                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Fetches relevant user data from Verida and returns up to 1 000 characters
+ * to provide additional context for OpenAI prompts. Returns an empty string
+ * when the user has not connected Verida or an error occurs.
+ */
+export async function buildProfileContext(userId: number): Promise<string> {
+  try {
+    const tokenRow = await getVeridaToken(userId)
+    if (!tokenRow) return ''
+
+    const result = await searchUniversal('resume OR experience', userId)
+    const jsonStr = JSON.stringify(result)
+    return jsonStr.slice(0, 1000)
+  } catch (err) {
+    console.error('buildProfileContext error:', err)
+    return ''
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                      C A N D I D A T E   P R O F I L E                     */
+/* -------------------------------------------------------------------------- */
+
+export async function summariseCandidateProfile(
+  profile: string,
+  words = 120,
+  userId?: number,
+): Promise<string> {
+  let context = ''
+  if (typeof userId === 'number') {
+    context = await buildProfileContext(userId)
+  }
+
+  const input = context ? `${context}\n\n${profile}` : profile
+  return await chatCompletion(summariseProfileMessages(input, words))
 }
 
 /* -------------------------------------------------------------------------- */

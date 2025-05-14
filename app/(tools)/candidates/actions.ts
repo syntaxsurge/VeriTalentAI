@@ -23,6 +23,7 @@ export async function generateCandidateSummary(candidateId: number): Promise<voi
   const [cand] = await db
     .select({
       id: candidates.id,
+      userId: candidates.userId,
       summary: candidates.summary,
       bio: candidates.bio,
       summaryHash: candidates.summaryHash,
@@ -73,7 +74,7 @@ export async function generateCandidateSummary(candidateId: number): Promise<voi
   /* ------------------------------------------------------------ */
   /*                 Generate fresh AI summary (≈120 w)           */
   /* ------------------------------------------------------------ */
-  const summary = await summariseCandidateProfile(profileText, 120)
+  const summary = await summariseCandidateProfile(profileText, 120, cand.userId)
 
   /* ------------------------------------------------------------ */
   /*                       Persist to DB                          */
