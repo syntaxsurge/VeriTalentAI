@@ -63,3 +63,12 @@ export interface SnapshotMetrics {
   experienceCount: number
   projectCount: number
 }
+
+/** Attributes stored inside issued Skill Pass credentials. */
+export interface SkillPassAttributes {
+  skillQuiz: string
+  score: number
+  candidateName: string
+  /** Space-separated list of Verida scopes granted when issuing this credential. */
+  veridaScopes?: string
+}

@@ -6,6 +6,7 @@ import { openAIAssess } from '@/lib/ai/openai' /* ← centralised helper */
 import { requireAuth } from '@/lib/auth/guards'
 import { issueCredential } from '@/lib/cheqd'
 import { PLATFORM_ISSUER_DID } from '@/lib/config'
+import { getVeridaToken } from '@/lib/db/queries/queries'
 import { db } from '@/lib/db/drizzle'
 import { candidates, skillQuizzes } from '@/lib/db/schema/candidate'
 import { teams, teamMembers } from '@/lib/db/schema/core'
@@ -73,6 +74,9 @@ export async function startQuizAction(formData: FormData) {
 
   if (passed) {
     try {
+      const tokenRow = await getVeridaToken(user.id)
+      const scopes = tokenRow?.scopes ?? []
+
       const credential = await issueCredential({
         issuerDid: PLATFORM_ISSUER_DID,
         subjectDid,
@@ -80,6 +84,7 @@ export async function startQuizAction(formData: FormData) {
           skillQuiz: quiz.title,
           score: aiScore,
           candidateName: user.name || user.email,
+          ...(scopes.length ? { veridaScopes: scopes.join(' ') } : {}),
         },
         credentialName: 'SkillPass',
       })
