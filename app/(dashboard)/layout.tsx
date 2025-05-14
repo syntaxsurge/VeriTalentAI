@@ -18,6 +18,7 @@ import {
   Tag,
   User,
   Star,
+  MessageCircle,
 } from 'lucide-react'
 
 import { SidebarNav } from '@/components/dashboard/sidebar-nav'
@@ -47,6 +48,7 @@ function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
         { href: '/candidate/highlights', icon: Star, label: 'Profile Highlight' },
         { href: '/candidate/credentials', icon: BookOpen, label: 'Credentials' },
         { href: '/candidate/skill-check', icon: Award, label: 'Skill Quiz' },
+        { href: '/candidate/telegram', icon: MessageCircle, label: 'Telegram' },
         { href: '/candidate/create-did', icon: Key, label: 'Create DID' },
       ]
     case 'recruiter':
@@ -112,7 +114,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     adminPendingIssuers: 0,
   })
 
-  /* Resolve user once (supports promise OR plain object) */
+  /* Resolve user once */
   useEffect(() => {
     let mounted = true
     const maybe = userPromise as unknown
@@ -126,7 +128,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
   }, [userPromise])
 
-  /* Fetch pending counts for sidebar badges */
+  /* Fetch pending counts */
   useEffect(() => {
     fetch('/api/pending-counts', { cache: 'no-store' })
       .then((r) => r.json())
@@ -140,7 +142,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       .catch(() => {})
   }, [])
 
-  /* Primary navigation — always visible */
+  /* Primary navigation */
   const mainNav: SidebarNavItem[] = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/invitations', icon: Mail, label: 'Invitations', badgeCount: counts.invitations },
