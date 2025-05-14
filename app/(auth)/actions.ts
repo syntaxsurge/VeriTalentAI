@@ -93,7 +93,7 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
 
   /* Persist Verida token parked by middleware (if any) */
   {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const tmpToken = cookieStore.get('verida_tmp_token')
     if (tmpToken?.value) {
       try {
@@ -218,7 +218,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 
   /* Persist Verida token parked by middleware (if any) */
   {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const tmpToken = cookieStore.get('verida_tmp_token')
     if (tmpToken?.value) {
       try {
