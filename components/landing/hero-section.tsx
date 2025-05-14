@@ -26,7 +26,7 @@ export default function HeroSection() {
   return (
     <section
       id='hero'
-      className='relative isolate overflow-hidden bg-gradient-to-br from-[#0b0f19] via-[#141b2d] to-[#0b0f19] pb-32 pt-44'
+      className='relative isolate overflow-hidden bg-gradient-to-br from-[#0b0f19] via-[#141b2d] to-[#0b0f19] pb-32 pt-15'
     >
       {/* Radial backdrop */}
       <div
