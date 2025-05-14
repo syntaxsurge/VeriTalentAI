@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 
-import * as verida from '@/lib/verida'
+import * as verida from '@/lib/verida/client'
 
 /* -------------------------------------------------------------------------- */
 /*                           S T U B   V E R I D A                             */
