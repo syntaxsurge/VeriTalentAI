@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
 import { planFeatures } from '@/lib/db/schema/pricing'
+import { setPlanPrice } from '@/lib/payments/stripe'
 
 /* -------------------------------------------------------------------------- */
 /*                              V A L I D A T I O N                           */
@@ -66,4 +67,39 @@ const _updatePlanFeatures = validatedActionWithUser(
 export const updatePlanFeaturesAction = async (...args: Parameters<typeof _updatePlanFeatures>) => {
   'use server'
   return _updatePlanFeatures(...args)
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 PRICING                                    */
+/* -------------------------------------------------------------------------- */
+
+const priceSchema = z.object({
+  basePrice: z.coerce.number().min(1),
+  plusPrice: z.coerce.number().min(1),
+})
+
+const _updatePlanPricing = validatedActionWithUser(
+  priceSchema,
+  async ({ basePrice, plusPrice }, _formData, user) => {
+    if (user.role !== 'admin') return { error: 'Unauthorized.' }
+
+    try {
+      await Promise.all([
+        setPlanPrice({ productName: 'Base', priceUsd: basePrice }),
+        setPlanPrice({ productName: 'Plus', priceUsd: plusPrice }),
+      ])
+
+      /* Pricing affects public grid */
+      revalidatePath('/pricing')
+      return { success: 'Plan pricing updated.' }
+    } catch (err) {
+      console.error('Stripe pricing update failed:', err)
+      return { error: 'Failed to update pricing – check Stripe configuration.' }
+    }
+  },
+)
+
+export const updatePlanPricingAction = async (...args: Parameters<typeof _updatePlanPricing>) => {
+  'use server'
+  return _updatePlanPricing(...args)
 }

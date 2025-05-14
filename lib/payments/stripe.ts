@@ -165,6 +165,50 @@ export async function getStripeProducts() {
     name: product.name,
     description: product.description,
     defaultPriceId:
-      typeof product.default_price === 'string' ? product.default_price : product.default_price?.id,
+      typeof product.default_price === 'string'
+        ? product.default_price
+        : product.default_price?.id,
   }))
+}
+
+/**
+ * Create a fresh recurring price for a plan’s product, archive previous ones
+ * and mark the new price as the product’s default_price. Returns the new price ID.
+ */
+export async function setPlanPrice({
+  productName,
+  priceUsd,
+  trialPeriodDays = 14,
+}: {
+  productName: string
+  priceUsd: number
+  trialPeriodDays?: number
+}): Promise<string> {
+  /* ---------------------- Locate product by name ----------------------- */
+  const prods = await stripe.products.list({ active: true })
+  const product = prods.data.find(
+    (p) => p.name.toLowerCase() === productName.toLowerCase(),
+  )
+  if (!product) throw new Error(`Stripe product "${productName}" not found.`)
+
+  /* ------------------------ Create new price --------------------------- */
+  const newPrice = await stripe.prices.create({
+    product: product.id,
+    unit_amount: Math.round(priceUsd * 100),
+    currency: 'usd',
+    recurring: { interval: 'month', trial_period_days: trialPeriodDays },
+  })
+
+  /* ------------------ Archive previous active prices ------------------- */
+  const existing = await stripe.prices.list({ product: product.id, active: true })
+  await Promise.all(
+    existing.data
+      .filter((pr) => pr.id !== newPrice.id)
+      .map((pr) => stripe.prices.update(pr.id, { active: false })),
+  )
+
+  /* ---------------------- Set as default price ------------------------- */
+  await stripe.products.update(product.id, { default_price: newPrice.id })
+
+  return newPrice.id
 }
