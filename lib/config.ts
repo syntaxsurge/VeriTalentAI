@@ -14,6 +14,7 @@ export const PLATFORM_ISSUER_DID = getEnv('NEXT_PUBLIC_PLATFORM_ISSUER_DID') as 
 /* --------------------------- Verida --------------------------- */
 
 export const VERIDA_API_URL = getEnv('NEXT_PUBLIC_VERIDA_API_URL') as string
+export const VERIDA_AUTH_URL = getEnv('NEXT_PUBLIC_VERIDA_AUTH_URL') as string
 export const VERIDA_API_VERSION = getEnv('NEXT_PUBLIC_VERIDA_API_VERSION') as string
 export const VERIDA_DEFAULT_SCOPES = (getEnv('NEXT_PUBLIC_VERIDA_DEFAULT_SCOPES') as string).split(
   ',',

@@ -1,5 +1,5 @@
 import {
-  VERIDA_API_URL,
+  VERIDA_AUTH_URL,
   VERIDA_DEFAULT_SCOPES,
   VERIDA_APP_REDIRECT_URL,
   VERIDA_APP_DID,
@@ -27,7 +27,7 @@ export function getDefaultScopes(): string[] {
  * @returns Fully-qualified URL that can be opened in a new tab or used as an <code>href</code>.
  */
 export function buildAuthUrl(scopes: string[] = getDefaultScopes()): string {
-  const url = new URL('/auth', VERIDA_API_URL)
+  const url = new URL('/auth', VERIDA_AUTH_URL)
 
   /* Append each scope individually as ?scopes=… */
   scopes.forEach((scope) => url.searchParams.append('scopes', scope))
