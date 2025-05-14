@@ -1,21 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { veridaFetch } from '@/lib/verida/server'
+import {
+  TELEGRAM_GROUP_SCHEMA,
+  TELEGRAM_MESSAGE_SCHEMA,
+  countDatastore,
+  queryDatastore,
+} from '@/lib/verida/datastore'
 
-const GROUP_SCHEMA = 'https://common.schemas.verida.io/social/chat/group/v0.1.0/schema.json'
-const MESSAGE_SCHEMA = 'https://common.schemas.verida.io/social/chat/message/v0.1.0/schema.json'
-
-function b64(url: string) {
-  return Buffer.from(url).toString('base64')
-}
-
-async function getDatastoreCount(userId: number, schemaUrl: string) {
-  const data = await veridaFetch<Record<string, any>>(userId, `/ds/count/${b64(schemaUrl)}`, {
-    method: 'POST',
-    body: JSON.stringify({ query: { sourceApplication: 'https://telegram.com' } }),
-  })
-  return typeof data.count === 'number' ? data.count : 0
-}
+const KEYWORDS = ['cluster', 'protocol', 'ai', 'defi', 'crypto', 'web3'] as const
 
 /**
  * GET /api/telegram/stats?userId=123
@@ -33,30 +25,36 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const [groupCount, messageSample] = await Promise.all([
-      getDatastoreCount(userId, GROUP_SCHEMA),
-      veridaFetch<Record<string, any>>(userId, `/ds/query/${b64(MESSAGE_SCHEMA)}`, {
-        method: 'POST',
-        body: JSON.stringify({
-          query: { sourceApplication: 'https://telegram.com' },
-          options: { sort: [{ _id: 'desc' }], limit: 200 },
-        }),
+    const [groupCount, sampleMessages] = await Promise.all([
+      countDatastore(userId, TELEGRAM_GROUP_SCHEMA, {
+        sourceApplication: 'https://telegram.com',
       }),
+      queryDatastore<any>(
+        userId,
+        TELEGRAM_MESSAGE_SCHEMA,
+        { sourceApplication: 'https://telegram.com' },
+        { sort: [{ _id: 'desc' }], limit: 200 },
+      ),
     ])
 
-    const messages = Array.isArray(messageSample.items) ? messageSample.items : []
-
-    const keywords = ['cluster', 'protocol', 'ai', 'defi', 'crypto', 'web3'] as const
     const keywordCounts: Record<string, number> = {}
-    keywords.forEach((kw) => {
-      keywordCounts[kw] = messages.filter((m) =>
-        String(m.messageText || m.message || '')
-          .toLowerCase()
-          .includes(kw),
+    KEYWORDS.forEach((kw) => {
+      keywordCounts[kw] = sampleMessages.filter((m) =>
+        String(
+          (m.messageText ??
+            m.message ??
+            m.text ??
+            m.body ??
+            m.content ??
+            '')
+            .toLowerCase(),
+        ).includes(kw),
       ).length
     })
 
-    const messageCount = await getDatastoreCount(userId, MESSAGE_SCHEMA)
+    const messageCount = await countDatastore(userId, TELEGRAM_MESSAGE_SCHEMA, {
+      sourceApplication: 'https://telegram.com',
+    })
 
     return NextResponse.json({
       success: true,

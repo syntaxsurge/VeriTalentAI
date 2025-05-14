@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { veridaFetch } from '@/lib/verida/server'
+import { fetchTelegramGroups } from '@/lib/verida/datastore'
 
 /**
  * GET /api/telegram/groups?userId=123
@@ -17,19 +17,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     )
   }
 
-  const schemaUrl = 'https://common.schemas.verida.io/social/chat/group/v0.1.0/schema.json'
-  const encodedSchema = Buffer.from(schemaUrl).toString('base64')
-
   try {
-    const data = await veridaFetch<Record<string, any>>(userId, `/ds/query/${encodedSchema}`, {
-      method: 'POST',
-      body: JSON.stringify({
-        query: { sourceApplication: 'https://telegram.com' },
-        options: { sort: [{ _id: 'desc' }], limit: 100_000 },
-      }),
-    })
-
-    const groups = Array.isArray(data.items) ? data.items : []
+    const groups = await fetchTelegramGroups<any>(userId)
     return NextResponse.json({ success: true, count: groups.length, groups })
   } catch (err: any) {
     console.error('Error fetching Telegram groups:', err)

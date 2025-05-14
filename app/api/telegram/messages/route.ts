@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { veridaFetch } from '@/lib/verida/server'
+import { fetchTelegramMessages } from '@/lib/verida/datastore'
 
 /**
  * GET /api/telegram/messages?userId=123
@@ -17,19 +17,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     )
   }
 
-  const schemaUrl = 'https://common.schemas.verida.io/social/chat/message/v0.1.0/schema.json'
-  const encodedSchema = Buffer.from(schemaUrl).toString('base64')
-
   try {
-    const data = await veridaFetch<Record<string, any>>(userId, `/ds/query/${encodedSchema}`, {
-      method: 'POST',
-      body: JSON.stringify({
-        query: { sourceApplication: 'https://telegram.com' },
-        options: { sort: [{ _id: 'desc' }], limit: 100_000 },
-      }),
-    })
-
-    const messages = Array.isArray(data.items) ? data.items : []
+    const messages = await fetchTelegramMessages<any>(userId)
     return NextResponse.json({ success: true, count: messages.length, messages })
   } catch (err: any) {
     console.error('Error fetching Telegram messages:', err)
