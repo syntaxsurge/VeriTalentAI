@@ -61,7 +61,7 @@ export async function veridaFetch<T = any>(
     ...(init.headers || {}),
   }
 
-  const url = `${VERIDA_API_URL}/${VERIDA_API_VERSION}/${endpoint.replace(/^\\/+/, '')}`
+  const url = `${VERIDA_API_URL}/${VERIDA_API_VERSION}/${endpoint.replace(/^\/+/, '')}`
 
   const res = await fetch(url, { ...init, headers })
   if (!res.ok) {
