@@ -41,6 +41,7 @@ export default async function ProfilePage() {
         avatarSrc={(user as any)?.image ?? undefined}
         profilePath={profilePath}
         showPublicProfile={showPublicProfile}
+        veridaConnected={hasVeridaToken}
       >
         <VeridaConnectButton connected={hasVeridaToken} />
       </ProfileHeader>

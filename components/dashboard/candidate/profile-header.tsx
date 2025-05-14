@@ -29,8 +29,9 @@ export default function ProfileHeader({
   showPublicProfile = false,
   stats = [],
   socials = [],
+  veridaConnected = false,
   children,
-}: ProfileHeaderProps) {
+}: ProfileHeaderProps & { veridaConnected?: boolean }) {
   /* ---------------------------- share link ---------------------------- */
   function copyLink() {
     if (!profilePath) return
@@ -95,6 +96,12 @@ export default function ProfileHeader({
                   View Profile
                 </Link>
               </Button>
+            )}
+
+            {veridaConnected && (
+              <span className='inline-flex items-center rounded-full bg-green-600 px-3 py-1 text-xs font-semibold text-white'>
+                Verida&nbsp;Connected
+              </span>
             )}
           </div>
         </div>

@@ -3,10 +3,11 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { Trash2, FileText, Clipboard } from 'lucide-react'
+import { Trash2, FileText, Clipboard, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { StatusBadge } from '@/components/ui/status-badge'
+import { searchUniversal } from '@/lib/verida'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { deleteCredentialAction } from '@/lib/actions/delete'
@@ -26,7 +27,8 @@ export default function CandidateCredentialsTable({
   basePath,
   initialParams,
   searchQuery,
-}: TableProps<CandidateCredentialRow>) {
+  veridaConnected = false,
+}: TableProps<CandidateCredentialRow> & { veridaConnected?: boolean }) {
   const router = useRouter()
 
   /* ------------------------ Bulk-selection actions ----------------------- */
@@ -63,6 +65,27 @@ export default function CandidateCredentialsTable({
   const makeActions = React.useCallback(
     (row: CandidateCredentialRow): TableRowAction<CandidateCredentialRow>[] => {
       const actions: TableRowAction<CandidateCredentialRow>[] = []
+
+      /* Search Verida ---------------------------------------------------- */
+      if (veridaConnected) {
+        actions.push({
+          label: 'Search My Verida Data',
+          icon: Search,
+          onClick: async () => {
+            const keywords = prompt('Enter keywords to search your Verida data')?.trim()
+            if (!keywords) return
+            const toastId = toast.loading('Searching Verida…')
+            try {
+              const res: any = await searchUniversal(keywords)
+              const count =
+                Array.isArray(res?.items) ? res.items.length : Array.isArray(res?.results) ? res.results.length : 0
+              toast.success(`Found ${count} matching item${count === 1 ? '' : 's'}.`, { id: toastId })
+            } catch (err: any) {
+              toast.error(err?.message ?? 'Verida search failed.', { id: toastId })
+            }
+          },
+        })
+      }
 
       /* View original file ------------------------------------------------ */
       if (row.fileUrl) {
