@@ -1,100 +1,67 @@
-import {
-  VERIDA_API_URL,
-  VERIDA_API_VERSION,
-  VERIDA_DEFAULT_SCOPES,
-  VERIDA_APP_REDIRECT_URL,
-  VERIDA_AUTH_ENDPOINT,
-} from '@/lib/config'
+import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
+import { buildAuthUrl } from '@/lib/verida/public'
+
+/* -------------------------------------------------------------------------- */
+/*                  B R O W S E R – S A F E   U T I L I T I E S               */
+/* -------------------------------------------------------------------------- */
+
+const isBrowser = typeof window !== 'undefined'
 
 /**
- * Build an authentication URL for initiating the Verida OAuth-style flow.
- * Mirrors the documentation example, adding payer=app and redirectUrl.
+ * Read the auth token saved by the Verida callback (stored by frontend
+ * code after a successful connect flow). Returns <code>null</code> when
+ * the user has not connected Verida in this browser session.
  */
-export function buildAuthUrl(scopes: string[] = VERIDA_DEFAULT_SCOPES): string {
-  const url = new URL(VERIDA_AUTH_ENDPOINT)
-  scopes.forEach((scope) => url.searchParams.append('scopes', scope))
-  url.searchParams.append('redirectUrl', VERIDA_APP_REDIRECT_URL)
-  url.searchParams.append('payer', 'app')
-  return url.toString()
+function getStoredToken(): string | null {
+  if (!isBrowser) return null
+  try {
+    return window.localStorage.getItem('verida_auth_token')
+  } catch {
+    return null
+  }
 }
 
 /**
- * Retrieve a stored auth token.
- * • On the client, read from localStorage.
- * • On the server, load from the database (lazy dynamic import to avoid bundle size).
+ * Lightweight wrapper that mirrors the Verida docs. Prepends the base API
+ * URL/version and injects the Bearer token retrieved from <code>localStorage</code>.
  */
-export async function getStoredToken(userId?: number): Promise<string | undefined> {
-  /* Browser – read from localStorage first */
-  if (typeof window !== 'undefined') {
-    const token = window.localStorage?.getItem('veridaAuthToken') ?? undefined
-    if (token) return token
-  }
+async function veridaFetch<T>(endpoint: string, init: RequestInit = {}): Promise<T> {
+  const token = getStoredToken()
+  if (!token) throw new Error('Verida is not connected in this browser session.')
 
-  /* Server – optionally query database */
-  if (userId !== undefined) {
-    try {
-      const { getVeridaToken } = await import('@/lib/db/queries/queries')
-      const row = await getVeridaToken(userId)
-      return row?.authToken
-    } catch {
-      /* Database module not yet implemented or query failed */
-    }
-  }
-
-  return undefined
-}
-
-/**
- * Wrapper around fetch that automatically prepends the base URL
- * and injects the Bearer token when available.
- */
-export async function veridaFetch<T = any>(
-  endpoint: string,
-  init: RequestInit = {},
-  userId?: number,
-): Promise<T> {
-  const token = await getStoredToken(userId)
-
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(init.headers || {}),
-  }
-
-  const url = `${VERIDA_API_URL}/${VERIDA_API_VERSION}/${endpoint.replace(/^\/+/, '')}`
-
-  const res = await fetch(url, { ...init, headers })
-  if (!res.ok) {
-    const body = await res.text().catch(() => '')
-    throw new Error(`Verida request failed (${res.status}): ${body}`)
-  }
-  return res.json() as Promise<T>
-}
-
-/**
- * Helper – Universal search across all user data.
- * Requires api:search-universal scope.
- */
-export function searchUniversal(keywords: string, userId?: number) {
-  return veridaFetch(`search/universal?keywords=${encodeURIComponent(keywords)}`, {}, userId)
-}
-
-/**
- * Helper – Query a specific datastore via shortcut.
- * Requires api:ds-query and an appropriate ds:* scope.
- */
-export function queryDatastore(
-  dsShortcut: string,
-  filters: Record<string, unknown>,
-  userId?: number,
-) {
-  return veridaFetch(
-    `ds/query/${encodeURIComponent(dsShortcut)}`,
-    {
-      method: 'POST',
-      body: JSON.stringify({ filters }),
-      headers: { 'Content-Type': 'application/json' },
+  const res = await fetch(`${VERIDA_API_URL}/${VERIDA_API_VERSION}${endpoint}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      ...(init.headers ?? {}),
     },
-    userId,
-  )
+    ...init,
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Verida request failed (${res.status}): ${text}`)
+  }
+
+  return (await res.json()) as T
 }
+
+/* -------------------------------------------------------------------------- */
+/*                             P U B L I C   A P I                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Universal Search helper exactly as shown in the Verida REST examples.
+ *
+ * @param keywords Search query string.
+ */
+export async function searchUniversal(
+  keywords: string,
+  _userId?: number,
+): Promise<Record<string, any>> {
+  const qs = new URLSearchParams({ keywords }).toString()
+  return veridaFetch(`/search/universal?${qs}`)
+}
+
+/* Re-export the canonical buildAuthUrl from public.ts for convenience */
+export { buildAuthUrl }
