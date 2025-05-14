@@ -92,7 +92,7 @@
 
     /* Verida aqua secondary */
     --secondary: 170 100% 45%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary-foreground: 0 0% 10%;
 
     /* Magenta accent to bridge gradient */
     --accent: 320 100% 65%;
@@ -191,7 +191,7 @@
   --primary-foreground: hsl(0 0% 10%);
 
   --secondary: hsl(170 100% 45%);
-  --secondary-foreground: hsl(0 0% 98%);
+  --secondary-foreground: hsl(0 0% 10%);
 
   --accent: hsl(320 100% 65%);
   --accent-foreground: hsl(0 0% 10%);

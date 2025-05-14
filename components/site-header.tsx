@@ -100,7 +100,7 @@ export default function SiteHeader() {
           {/* Brand ------------------------------------------------------------------ */}
           <Link
             href='/'
-            className='text-primary flex items-center gap-2 text-lg font-extrabold tracking-tight whitespace-nowrap'
+            className='text-foreground flex items-center gap-2 text-lg font-extrabold tracking-tight whitespace-nowrap'
             onClick={handleNav}
           >
             <Image
