@@ -10,3 +10,10 @@ export const CHEQD_API_URL = getEnv('CHEQD_API_URL') as string
 export const CHEQD_API_KEY = getEnv('CHEQD_API_KEY') as string
 
 export const PLATFORM_ISSUER_DID = getEnv('NEXT_PUBLIC_PLATFORM_ISSUER_DID') as string
+
+/* --------------------------- Verida --------------------------- */
+
+export const VERIDA_API_URL = getEnv('VERIDA_API_URL') as string
+export const VERIDA_API_VERSION = getEnv('VERIDA_API_VERSION') as string
+export const VERIDA_DEFAULT_SCOPES = (getEnv('NEXT_PUBLIC_VERIDA_DEFAULT_SCOPES') as string).split(',')
+export const VERIDA_AUTH_ENDPOINT = `${VERIDA_API_URL}/${VERIDA_API_VERSION}/auth/auth`
