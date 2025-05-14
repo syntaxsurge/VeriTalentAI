@@ -4,10 +4,17 @@ import { buildAuthUrl } from '@/lib/verida/public'
 
 /**
  * Basic sanity check that the generated authentication link matches
- * the documented Verida endpoint and embeds at least one scope param.
+ * the documented Verida endpoint and embeds multiple scope params.
  */
 const url = buildAuthUrl()
 
-assert.ok(url.includes('/auth/auth'), 'buildAuthUrl() must contain the auth/auth endpoint path')
+assert.ok(
+  url.includes('/auth?'),
+  'buildAuthUrl() must contain the /auth endpoint path (without /auth/auth)',
+)
 
-assert.ok(url.includes('scopes='), 'buildAuthUrl() must include at least one "scopes=" query param')
+const scopesMatches = url.match(/scopes=/g) || []
+assert.ok(
+  scopesMatches.length >= 2,
+  'buildAuthUrl() must include at least two "scopes=" query params',
+)
