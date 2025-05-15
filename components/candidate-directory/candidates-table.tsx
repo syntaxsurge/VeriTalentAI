@@ -43,7 +43,7 @@ export default function CandidatesTable({
   })
 
   /* Column definitions */
-  const columns = React.useMemo<Column<any>[]>(() => {
+  const columns = React.useMemo<Column<CandidateDirectoryRow>[]>(() => {
     return [
       {
         key: 'name',
@@ -60,7 +60,7 @@ export default function CandidatesTable({
         key: 'email',
         header: sortableHeader('Email', 'email'),
         sortable: false,
-        render: (v: unknown) => v as string,
+        render: (v: unknown, _row: CandidateDirectoryRow) => v as React.ReactNode,
         className: 'break-all',
       },
       {
@@ -77,7 +77,8 @@ export default function CandidatesTable({
         key: 'verified',
         header: sortableHeader('Verified', 'verified'),
         sortable: false,
-        render: (v: unknown) => ((v as number) > 0 ? v : '—'),
+        render: (v: unknown, _row: CandidateDirectoryRow) =>
+          ((v as number) > 0 ? v : '—') as React.ReactNode,
       },
       {
         key: 'id',
