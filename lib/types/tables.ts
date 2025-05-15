@@ -37,6 +37,8 @@ export interface CandidateDirectoryRow {
   name: string | null
   email: string
   verified: number
+  /** Indicates whether the candidate has a connected Verida wallet (optional virtual column). */
+  verida?: boolean
 }
 
 /** Internal pipeline listing row used by shared pipelines helper */
