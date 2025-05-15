@@ -1,4 +1,5 @@
 import { eq, asc, and } from 'drizzle-orm'
+import { fetchConnectionStatus } from '@/lib/verida/server'
 
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import AddToPipelineForm from '@/components/recruiter/add-to-pipeline-form'
@@ -57,6 +58,17 @@ export default async function PublicCandidateProfile({
     .limit(1)
 
   if (!row) return <div>Candidate not found.</div>
+
+  /* -------------------------- Verida status ----------------------------- */
+  let veridaConnected = false
+  try {
+    if (row.userRow?.id) {
+      const { connected } = await fetchConnectionStatus(row.userRow.id)
+      veridaConnected = connected
+    }
+  } catch {
+    /* Silent fallback – treat as disconnected on error */
+  }
 
   /* -------------------------- Logged-in user ----------------------------- */
   const user = await requireAuth()
@@ -299,6 +311,7 @@ export default async function PublicCandidateProfile({
         },
       }}
       pipeline={pipelineSection}
+      veridaConnected={veridaConnected}
       showShare
     />
   )
