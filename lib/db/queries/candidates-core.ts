@@ -28,11 +28,11 @@ const VERIFIED_COUNT_EXPR = sql<number>`(
     AND cc.verified
 )`
 
-/* Count of authorised Verida connections per user */
+/* Count of stored Verida auth tokens per user (indicates connection) */
 const VERIDA_COUNT_EXPR = sql<number>`(
   SELECT COUNT(*)
-  FROM verida_connections vc
-  WHERE vc.user_id = ${candidates.userId}
+  FROM verida_tokens vt
+  WHERE vt.user_id = ${candidates.userId}
 )`
 
 export async function getCandidateListingPage(
@@ -70,7 +70,7 @@ export async function getCandidateListingPage(
   /* Verida wallet connected filter */
   if (veridaOnly) {
     filters.push(
-      sql`EXISTS (SELECT 1 FROM verida_connections vc WHERE vc.user_id = ${candidates.userId})`,
+      sql`EXISTS (SELECT 1 FROM verida_tokens vt WHERE vt.user_id = ${candidates.userId})`,
     )
   }
 
