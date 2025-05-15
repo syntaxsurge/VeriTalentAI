@@ -63,6 +63,34 @@ export async function veridaFetch<T = any>(
 /* -------------------------------------------------------------------------- */
 
 /**
+ * Fetch the Verida connection status and authorised providers for a user.
+ * Returns { connected:false, providers:[] } when the request is unauthorised.
+ *
+ * @param userId Platform user ID.
+ */
+export async function fetchConnectionStatus(
+  userId: number,
+): Promise<{ connected: boolean; providers: string[] }> {
+  try {
+    const res = await veridaFetch<{
+      connected?: boolean
+      providers?: string[]
+    }>(userId, '/connections/status')
+
+    return {
+      connected: !!res.connected,
+      providers: Array.isArray(res.providers) ? res.providers : [],
+    }
+  } catch (err: any) {
+    const msg = typeof err?.message === 'string' ? err.message : ''
+    if (msg.includes('(401') || msg.includes('(403')) {
+      return { connected: false, providers: [] }
+    }
+    throw err
+  }
+}
+
+/**
  * Server-side Universal Search wrapper that injects the user’s Bearer token.
  *
  * @param keywords Search query string.
