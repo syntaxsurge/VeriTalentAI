@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { mutate } from 'swr'
 
 import { toast } from 'sonner'
 
@@ -35,6 +36,17 @@ export default function VeridaConnectButton({ connected = false }: VeridaConnect
       /* Clear client-side token (used by browser-only helpers) */
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem('verida_auth_token')
+      }
+
+      /* Invalidate cached Verida status so UI updates immediately */
+      try {
+        mutate(
+          (key: string) => typeof key === 'string' && key.startsWith('verida-status-'),
+          undefined,
+          { revalidate: false },
+        )
+      } catch {
+        /* no-op: SWR may not be initialised */
       }
 
       toast.success('Verida account disconnected')

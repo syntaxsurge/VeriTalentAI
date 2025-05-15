@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import { veridaTokens } from '@/lib/db/schema/verida'
+import { veridaTokens, veridaConnections } from '@/lib/db/schema/verida'
 
 /**
  * POST /api/verida/disconnect
@@ -17,7 +17,10 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ success: false, error: 'Unauthenticated' }, { status: 401 })
   }
 
-  await db.delete(veridaTokens).where(eq(veridaTokens.userId, user.id))
+  await db.transaction(async (tx) => {
+    await tx.delete(veridaTokens).where(eq(veridaTokens.userId, user.id))
+    await tx.delete(veridaConnections).where(eq(veridaConnections.userId, user.id))
+  })
 
   return NextResponse.json({ success: true })
 }
