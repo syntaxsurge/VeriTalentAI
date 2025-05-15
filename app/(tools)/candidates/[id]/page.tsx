@@ -25,7 +25,7 @@ import {
   resolveSearchParams,
   type Query,
 } from '@/lib/utils/query'
-import { fetchConnectionStatus } from '@/lib/verida/server'
+import { getVeridaToken } from '@/lib/db/queries/queries'
 
 export const revalidate = 0
 
@@ -60,15 +60,8 @@ export default async function PublicCandidateProfile({
   if (!row) return <div>Candidate not found.</div>
 
   /* -------------------------- Verida status ----------------------------- */
-  let veridaConnected = false
-  try {
-    if (row.userRow?.id) {
-      const { connected } = await fetchConnectionStatus(row.userRow.id)
-      veridaConnected = connected
-    }
-  } catch {
-    /* Silent fallback – treat as disconnected on error */
-  }
+  const tokenRow = row.userRow?.id ? await getVeridaToken(row.userRow.id) : null
+  const veridaConnected = !!tokenRow
 
   /* -------------------------- Logged-in user ----------------------------- */
   const user = await requireAuth()
