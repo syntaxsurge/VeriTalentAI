@@ -1,11 +1,6 @@
 @import 'tailwindcss';
-/*
-  ---break---
-*/
 @custom-variant dark (&:is(.dark *));
-
 @plugin 'tailwindcss-animate';
-
 @variant dark (&:is(.dark *));
 
 @theme {
@@ -57,7 +52,6 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
-/* Tailwind v3 → v4 border fallback  */
 @layer base {
   *,
   ::after,
@@ -76,7 +70,6 @@
 
 @layer base {
   :root {
-    /* ---------- Light theme ---------- */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -86,15 +79,12 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Cheqd purple primary */
     --primary: 265 90% 88%;
     --primary-foreground: 0 0% 10%;
 
-    /* Verida aqua secondary */
     --secondary: 170 100% 45%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary-foreground: 0 0% 5%; /* Darkened for contrast */
 
-    /* Magenta accent to bridge gradient */
     --accent: 320 100% 65%;
     --accent-foreground: 0 0% 10%;
 
@@ -107,7 +97,6 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-    /* Chart palette harmonised with new brand colours */
     --chart-1: 264 100% 60%;
     --chart-2: 170 100% 45%;
     --chart-3: 320 100% 65%;
@@ -127,7 +116,6 @@
   }
 
   .dark {
-    /* ---------- Dark theme ---------- */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -141,7 +129,7 @@
     --primary-foreground: 0 0% 98%;
 
     --secondary: 170 100% 55%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary-foreground: 220 40% 15%; /* Lightened for dark mode contrast */
 
     --accent: 320 100% 70%;
     --accent-foreground: 210 40% 98%;
@@ -172,54 +160,6 @@
   }
 }
 
-/*
-  ---break---
-*/
-
-:root {
-  /* Duplicate variables for Tailwind inline fallback */
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(240 10% 3.9%);
-
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(240 10% 3.9%);
-
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(240 10% 3.9%);
-
-  --primary: hsl(265 90% 88%);
-  --primary-foreground: hsl(0 0% 10%);
-
-  --secondary: hsl(170 100% 45%);
-  --secondary-foreground: hsl(0 0% 10%);
-
-  --accent: hsl(320 100% 65%);
-  --accent-foreground: hsl(0 0% 10%);
-
-  --success: hsl(158 64% 44%);
-  --success-foreground: hsl(0 0% 98%);
-
-  --warning: hsl(45 95% 50%);
-  --warning-foreground: hsl(0 0% 10%);
-
-  --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: hsl(0 0% 98%);
-
-  --border: hsl(240 5.9% 90%);
-  --input: hsl(240 5.9% 90%);
-  --ring: hsl(240 10% 3.9%);
-
-  --chart-1: hsl(264 100% 60%);
-  --chart-2: hsl(170 100% 45%);
-  --chart-3: hsl(320 100% 65%);
-  --chart-4: hsl(50 100% 60%);
-  --chart-5: hsl(198 100% 45%);
-
-  --radius: 0.6rem;
-
-  --viskify-gradient: linear-gradient(90deg, #7f3dff 0%, #00e5c4 100%);
-}
-
 @layer utilities {
   .bg-viskify-gradient {
     background-image: var(--viskify-gradient);
@@ -233,55 +173,36 @@
   }
 }
 
-/*
-  ---break---
-*/
-
 .dark {
   --background: hsl(240 10% 3.9%);
   --foreground: hsl(0 0% 98%);
-
   --card: hsl(240 10% 3.9%);
   --card-foreground: hsl(0 0% 98%);
-
   --popover: hsl(240 10% 3.9%);
   --popover-foreground: hsl(0 0% 98%);
-
   --primary: hsl(265 100% 60%);
   --primary-foreground: hsl(0 0% 98%);
-
   --secondary: hsl(170 100% 55%);
-  --secondary-foreground: hsl(0 0% 98%);
-
+  --secondary-foreground: hsl(220 40% 15%);
   --muted: hsl(240 3.7% 15.9%);
   --muted-foreground: hsl(240 5% 64.9%);
-
   --accent: hsl(320 100% 70%);
   --accent-foreground: hsl(0 0% 98%);
-
   --success: hsl(158 36% 30%);
   --success-foreground: hsl(0 0% 98%);
-
   --warning: hsl(45 70% 45%);
   --warning-foreground: hsl(0 0% 10%);
-
   --destructive: hsl(0 62.8% 30.6%);
   --destructive-foreground: hsl(0 0% 98%);
-
   --border: hsl(240 3.7% 15.9%);
   --input: hsl(240 3.7% 15.9%);
   --ring: hsl(240 4.9% 83.9%);
-
   --chart-1: hsl(264 100% 70%);
   --chart-2: hsl(170 100% 55%);
   --chart-3: hsl(320 100% 70%);
   --chart-4: hsl(50 100% 60%);
   --chart-5: hsl(198 100% 50%);
 }
-
-/*
-  ---break---
-*/
 
 @theme inline {
   --color-background: var(--background);
@@ -314,10 +235,6 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/*
-  ---break---
-*/
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -326,10 +243,6 @@
     @apply bg-background text-foreground;
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/*                         Animated Gradient Utility                          */
-/* -------------------------------------------------------------------------- */
 
 @keyframes viskify-gradient-pan {
   0%,

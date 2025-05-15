@@ -189,17 +189,17 @@ export async function generateCandidateFitSummary(
  * @returns      Assistant JSON string following telegramInsightsMessages schema.
  */
 export async function generateTelegramInsights(userId: number): Promise<string> {
-  const prompt = telegramInsightsPrompt();
+  const prompt = telegramInsightsPrompt()
 
   const res = await veridaFetch<{ response?: { output?: string } }>(userId, '/llm/agent', {
     method: 'POST',
     body: JSON.stringify({ prompt }),
-  });
+  })
 
-  const output = res?.response?.output;
+  const output = res?.response?.output
   if (!output || typeof output !== 'string') {
-    throw new Error('Verida LLM agent returned an empty output.');
+    throw new Error('Verida LLM agent returned an empty output.')
   }
 
-  return output.trim();
+  return output.trim()
 }
