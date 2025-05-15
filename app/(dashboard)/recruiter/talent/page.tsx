@@ -42,9 +42,9 @@ export default async function TalentSearchPage({
     order,
     searchTerm,
     verifiedOnly,
-    veridaOnly,
     skillMin,
     skillMax,
+    veridaOnly,
   )
 
   const rows: TalentRow[] = candidates.map((c) => ({
@@ -100,6 +100,7 @@ export default async function TalentSearchPage({
               skillMin: String(skillMin),
               skillMax: String(skillMax),
               verifiedOnly: verifiedOnly ? '1' : '',
+              verida: veridaOnly ? '1' : '',
             }}
             pageSize={pageSize}
           />
