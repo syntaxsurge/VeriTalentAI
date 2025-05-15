@@ -4,6 +4,7 @@ import * as React from 'react'
 import type { ReactElement } from 'react'
 
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -21,13 +22,17 @@ import { useVeridaSearch } from '@/lib/hooks/use-verida-search'
 type SearchTelegramModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Search scope: 'telegram' limits to chat data; 'all' performs universal search. */
+  scope?: 'telegram' | 'all'
 }
 
 export default function SearchTelegramModal({
   open,
   onOpenChange,
+  scope = 'telegram',
 }: SearchTelegramModalProps): ReactElement {
   const [keywords, setKeywords] = React.useState('')
+  const [currentScope, setCurrentScope] = React.useState<'telegram' | 'all'>(scope)
   const { loading, results, error, search } = useVeridaSearch<any>()
 
   async function handleSearch(e: React.FormEvent) {
@@ -49,7 +54,26 @@ export default function SearchTelegramModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSearch} className='flex gap-2'>
+        {/* Datastore scope selector */}
+        <div className='flex gap-2'>
+          {(['all', 'telegram'] as const).map((s) => (
+            <button
+              key={s}
+              type='button'
+              onClick={() => setCurrentScope(s)}
+              className={cn(
+                'rounded-full px-3 py-1 text-xs font-medium transition-colors',
+                currentScope === s
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/70',
+              )}
+            >
+              {s === 'all' ? 'All Data' : 'Telegram'}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSearch} className='flex gap-2 mt-4'>
           <Input
             placeholder='e.g. cluster protocol defi'
             value={keywords}

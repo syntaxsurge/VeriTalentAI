@@ -14,6 +14,7 @@ import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, CandidateCredentialRow } from '@/lib/types/tables'
 import { copyToClipboard } from '@/lib/utils'
+import { useDisclosure } from '@/lib/hooks/use-disclosure'
 
 import SearchTelegramModal from './search-telegram-modal'
 
@@ -32,7 +33,11 @@ export default function CandidateCredentialsTable({
 }: TableProps<CandidateCredentialRow> & { veridaConnected?: boolean }) {
   const router = useRouter()
   /* ---------------------- Verida search modal state ---------------------- */
-  const [searchOpen, setSearchOpen] = React.useState(false)
+  const {
+    isOpen: searchOpen,
+    open: openSearch,
+    onOpenChange: setSearchOpen,
+  } = useDisclosure()
 
   /* ------------------------ Bulk-selection actions ----------------------- */
   const bulkActions = useBulkActions<CandidateCredentialRow>([
@@ -72,9 +77,9 @@ export default function CandidateCredentialsTable({
       /* Search Verida ---------------------------------------------------- */
       if (veridaConnected) {
         actions.push({
-          label: 'Search My Verida Data',
+          label: 'Search My Private Data',
           icon: Search,
-          onClick: () => setSearchOpen(true),
+          onClick: () => openSearch(),
         })
       }
 
@@ -163,7 +168,7 @@ export default function CandidateCredentialsTable({
   /* ------------------------------ Render ------------------------------- */
   return (
     <>
-      <SearchTelegramModal open={searchOpen} onOpenChange={setSearchOpen} />
+      <SearchTelegramModal open={searchOpen} onOpenChange={setSearchOpen} scope="all" />
       <DataTable
         columns={columns}
         rows={rows}
