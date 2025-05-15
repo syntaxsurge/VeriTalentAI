@@ -4,11 +4,13 @@ import {
   strictGraderMessages,
   summariseProfileMessages,
   candidateFitMessages,
+  telegramInsightsMessages,
 } from '@/lib/ai/prompts'
 import { validateCandidateFitJson, validateQuizScoreResponse } from '@/lib/ai/validators'
 import { OPENAI_API_KEY } from '@/lib/config'
 import { getVeridaToken } from '@/lib/db/queries/queries'
-import { searchUniversal } from '@/lib/verida/server'
+import { searchUniversal, veridaFetch } from '@/lib/verida/server'
+import { queryDatastore, TELEGRAM_MESSAGE_SCHEMA } from '@/lib/verida/datastore'
 
 /* -------------------------------------------------------------------------- */
 /*                           S I N G L E T O N   C L I E N T                  */
@@ -174,4 +176,56 @@ export async function generateCandidateFitSummary(
     maxRetries: 3,
     validate: validateCandidateFitJson,
   })
+}
+
+/* -------------------------------------------------------------------------- */
+/*                       T E L E G R A M   I N S I G H T S                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Generate structured insights from the user’s recent Telegram messages using
+ * the Verida <api:llm-agent-prompt> endpoint to preserve data-sovereignty.
+ *
+ * @param userId Authenticated platform user ID.
+ * @returns      Assistant JSON string following telegramInsightsMessages schema.
+ */
+export async function generateTelegramInsights(userId: number): Promise<string> {
+  /* Pull up to 1 000 latest Telegram messages (server-side, no PII leakage). */
+  const raw = await queryDatastore<any>(
+    userId,
+    TELEGRAM_MESSAGE_SCHEMA,
+    { sourceApplication: 'https://telegram.com' },
+    { sort: [{ _id: 'desc' }], limit: 1_000 },
+  )
+
+  const transcript = raw
+    .map(
+      (m) =>
+        String(
+          m.messageText ??
+            m.message ??
+            m.text ??
+            m.body ??
+            m.content ??
+            '',
+        ).trim(),
+    )
+    .filter(Boolean)
+    .join('\n')
+    /* Cap at ~8 000 chars to respect model limits */
+    .slice(0, 8_000)
+
+  const messages = telegramInsightsMessages(transcript)
+
+  /* Delegate to Verida LLM agent so user data never leaves Verida infrastructure. */
+  const res = await veridaFetch<{ completion?: string }>(userId, '/llm/agent-prompt', {
+    method: 'POST',
+    body: JSON.stringify({ messages }),
+  })
+
+  if (!res?.completion || typeof res.completion !== 'string') {
+    throw new Error('Verida LLM agent did not return a completion.')
+  }
+
+  return res.completion.trim()
 }

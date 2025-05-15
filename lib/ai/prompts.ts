@@ -56,20 +56,9 @@ export function summariseProfileMessages(profile: string, words = 120): PromptMe
 }
 
 /* -------------------------------------------------------------------------- */
-/*                R E C R U I T E R   " W H Y   H I R E ”  P R O M P T       */
+/*                R E C R U I T E R   " W H Y   H I R E "  P R O M P T        */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Craft a comprehensive multi-step prompt that asks the LLM to:
- *   1. List exactly five 12-word bullets explaining why the candidate suits the role(s).
- *   2. Recommend the single best pipeline (job opening) from the recruiter’s list, or "NONE”.
- *   3. Provide concise pros and cons to aid quick screening decisions.
- * The model must respond with **valid JSON** matching the schema shown so the frontend
- * can parse deterministically.
- *
- * @param pipelines      Joined string of ≤20 pipeline name/description pairs.
- * @param candidateText  Raw candidate profile text (bio + credential highlights).
- */
 export function candidateFitMessages(pipelines: string, candidateText: string): PromptMessage[] {
   const schema = `{
   "bullets":  [ "string (exactly 12 words)", 5 items ],
@@ -97,6 +86,48 @@ export function candidateFitMessages(pipelines: string, candidateText: string): 
       content:
         `=== Recruiter Pipelines (max 20) ===\n${pipelines}\n\n` +
         `=== Candidate Profile ===\n${candidateText}\n\n` +
+        `Return the JSON now:`,
+    },
+  ]
+}
+
+/* -------------------------------------------------------------------------- */
+/*                     T E L E G R A M   I N S I G H T S                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Build messages for the Verida LLM agent to analyse Telegram chats and
+ * produce structured insights.
+ *
+ * Expected **assistant** JSON schema:
+ * {
+ *   "topTopics": [ "string", … up to 5 ],
+ *   "sentiment": "positive" | "neutral" | "negative",
+ *   "actionItems": [ "string", … ]
+ * }
+ *
+ * @param transcript Combined Telegram message text (≤ 8 000 chars recommended).
+ */
+export function telegramInsightsMessages(transcript: string): PromptMessage[] {
+  const schema = `{
+  "topTopics": [ "string", … max 5 ],
+  "sentiment": "positive | neutral | negative",
+  "actionItems": [ "string", … ]
+}`
+
+  return [
+    {
+      role: 'system',
+      content:
+        `You are an expert communications analyst. Analyse the user's recent Telegram\n` +
+        `conversations, detect prevalent discussion topics, overall sentiment and any\n` +
+        `explicit or implicit action items. Respond **only** with valid JSON conforming\n` +
+        `exactly to the following schema:\n${schema}`,
+    },
+    {
+      role: 'user',
+      content:
+        `Here are the latest Telegram messages (chronological, newest first):\n\n${transcript}\n\n` +
         `Return the JSON now:`,
     },
   ]
