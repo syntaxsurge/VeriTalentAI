@@ -46,18 +46,18 @@ Viskify now super-charges talent verification with **Verida’s encrypted data n
 
    Minimum variables:
 
-   | Key                               | Purpose                                                                                                       |
-   | --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-   | `POSTGRES_URL`                    | PostgreSQL connection string                                                                                  |
-   | `CHEQD_API_URL`                   | Cheqd Studio base URL (e.g. `https://studio.cheqd.io`)                                                        |
-   | `CHEQD_API_KEY`                   | Cheqd Studio API key                                                                                          |
-   | `OPENAI_API_KEY`                  | GPT-4o key for AI workflows                                                                                   |
-   | `NEXT_PUBLIC_PLATFORM_ISSUER_DID` | cheqd DID used by the platform issuer                                                                         |
-   | `NEXT_PUBLIC_VERIDA_API_URL`      | Verida REST base URL (e.g. `https://api.verida.ai/api/rest`)                                                  |
-   | `NEXT_PUBLIC_VERIDA_API_VERSION`  | Verida REST API version segment (default: `v1`)                                                               |
-   | `NEXT_PUBLIC_VERIDA_AUTH_URL`     | Verida Vault authentication URL (e.g. `https://app.verida.ai`)                                               |
-   | `NEXT_PUBLIC_VERIDA_APP_DID`      | DID identifier of the Viskify application registered with Verida                                             |
-   | `NEXT_PUBLIC_VERIDA_DEFAULT_SCOPES` | Comma-separated list of Verida scopes requested during connect flow                                          |
+   | Key                                   | Purpose                                                                                                  |
+   | ------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+   | `POSTGRES_URL`                        | PostgreSQL connection string                                                                             |
+   | `CHEQD_API_URL`                       | Cheqd Studio base URL (e.g. `https://studio.cheqd.io`)                                                   |
+   | `CHEQD_API_KEY`                       | Cheqd Studio API key                                                                                     |
+   | `OPENAI_API_KEY`                      | GPT-4o key for AI workflows                                                                              |
+   | `NEXT_PUBLIC_PLATFORM_ISSUER_DID`     | cheqd DID used by the platform issuer                                                                    |
+   | `NEXT_PUBLIC_VERIDA_API_URL`          | Verida REST base URL (e.g. `https://api.verida.ai/api/rest`)                                             |
+   | `NEXT_PUBLIC_VERIDA_API_VERSION`      | Verida REST API version segment (default: `v1`)                                                          |
+   | `NEXT_PUBLIC_VERIDA_AUTH_URL`         | Verida Vault authentication URL (e.g. `https://app.verida.ai`)                                           |
+   | `NEXT_PUBLIC_VERIDA_APP_DID`          | DID identifier of the Viskify application registered with Verida                                         |
+   | `NEXT_PUBLIC_VERIDA_DEFAULT_SCOPES`   | Comma-separated list of Verida scopes requested during connect flow                                      |
    | `NEXT_PUBLIC_VERIDA_APP_REDIRECT_URL` | OAuth callback URL pointing to `/api/verida/callback` (e.g. `http://localhost:3000/api/verida/callback`) |
 
 3. **Database setup (optional Docker helper)**
@@ -120,12 +120,12 @@ Viskify now super-charges talent verification with **Verida’s encrypted data n
 
 Viskify integrates OpenAI GPT-4o in three independent workflows:
 
-| Feature                                                                                                              | File(s) / Entry Point                                                                                                                                       | Model Interaction                                                              | Guard-rails & Caching                                                                                                                                                                          |
-| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Strict Quiz Grader** – grades free-text answers and converts them to a 0-100 score used by candidate Skill Passes. | `lib/ai/openai.ts ➜ openAIAssess()`<br/>`lib/ai/prompts.ts ➜ strictGraderMessages()`<br/>`lib/ai/validators.ts ➜ validateQuizScoreResponse()`               | Non-streaming chat completion with automatic validation & up to **3 retries**. | Centralised validator guarantees a 0-100 integer and `chatCompletion()` automatically retries three times before throwing.                                                                     |
-| **Candidate Profile Summary** – produces a 120-word third-person bio shown on public profiles.                       | `lib/ai/openai.ts ➜ summariseCandidateProfile()`<br/>`lib/ai/prompts.ts ➜ summariseProfileMessages()`                                                       | Single-shot chat completion.                                                   | SHA-256 hash of bio + credential list prevents duplicate generations; server limits to **2 runs per UTC day**.                                                                                 |
-| **"Why Hire" Fit Summary** – recruiter-specific JSON (five 12-word bullets, bestPipeline, pros/cons).                | `lib/ai/openai.ts ➜ generateCandidateFitSummary()`<br/>`lib/ai/prompts.ts ➜ candidateFitMessages()`<br/>`lib/ai/validators.ts ➜ validateCandidateFitJson()` | Non-streaming chat completion with automatic validation & up to **3 retries**. | Centralised validator auto-parses JSON, enforces schema, and `chatCompletion()` retries three times before error; results cached per recruiter × candidate (`recruiter_candidate_fits` table). |
-| **Telegram Insights** – synthesises key themes from private Telegram messages via Verida LLM Agent.                 | `lib/ai/openai.ts ➜ generateTelegramInsights()`<br/>`lib/ai/prompts.ts ➜ telegramInsightsPrompt()`                                                         | Server-side call to Verida `/llm/agent` endpoint then single-shot OpenAI analysis. | Invoked on demand; output trimmed to **1000 chars**, cached in component state; errors surfaced via toast for graceful UX. |
+| Feature                                                                                                              | File(s) / Entry Point                                                                                                                                       | Model Interaction                                                                  | Guard-rails & Caching                                                                                                                                                                          |
+| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Strict Quiz Grader** – grades free-text answers and converts them to a 0-100 score used by candidate Skill Passes. | `lib/ai/openai.ts ➜ openAIAssess()`<br/>`lib/ai/prompts.ts ➜ strictGraderMessages()`<br/>`lib/ai/validators.ts ➜ validateQuizScoreResponse()`               | Non-streaming chat completion with automatic validation & up to **3 retries**.     | Centralised validator guarantees a 0-100 integer and `chatCompletion()` automatically retries three times before throwing.                                                                     |
+| **Candidate Profile Summary** – produces a 120-word third-person bio shown on public profiles.                       | `lib/ai/openai.ts ➜ summariseCandidateProfile()`<br/>`lib/ai/prompts.ts ➜ summariseProfileMessages()`                                                       | Single-shot chat completion.                                                       | SHA-256 hash of bio + credential list prevents duplicate generations; server limits to **2 runs per UTC day**.                                                                                 |
+| **"Why Hire" Fit Summary** – recruiter-specific JSON (five 12-word bullets, bestPipeline, pros/cons).                | `lib/ai/openai.ts ➜ generateCandidateFitSummary()`<br/>`lib/ai/prompts.ts ➜ candidateFitMessages()`<br/>`lib/ai/validators.ts ➜ validateCandidateFitJson()` | Non-streaming chat completion with automatic validation & up to **3 retries**.     | Centralised validator auto-parses JSON, enforces schema, and `chatCompletion()` retries three times before error; results cached per recruiter × candidate (`recruiter_candidate_fits` table). |
+| **Telegram Insights** – synthesises key themes from private Telegram messages via Verida LLM Agent.                  | `lib/ai/openai.ts ➜ generateTelegramInsights()`<br/>`lib/ai/prompts.ts ➜ telegramInsightsPrompt()`                                                          | Server-side call to Verida `/llm/agent` endpoint then single-shot OpenAI analysis. | Invoked on demand; output trimmed to **1000 chars**, cached in component state; errors surfaced via toast for graceful UX.                                                                     |
 
 ### AI Prompt & Usage Summary
 
@@ -171,5 +171,25 @@ Return the JSON now:
 - **Strict Grader** – tightened to enforce a single integer after early experiments returned explanations.
 - **Profile Summary** – reduced word budget and switched to third-person to avoid "I have…" phrasing.
 - **Fit Summary** – added in-prompt JSON schema, 12-word bullet constraint and a validation-with-retry loop to guarantee compliant output.
+
+## 🏆 Hackathon Submission Checklist
+
+- **Unique Use-Case** – Fuses on-ledger cheqd proofs with consent-based private data from Verida vaults for holistic talent verification.
+- **cheqd Capability Implementation** – Deterministic DID creation, VC-JWT issuance/verification, Trust Registry entries, DID-Linked Resources, fee-abstracted payments.
+- **Verida Capability Implementation** – OAuth Vault flow, Universal & Datastore Search, LLM Agent, granular scope management, token revocation.
+- **Why cheqd + Verida** – cheqd anchors public trust while Verida supplies user-owned private signals, satisfying tracks on agentic economy, content credentials and verified datasets.
+- **3-Minute Demo Video** – See header link or `demo.mp4`.
+- **Public Repo** – <https://github.com/syntaxsurge/viskify-cheqd>
+
+## 🎯 Judging Criteria Mapping
+
+| Criterion                   | Implementation Highlights                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Technical Excellence 40** | Typed Next.js 14, Drizzle ORM, Jest suite, CI-linted; end-to-end Verida & cheqd wrappers.        |
+| **cheqd Capability 30**     | DID creation, VC-JWT issuance/verification, Trust Registry, DLR logos, payment-gated revocation. |
+| **Innovation & Impact 30**  | First platform merging verifiable proofs with behavioural chat insights via Verida AI agent.     |
+| **Business Viability 15**   | Freemium SaaS with subscription + metered verifications; zero on-chain gas for users.            |
+| **Presentation 10**         | Polished landing, video demo, interactive dashboards, clear README.                              |
+| **Bonus 5**                 | Implements full Verida private-data agent matching bounty theme.                                 |
 
 ---

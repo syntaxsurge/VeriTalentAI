@@ -52,8 +52,9 @@ export default function HeroSection() {
           </h1>
 
           <p className='mt-6 max-w-xl text-lg/relaxed text-white/90'>
-            Viskify transforms résumés into tamper-evident credentials on the cheqd network so you
-            can verify <em>what</em> talent did instead of guessing.
+            Viskify converts résumés into tamper-evident Verifiable Credentials anchored on cheqd,
+            while tapping Verida’s private-data vault for consent-based insights, so recruiters can
+            verify what talent did instead of guessing.
           </p>
 
           {/* Feature pills */}

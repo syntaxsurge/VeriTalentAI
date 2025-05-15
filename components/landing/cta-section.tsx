@@ -29,8 +29,8 @@ export default function CTASection() {
           transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
           className='mx-auto mt-6 max-w-xl text-lg/relaxed text-white/90'
         >
-          Launch your workspace, mint a did:cheqd identifier and start issuing proofs in minutes—no
-          blockchain knowledge required.
+          Launch your workspace, mint a did:cheqd identifier, securely connect your Verida data
+          vault, and start issuing proofs in minutes—no blockchain knowledge required.
         </motion.p>
 
         <motion.div

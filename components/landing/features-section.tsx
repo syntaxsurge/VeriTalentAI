@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { CheckCircle2, Wallet, ShieldCheck, Key } from 'lucide-react'
+import { CheckCircle2, Wallet, ShieldCheck, Key, Lock } from 'lucide-react'
 
 const features = [
   {
@@ -18,6 +18,11 @@ const features = [
     icon: Wallet,
     title: 'AI Skill Validation',
     description: 'GPT-powered graders convert raw answers into objective scores.',
+  },
+  {
+    icon: Lock,
+    title: 'Private Data Agent',
+    description: 'Consent-driven Verida vault powers secure AI insights from user data.',
   },
   {
     icon: CheckCircle2,
