@@ -6,7 +6,7 @@ import { requireAuth } from '@/lib/auth/guards'
 import { verifyToken } from '@/lib/auth/session'
 
 import { db } from '../drizzle'
-import { activityLogs, teamMembers, teams, users, veridaTokens } from '../schema'
+import { activityLogs, teamMembers, teams, users, veridaTokens, veridaConnections } from '../schema'
 
 /* -------------------------------------------------------------------------- */
 /*                              U S E R  H E L P E R                          */
@@ -133,6 +133,23 @@ export async function getTeamForUser(userId: number) {
   })
 
   return result?.teamMembers[0]?.team || null
+}
+
+/* -------------------------------------------------------------------------- */
+/*                  V E R I D A   M I S S I N G   C O U N T                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Count how many members of a team have NOT connected their Verida wallet.
+ */
+export async function countTeamMembersWithoutVerida(teamId: number): Promise<number> {
+  const rows = await db
+    .select({ uid: teamMembers.userId })
+    .from(teamMembers)
+    .leftJoin(veridaConnections, eq(veridaConnections.userId, teamMembers.userId))
+    .where(and(eq(teamMembers.teamId, teamId), isNull(veridaConnections.id)))
+
+  return rows.length
 }
 
 /* -------------------------------------------------------------------------- */

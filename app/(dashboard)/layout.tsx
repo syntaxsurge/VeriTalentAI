@@ -34,6 +34,7 @@ type PendingCounts = {
   invitations: number
   issuerRequests: number
   adminPendingIssuers: number
+  veridaMissing: number
 }
 
 /* -------------------------------------------------------------------------- */
@@ -112,6 +113,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     invitations: 0,
     issuerRequests: 0,
     adminPendingIssuers: 0,
+    veridaMissing: 0,
   })
 
   /* Resolve user once */
@@ -128,15 +130,18 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
   }, [userPromise])
 
-  /* Fetch pending counts */
+  /* Fetch pending counts + Verida-missing counts */
   useEffect(() => {
-    fetch('/api/pending-counts', { cache: 'no-store' })
-      .then((r) => r.json())
-      .then((d) =>
+    Promise.all([
+      fetch('/api/pending-counts', { cache: 'no-store' }).then((r) => r.json()),
+      fetch('/api/verida/missing-count', { cache: 'no-store' }).then((r) => r.json()),
+    ])
+      .then(([d, vm]) =>
         setCounts({
           invitations: d.invitations ?? 0,
           issuerRequests: d.issuerRequests ?? 0,
           adminPendingIssuers: d.adminPendingIssuers ?? 0,
+          veridaMissing: vm.veridaMissing ?? 0,
         }),
       )
       .catch(() => {})
@@ -152,7 +157,12 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   /* Settings navigation */
   const settingsNav: SidebarNavItem[] = [
     { href: '/settings/general', icon: Settings, label: 'General' },
-    { href: '/settings/team', icon: Users, label: 'Team' },
+    {
+      href: '/settings/team',
+      icon: Users,
+      label: 'Team',
+      badgeCount: counts.veridaMissing,
+    },
     { href: '/settings/activity', icon: Activity, label: 'Activity' },
     { href: '/settings/security', icon: Shield, label: 'Security' },
   ]
