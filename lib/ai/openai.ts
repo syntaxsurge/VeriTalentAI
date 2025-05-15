@@ -196,7 +196,7 @@ export async function generateTelegramInsights(userId: number): Promise<string> 
   const dsUrlEncoded = base64(TELEGRAM_MESSAGE_SCHEMA);
 
   try {
-    const res = await veridaFetch<{ completion?: string }>(userId, '/llm/agent-prompt', {
+    const res = await veridaFetch<{ completion?: string }>(userId, '/llm/agent/prompt', {
       method: 'POST',
       body: JSON.stringify({
         prompt,
@@ -215,7 +215,7 @@ export async function generateTelegramInsights(userId: number): Promise<string> 
     return res.completion.trim();
   } catch (err: any) {
     const msg: string = err?.message ?? '';
-    if (msg.includes('404')) {
+    if (msg.includes('401') || msg.includes('403') || msg.includes('404')) {
       throw new Error(
         'Your Verida connection is missing the api:llm-agent-prompt scope. ' +
           'Please disconnect and reconnect your Verida wallet to enable Telegram AI insights.',
