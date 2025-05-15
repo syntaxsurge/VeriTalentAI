@@ -23,7 +23,7 @@ export default async function CandidateDirectoryPage({
   /* -------------------------- Table helpers --------------------------- */
   const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
     params,
-    ['name', 'email', 'verified'] as const,
+    ['name', 'email', 'verified', 'verida'] as const,
     'name',
   )
 
@@ -34,7 +34,7 @@ export default async function CandidateDirectoryPage({
   const { candidates, hasNext } = await getCandidateListingPage(
     page,
     pageSize,
-    sort as 'name' | 'email' | 'verified',
+    sort as 'name' | 'email' | 'verified' | 'verida',
     order,
     termLower,
   )

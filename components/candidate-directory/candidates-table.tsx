@@ -68,13 +68,12 @@ export default function CandidatesTable({
       },
       {
         key: 'verida', // virtual column – value comes from render only
-        header: 'Verida',
+        header: sortableHeader('Verida', 'verida'),
         sortable: false,
         enableHiding: false,
         render: (_v: unknown, row: CandidateDirectoryRow) => (
           <WalletBadgeCell userId={(row as any).userId ?? row.id} />
         ),
-        className: 'text-center',
       },
       {
         key: 'verified',

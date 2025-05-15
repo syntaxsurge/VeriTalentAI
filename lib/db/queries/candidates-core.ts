@@ -28,10 +28,17 @@ const VERIFIED_COUNT_EXPR = sql<number>`(
     AND cc.verified
 )`
 
+/* Count of authorised Verida connections per user */
+const VERIDA_COUNT_EXPR = sql<number>`(
+  SELECT COUNT(*)
+  FROM verida_connections vc
+  WHERE vc.user_id = ${candidates.userId}
+)`
+
 export async function getCandidateListingPage(
   page: number,
   pageSize = 10,
-  sortBy: 'name' | 'email' | 'id' | 'verified' = 'name',
+  sortBy: 'name' | 'email' | 'id' | 'verified' | 'verida' = 'name',
   order: 'asc' | 'desc' = 'asc',
   searchTerm = '',
   verifiedOnly = false,
@@ -45,6 +52,7 @@ export async function getCandidateListingPage(
     email: users.email,
     id: candidates.id,
     verified: VERIFIED_COUNT_EXPR,
+    verida: VERIDA_COUNT_EXPR,
   } as const
 
   const orderBy = buildOrderExpr(sortMap, sortBy, order)
