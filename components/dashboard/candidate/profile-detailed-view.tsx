@@ -112,6 +112,7 @@ export default function CandidateDetailedProfileView({
   summary,
   pipelineSummary,
   fitSummary,
+  veridaConnected,
   statusCounts,
   passes,
   snapshot = defaultSnapshot,
@@ -165,6 +166,7 @@ export default function CandidateDetailedProfileView({
         email={email}
         avatarSrc={avatarSrc}
         profilePath={profilePath}
+        veridaConnected={veridaConnected}
         showShare={showShare}
         stats={stats}
         socials={socialIcons}

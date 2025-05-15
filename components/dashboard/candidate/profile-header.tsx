@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import { VeridaWalletBadge } from '@/components/ui/verida-wallet-badge'
 import type { ProfileHeaderProps } from '@/lib/types/components'
 import { copyToClipboard } from '@/lib/utils'
 
@@ -29,6 +30,7 @@ export default function ProfileHeader({
   showPublicProfile = false,
   stats = [],
   socials = [],
+  veridaConnected,
   children,
 }: ProfileHeaderProps) {
   /* ---------------------------- share link ---------------------------- */
@@ -63,9 +65,19 @@ export default function ProfileHeader({
             />
             <div className='text-center sm:text-left'>
               <h1 className='text-2xl leading-tight font-extrabold'>{name || 'Unnamed'}</h1>
-              <Link href={`mailto:${email}`} className='break-all underline underline-offset-4'>
-                {email}
-              </Link>
+
+              <div className='flex flex-wrap items-center justify-center gap-2 sm:justify-start'>
+                <Link
+                  href={`mailto:${email}`}
+                  className='break-all underline underline-offset-4'
+                >
+                  {email}
+                </Link>
+
+                {veridaConnected !== undefined && (
+                  <VeridaWalletBadge connected={veridaConnected} />
+                )}
+              </div>
             </div>
           </div>
 

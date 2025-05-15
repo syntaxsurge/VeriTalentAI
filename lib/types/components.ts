@@ -260,6 +260,8 @@ export interface ProfileHeaderProps {
   showPublicProfile?: boolean
   stats?: ProfileStat[]
   socials?: SocialLink[]
+  /** Whether the user has a Verida wallet connected */
+  veridaConnected?: boolean
   children?: ReactNode
 }
 
@@ -390,5 +392,7 @@ export interface CandidateDetailedProfileViewProps {
   socials: Socials
   pipeline?: PipelineSection
   fitSummary?: string
+  /** Whether the candidate has a Verida wallet connected */
+  veridaConnected?: boolean
   showShare?: boolean
 }
