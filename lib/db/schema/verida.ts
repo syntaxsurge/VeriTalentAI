@@ -23,8 +23,37 @@ export const veridaTokens = pgTable('verida_tokens', {
 })
 
 /* -------------------------------------------------------------------------- */
+/*                       P E R - P R O V I D E R   S N A P S H O T            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Persist authorised providers and their sync metadata to support
+ * offline checks, recruiter filters and audit requirements.
+ */
+export const veridaConnections = pgTable('verida_connections', {
+  id: serial('id').primaryKey(),
+  /** Owning platform user. */
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  /** Provider identifier string (e.g. 'telegram', 'gmail'). */
+  providerId: text('provider_id').notNull(),
+  /** Optional provider-specific account identifier. */
+  accountId: text('account_id'),
+  /** syncStatus describes the last sync outcome ('ok', 'error', etc.). */
+  syncStatus: text('sync_status').notNull().default('ok'),
+  /** Timestamp of the most recent successful sync. */
+  lastSync: timestamp('last_sync', { withTimezone: true }),
+  /** Row creation timestamp for audit purposes. */
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+/* -------------------------------------------------------------------------- */
 /*                                T Y P E S                                   */
 /* -------------------------------------------------------------------------- */
 
 export type VeridaToken = typeof veridaTokens.$inferSelect
 export type NewVeridaToken = typeof veridaTokens.$inferInsert
+
+export type VeridaConnection = typeof veridaConnections.$inferSelect
+export type NewVeridaConnection = typeof veridaConnections.$inferInsert
