@@ -88,7 +88,20 @@ export default function VeridaTelegramDashboard({ userId, veridaConnected }: Pro
       const res = await fetch(`/api/telegram/insights?userId=${userId}`)
       const json = await res.json()
       if (!json.success) throw new Error(json.error ?? 'Failed to generate insights')
-      setInsights(JSON.stringify(JSON.parse(json.insights), null, 2))
+
+      let formatted = ''
+      if (typeof json.insights === 'string') {
+        try {
+          formatted = JSON.stringify(JSON.parse(json.insights), null, 2)
+        } catch {
+          /* The string isn’t valid JSON – display as-is */
+          formatted = json.insights.trim()
+        }
+      } else {
+        formatted = JSON.stringify(json.insights, null, 2)
+      }
+
+      setInsights(formatted)
       setInsightsOpen(true)
     } catch (err: any) {
       toast.error(err?.message ?? 'Unable to generate AI insights.')
