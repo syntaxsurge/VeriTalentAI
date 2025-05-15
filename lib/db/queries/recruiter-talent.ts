@@ -18,7 +18,7 @@ export async function getTalentSearchPage(
   verifiedOnly = false,
   skillMin = 0,
   skillMax = 100,
-  _veridaOnly = false,
+  veridaOnly = false,
 ): Promise<{ candidates: TalentRow[]; hasNext: boolean }> {
   return getCandidateListingPage(
     page,
@@ -29,6 +29,6 @@ export async function getTalentSearchPage(
     verifiedOnly,
     skillMin,
     skillMax,
-    // TODO: implement veridaOnly filtering inside getCandidateListingPage
+    veridaOnly,
   )
 }

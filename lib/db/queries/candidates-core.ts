@@ -37,6 +37,7 @@ export async function getCandidateListingPage(
   verifiedOnly = false,
   skillMin = 0,
   skillMax = 100,
+  veridaOnly = false,
 ): Promise<{ candidates: TalentRow[]; hasNext: boolean }> {
   /* --------------------------- ORDER BY helper --------------------------- */
   const sortMap = {
@@ -56,6 +57,13 @@ export async function getCandidateListingPage(
 
   if (verifiedOnly) {
     filters.push(sql`(${VERIFIED_COUNT_EXPR}) > 0`)
+  }
+
+  /* Verida wallet connected filter */
+  if (veridaOnly) {
+    filters.push(
+      sql`EXISTS (SELECT 1 FROM verida_connections vc WHERE vc.user_id = ${candidates.userId})`,
+    )
   }
 
   /* Skill-score range filter */
