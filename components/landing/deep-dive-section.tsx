@@ -45,7 +45,7 @@ export default function DeepDiveSection() {
           </p>
         </header>
 
-        <ul className='mt-20 grid gap-10 sm:grid-cols-2 lg:grid-cols-3'>
+        <ul className='mt-20 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
           {ROLES.map(({ icon: Icon, title, intro, bullets }) => (
             <motion.li
               key={title}
