@@ -71,13 +71,18 @@ export default function ProfileHeader({
                   {email}
                 </Link>
 
-                {veridaConnected !== undefined && <VeridaWalletBadge connected={veridaConnected} />}
+                {veridaConnected !== undefined && (
+                  <VeridaWalletBadge connected={veridaConnected} />
+                )}
               </div>
             </div>
           </div>
 
           {/* Actions */}
           <div className='flex flex-wrap gap-2'>
+            {/* Verida Connect / Disconnect button passed via children */}
+            {children}
+
             {showShare && profilePath && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -148,9 +153,6 @@ export default function ProfileHeader({
             ))}
           </div>
         )}
-
-        {/* Children such as VeridaConnectButton */}
-        {children}
       </div>
     </TooltipProvider>
   )
