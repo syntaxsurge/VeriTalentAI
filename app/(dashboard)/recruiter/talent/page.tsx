@@ -30,6 +30,7 @@ export default async function TalentSearchPage({
 
   /* -------------- Additional numeric / boolean filters --------------- */
   const verifiedOnly = getParam(params, 'verifiedOnly') === '1'
+  const veridaOnly = getParam(params, 'verida') === '1'
   const skillMin = Math.max(0, Number(getParam(params, 'skillMin') ?? '0'))
   const skillMax = Math.min(100, Number(getParam(params, 'skillMax') ?? '100'))
 
@@ -41,6 +42,7 @@ export default async function TalentSearchPage({
     order,
     searchTerm,
     verifiedOnly,
+    veridaOnly,
     skillMin,
     skillMax,
   )
@@ -70,6 +72,7 @@ export default async function TalentSearchPage({
             skillMin={skillMin}
             skillMax={skillMax}
             verifiedOnly={verifiedOnly}
+            veridaOnly={veridaOnly}
           />
 
           {/* Results */}
@@ -83,6 +86,7 @@ export default async function TalentSearchPage({
               skillMin: String(skillMin),
               skillMax: String(skillMax),
               verifiedOnly: verifiedOnly ? '1' : '',
+              verida: veridaOnly ? '1' : '',
             }}
             searchQuery={searchTerm}
           />

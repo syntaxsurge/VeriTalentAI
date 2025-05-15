@@ -288,6 +288,8 @@ export interface TalentFiltersProps {
   skillMin: number
   skillMax: number
   verifiedOnly: boolean
+  /** Filter candidates to those with a connected Verida wallet */
+  veridaOnly: boolean
 }
 
 /** Props for the encapsulated page section card component. */
