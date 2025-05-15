@@ -3,9 +3,19 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { Trash2, FileText, Clipboard, Search } from 'lucide-react'
+import { Trash2, FileText, Clipboard, Search, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { submitCredentialForReview } from '@/app/(dashboard)/candidate/credentials/actions'
+import IssuerSelect from '@/components/issuer-select'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
@@ -32,8 +42,14 @@ export default function CandidateCredentialsTable({
   veridaConnected = false,
 }: TableProps<CandidateCredentialRow> & { veridaConnected?: boolean }) {
   const router = useRouter()
+
   /* ---------------------- Verida search modal state ---------------------- */
   const { isOpen: searchOpen, open: openSearch, onOpenChange: setSearchOpen } = useDisclosure()
+
+  /* -------------------- Submit-for-review modal state -------------------- */
+  const { isOpen: submitOpen, open: openSubmit, onOpenChange: setSubmitOpen } = useDisclosure()
+  const [currentCredId, setCurrentCredId] = React.useState<number | null>(null)
+  const [submitting, setSubmitting] = React.useState(false)
 
   /* ------------------------ Bulk-selection actions ----------------------- */
   const bulkActions = useBulkActions<CandidateCredentialRow>([
@@ -64,6 +80,31 @@ export default function CandidateCredentialsTable({
     order,
     searchQuery,
   })
+
+  /* ---------------------- Submit-for-review handler ---------------------- */
+  async function handleSubmitForReview(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!currentCredId) return
+    const fd = new FormData(e.currentTarget)
+    fd.append('credentialId', currentCredId.toString())
+
+    setSubmitting(true)
+    const toastId = toast.loading('Submitting for review…')
+    try {
+      const res = await submitCredentialForReview({}, fd)
+      if (res?.error) {
+        toast.error(res.error, { id: toastId })
+      } else {
+        toast.success(res?.success ?? 'Credential submitted.', { id: toastId })
+        setSubmitOpen(false)
+        router.refresh()
+      }
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Something went wrong.', { id: toastId })
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   /* --------------------------- Row actions ------------------------------ */
   const makeActions = React.useCallback(
@@ -97,6 +138,18 @@ export default function CandidateCredentialsTable({
         })
       }
 
+      /* Submit for review (only when unverified) ------------------------- */
+      if (row.status === 'unverified') {
+        actions.push({
+          label: 'Submit for Review',
+          icon: Send,
+          onClick: () => {
+            setCurrentCredId(row.id)
+            openSubmit()
+          },
+        })
+      }
+
       /* Delete (single) --------------------------------------------------- */
       actions.push({
         label: 'Delete',
@@ -113,7 +166,7 @@ export default function CandidateCredentialsTable({
 
       return actions
     },
-    [router],
+    [router, veridaConnected],
   )
 
   /* ------------------------------- Columns ------------------------------ */
@@ -164,7 +217,27 @@ export default function CandidateCredentialsTable({
   /* ------------------------------ Render ------------------------------- */
   return (
     <>
+      {/* Verida search modal */}
       <SearchTelegramModal open={searchOpen} onOpenChange={setSearchOpen} scope='all' />
+
+      {/* Submit-for-review modal */}
+      <Dialog open={submitOpen} onOpenChange={setSubmitOpen}>
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle>Select Issuer</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmitForReview} className='space-y-6'>
+            <IssuerSelect />
+            <DialogFooter>
+              <Button type='submit' disabled={submitting} className='w-full'>
+                {submitting ? 'Submitting…' : 'Submit for Review'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credentials table */}
       <DataTable
         columns={columns}
         rows={rows}
@@ -172,7 +245,6 @@ export default function CandidateCredentialsTable({
         filterValue={search}
         onFilterChange={handleSearchChange}
         bulkActions={bulkActions}
-        /* Disable client-side pagination – handled by server TablePagination */
         pageSize={rows.length}
         pageSizeOptions={[rows.length]}
         hidePagination

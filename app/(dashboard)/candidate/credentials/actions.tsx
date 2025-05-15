@@ -1,5 +1,7 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
+
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -18,10 +20,8 @@ import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 /*                               A D D  C R E D                               */
 /* -------------------------------------------------------------------------- */
 
-/** Enum wrapper keeps schema strongly typed. */
 const CategoryEnum = z.nativeEnum(CredentialCategory)
 
-/** Core payload schema – no proof fields required. */
 const AddCredentialSchema = z.object({
   title: z.string().min(2).max(200),
   category: CategoryEnum,
@@ -30,14 +30,9 @@ const AddCredentialSchema = z.object({
   issuerId: z.coerce.number().optional(),
 })
 
-/* -------------------------------------------------------------------------- */
-/*                           S E R V E R   A C T I O N                        */
-/* -------------------------------------------------------------------------- */
-
 export const addCredential = validatedActionWithUser(
   AddCredentialSchema,
   async ({ title, category, type, fileUrl, issuerId }, _formData, user) => {
-    /* --------------------------- issuer lookup -------------------------- */
     let linkedIssuerId: number | undefined
     let status: CredentialStatus = CredentialStatus.UNVERIFIED
 
@@ -47,13 +42,11 @@ export const addCredential = validatedActionWithUser(
         .from(issuers)
         .where(and(eq(issuers.id, issuerId), eq(issuers.status, IssuerStatus.ACTIVE)))
         .limit(1)
-
       if (!issuer) return { error: 'Issuer not found or not verified.' }
       linkedIssuerId = issuer.id
       status = CredentialStatus.PENDING
     }
 
-    /* --------------------- DID required for issuer ---------------------- */
     if (linkedIssuerId) {
       const [teamRow] = await db
         .select({ did: teams.did })
@@ -61,13 +54,11 @@ export const addCredential = validatedActionWithUser(
         .leftJoin(teams, eq(teamMembers.teamId, teams.id))
         .where(eq(teamMembers.userId, user.id))
         .limit(1)
-
       if (!teamRow?.did) {
         return { error: 'Create your team DID before submitting credentials to an issuer.' }
       }
     }
 
-    /* ------------------------- candidate ensure ------------------------- */
     let [candidate] = await db
       .select()
       .from(candidates)
@@ -79,7 +70,6 @@ export const addCredential = validatedActionWithUser(
       candidate = newCand
     }
 
-    /* -------------------------- insert record --------------------------- */
     await db.insert(candidateCredentials).values({
       candidateId: candidate.id,
       title,
@@ -90,7 +80,81 @@ export const addCredential = validatedActionWithUser(
       status,
     })
 
-    /* --------------------------- response ------------------------------- */
+    revalidatePath('/candidate/credentials')
     return { success: 'Credential added.' }
+  },
+)
+
+/* -------------------------------------------------------------------------- */
+/*                      S U B M I T   F O R   R E V I E W                     */
+/* -------------------------------------------------------------------------- */
+
+const SubmitForReviewSchema = z.object({
+  credentialId: z.coerce.number(),
+  issuerId: z.coerce.number(),
+})
+
+export const submitCredentialForReview = validatedActionWithUser(
+  SubmitForReviewSchema,
+  async ({ credentialId, issuerId }, _formData, user) => {
+    /* Verify credential ownership + status -------------------------------- */
+    const [cred] = await db
+      .select({
+        id: candidateCredentials.id,
+        candidateId: candidateCredentials.candidateId,
+        status: candidateCredentials.status,
+      })
+      .from(candidateCredentials)
+      .where(eq(candidateCredentials.id, credentialId))
+      .limit(1)
+
+    if (!cred) return { error: 'Credential not found.' }
+    if (cred.status !== CredentialStatus.UNVERIFIED) {
+      return { error: 'Only unverified credentials can be submitted for review.' }
+    }
+
+    const [cand] = await db
+      .select({ userId: candidates.userId })
+      .from(candidates)
+      .where(eq(candidates.id, cred.candidateId))
+      .limit(1)
+
+    if (!cand || cand.userId !== user.id) {
+      return { error: 'Unauthorized.' }
+    }
+
+    /* Validate issuer ----------------------------------------------------- */
+    const [issuer] = await db
+      .select()
+      .from(issuers)
+      .where(and(eq(issuers.id, issuerId), eq(issuers.status, IssuerStatus.ACTIVE)))
+      .limit(1)
+
+    if (!issuer) return { error: 'Issuer not found or not verified.' }
+
+    /* Ensure candidate DID exists ---------------------------------------- */
+    const [teamRow] = await db
+      .select({ did: teams.did })
+      .from(teamMembers)
+      .leftJoin(teams, eq(teamMembers.teamId, teams.id))
+      .where(eq(teamMembers.userId, user.id))
+      .limit(1)
+
+    if (!teamRow?.did) {
+      return { error: 'Create your team DID before submitting credentials to an issuer.' }
+    }
+
+    /* Update credential --------------------------------------------------- */
+    await db
+      .update(candidateCredentials)
+      .set({
+        issuerId,
+        status: CredentialStatus.PENDING,
+        updatedAt: new Date(),
+      })
+      .where(eq(candidateCredentials.id, credentialId))
+
+    revalidatePath('/candidate/credentials')
+    return { success: 'Credential submitted for issuer review.' }
   },
 )
