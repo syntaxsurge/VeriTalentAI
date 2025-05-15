@@ -7,41 +7,55 @@ import { cn } from '@/lib/utils'
 import { Badge } from './badge'
 import { HoverCard, HoverCardTrigger, HoverCardContent } from './hover-card'
 import { Tooltip, TooltipTrigger, TooltipContent } from './tooltip'
+import { useVeridaStatus } from '@/lib/hooks/use-verida-status'
+
+/* -------------------------------------------------------------------------- */
+/*                         V E R I D A   W A L L E T   B A D G E              */
+/* -------------------------------------------------------------------------- */
 
 export interface VeridaWalletBadgeProps {
-  /** Whether the user has a Verida Vault connected */
+  /** Is a Verida Vault token present for the user. */
   connected: boolean
-  /** Optional list of authorised data providers (gmail, telegram …) */
+  /** Optional list of authorised data providers (gmail, telegram …). */
   providers?: string[]
-  /** Use a hover-card instead of a tooltip (helpful on touch devices) */
+  /** Optional user ID – needed when <code>providers</code> is omitted so the
+   *  badge can fetch the list itself. */
+  userId?: number
+  /** Use a hover-card instead of a tooltip (helpful on touch devices). */
   useHoverCard?: boolean
   className?: string
 }
 
-/**
- * Small pill-style badge that reflects Verida connection status and,
- * on hover or focus, lists authorised data providers for the user.
- */
 export function VeridaWalletBadge({
   connected,
   providers,
+  userId,
   useHoverCard = false,
   className,
 }: VeridaWalletBadgeProps) {
-  /* -------------------------- Visual styles --------------------------- */
+  /* -------------------------- Lazy status fetch --------------------------- */
+  const shouldFetch = connected && !providers && typeof userId === 'number'
+  const status = useVeridaStatus(userId, shouldFetch)
+  const effectiveProviders = providers ?? status.providers
+
+  /* -------------------------- Visual styles ------------------------------ */
   const badgeStyles = connected
     ? 'border-green-600 bg-green-600/10 text-green-700 dark:border-green-500 dark:text-green-400'
     : 'border-red-600 bg-red-600/10 text-red-700 dark:border-red-500 dark:text-red-400'
 
-  /* ------------------------ Tooltip content --------------------------- */
-  const tooltipText =
-    providers && providers.length > 0
-      ? `Providers: ${providers.join(', ')}`
-      : connected
-        ? 'Verida connected – loading provider list…'
-        : 'No Verida wallet connected'
+  /* -------------------------- Tooltip content ---------------------------- */
+  let tooltipText: string
+  if (!connected) {
+    tooltipText = 'No Verida wallet connected'
+  } else if (!effectiveProviders) {
+    tooltipText = 'Verida connected – loading provider list…'
+  } else if (effectiveProviders.length === 0) {
+    tooltipText = 'Verida connected'
+  } else {
+    tooltipText = `Providers: ${effectiveProviders.join(', ')}`
+  }
 
-  /* ------------------------ Badge element ----------------------------- */
+  /* ----------------------------- Badge JSX ------------------------------- */
   const badgeEl = (
     <Badge
       size='sm'
@@ -70,7 +84,7 @@ export function VeridaWalletBadge({
     </Badge>
   )
 
-  /* -------------------- Tooltip / Hover-card wrapper ------------------ */
+  /* -------------------- Tooltip / Hover-card wrapper --------------------- */
   if (useHoverCard) {
     return (
       <HoverCard>
