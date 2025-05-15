@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { veridaFetch } from '@/lib/verida/server'
 import { parseUserId, jsonError } from '@/lib/utils/api'
+import { veridaFetch } from '@/lib/verida/server'
 
 /**
  * GET /api/telegram/search?userId=123&keyword=foo

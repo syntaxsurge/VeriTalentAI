@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { parseUserId, jsonError } from '@/lib/utils/api'
 import {
   TELEGRAM_GROUP_SCHEMA,
   TELEGRAM_MESSAGE_SCHEMA,
   countDatastore,
   queryDatastore,
 } from '@/lib/verida/datastore'
-import { parseUserId, jsonError } from '@/lib/utils/api'
 
 const KEYWORDS = ['cluster', 'protocol', 'ai', 'defi', 'crypto', 'web3'] as const
 

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { eq } from 'drizzle-orm'
 
-import { getUser } from '@/lib/db/queries/queries'
 import { db } from '@/lib/db/drizzle'
+import { getUser } from '@/lib/db/queries/queries'
 import { veridaTokens } from '@/lib/db/schema/verida'
 
 /**

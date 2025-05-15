@@ -1,4 +1,4 @@
-import { VERIDA_BASE_URL, buildVeridaUrl } from './common'
+import { buildVeridaUrl } from './common'
 import { base64 } from '../utils'
 
 /* -------------------------------------------------------------------------- */

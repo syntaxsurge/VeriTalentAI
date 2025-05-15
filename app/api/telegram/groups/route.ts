@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { fetchTelegramGroups } from '@/lib/verida/datastore'
 import { parseUserId, jsonError } from '@/lib/utils/api'
+import { fetchTelegramGroups } from '@/lib/verida/datastore'
 
 /**
  * GET /api/telegram/groups?userId=123

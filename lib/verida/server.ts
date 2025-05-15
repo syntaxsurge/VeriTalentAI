@@ -1,7 +1,8 @@
 import 'server-only'
 
-import { buildVeridaUrl } from './common'
 import { getVeridaToken } from '@/lib/db/queries/queries'
+
+import { buildVeridaUrl } from './common'
 
 /* -------------------------------------------------------------------------- */
 /*                       V E R I D A   S E R V E R   H E L P E R              */

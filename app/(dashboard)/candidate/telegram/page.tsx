@@ -1,7 +1,7 @@
 import { MessageCircle } from 'lucide-react'
 
-import PageCard from '@/components/ui/page-card'
 import VeridaTelegramDashboard from '@/components/dashboard/candidate/verida-telegram-dashboard'
+import PageCard from '@/components/ui/page-card'
 import { requireAuth } from '@/lib/auth/guards'
 import { getVeridaToken } from '@/lib/db/queries/queries'
 

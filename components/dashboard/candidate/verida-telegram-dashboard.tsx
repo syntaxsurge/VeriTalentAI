@@ -1,14 +1,14 @@
 'use client'
 
 import * as React from 'react'
-import type { TelegramGroup, TelegramMessage, KeywordStats } from '@/lib/types/telegram'
 
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import VeridaConnectButton from '@/components/ui/verida-connect-button'
-import { cn, prettify } from '@/lib/utils'
+import type { TelegramGroup, TelegramMessage, KeywordStats } from '@/lib/types/telegram'
+import { prettify } from '@/lib/utils'
 
 type Props = {
   userId: number
@@ -138,14 +138,14 @@ export default function VeridaTelegramDashboard({ userId, veridaConnected }: Pro
             <ul className='space-y-4'>
               {messages.slice(0, 100).map((m, i) => (
                 <li key={i} className='space-y-1'>
-                  <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+                  <div className='text-muted-foreground flex items-center gap-2 text-xs'>
                     <span className='font-medium'>
                       {m.fromName ?? m.sender ?? m.from ?? 'Unknown'}
                     </span>
                     <span>·</span>
                     <span>{formatDate(m.date ?? m.timestamp)}</span>
                   </div>
-                  <p className='whitespace-pre-wrap break-words text-sm'>
+                  <p className='text-sm break-words whitespace-pre-wrap'>
                     {m.messageText ?? m.message ?? m.text ?? '(no content)'}
                   </p>
                 </li>
@@ -166,18 +166,12 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
   return (
     <Card className='flex flex-col items-center justify-center gap-1 py-6'>
       <span className='text-2xl font-bold'>{value}</span>
-      <span className='text-muted-foreground text-sm uppercase tracking-wider'>{label}</span>
+      <span className='text-muted-foreground text-sm tracking-wider uppercase'>{label}</span>
     </Card>
   )
 }
 
-function SectionCard({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) {
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Card>
       <h3 className='border-b px-4 py-3 text-sm font-semibold'>{title}</h3>
