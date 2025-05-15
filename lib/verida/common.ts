@@ -22,9 +22,27 @@ export const VERIDA_BASE_URL: string = withVersion(VERIDA_API_URL)
 /**
  * Construct the final Verida REST URL for a given endpoint.
  *
- * @param endpoint Path beginning with `/` or a full URL when `raw` is `true`.
- * @param raw      Skip base-URL prefixing when `true`.
+ * @param endpoint Path beginning with `/` or a full URL when {@code raw} is {@code true}.
+ * @param raw      Skip base-URL prefixing when {@code true}.
  */
 export function buildVeridaUrl(endpoint: string, raw = false): string {
   return raw ? endpoint : `${VERIDA_BASE_URL}${endpoint}`
 }
+
+/* -------------------------------------------------------------------------- */
+/*                       K N O W N   P R O V I D E R S                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Canonical list of data providers supported by Verida connectors.
+ * Centralising this list avoids magic strings and enables strong typing.
+ */
+export const KNOWN_PROVIDERS = [
+  'google',     // Gmail, Calendar, Drive, YouTube
+  'telegram',
+  'discord',
+  'spotify',
+  'facebook',
+  'notion',
+  'slack',
+] as const

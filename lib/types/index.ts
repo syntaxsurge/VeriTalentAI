@@ -1,3 +1,5 @@
+import { KNOWN_PROVIDERS } from '@/lib/verida/common'
+
 /* -------------------------------------------------------------------------- */
 /*                                 Core types                                 */
 /* -------------------------------------------------------------------------- */
@@ -20,3 +22,10 @@ export interface Pagination {
   /** Query-string params to persist across navigation */
   initialParams: Record<string, string>
 }
+
+/* -------------------------------------------------------------------------- */
+/*                         V E R I D A   P R O V I D E R S                    */
+/* -------------------------------------------------------------------------- */
+
+/** Union of all supported Verida provider identifiers. */
+export type VeridaProvider = (typeof KNOWN_PROVIDERS)[number]
