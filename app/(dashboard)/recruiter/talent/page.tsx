@@ -4,9 +4,9 @@ import TalentFilters from '@/components/dashboard/recruiter/talent-filters'
 import TalentTable from '@/components/dashboard/recruiter/talent-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { getTalentSearchPage } from '@/lib/db/queries/recruiter-talent'
 import type { TalentRow } from '@/lib/types/tables'
 import { getTableParams, getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import { getCandidateListingPage } from '@/lib/db/queries/candidates-core'
 
 export const revalidate = 0
 
@@ -35,7 +35,7 @@ export default async function TalentSearchPage({
   const skillMax = Math.min(100, Number(getParam(params, 'skillMax') ?? '100'))
 
   /* ----------------------------- Data --------------------------------- */
-  const { candidates, hasNext } = await getTalentSearchPage(
+  const { candidates, hasNext } = await getCandidateListingPage(
     page,
     pageSize,
     sort as 'name' | 'email' | 'id',
