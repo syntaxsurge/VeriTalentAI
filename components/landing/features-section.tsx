@@ -1,7 +1,16 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { CheckCircle2, Wallet, ShieldCheck, Key, Lock } from 'lucide-react'
+import {
+  CheckCircle2,
+  Wallet,
+  ShieldCheck,
+  Key,
+  Lock,
+  UserCheck,
+  EyeOff,
+  RotateCcw,
+} from 'lucide-react'
 
 const features = [
   {
@@ -23,6 +32,21 @@ const features = [
     icon: Lock,
     title: 'Private Data Agent',
     description: 'Consent-driven Verida vault powers secure AI insights from user data.',
+  },
+  {
+    icon: UserCheck,
+    title: 'Consent-Driven Access',
+    description: 'Users approve every data connector, meeting global privacy standards.',
+  },
+  {
+    icon: EyeOff,
+    title: 'Zero-Knowledge Ready',
+    description: 'Architecture primed for future ZK selective-disclosure protocols.',
+  },
+  {
+    icon: RotateCcw,
+    title: 'Instant Revocation',
+    description: 'Revocation lists propagate in real time across cheqd and Verida.',
   },
   {
     icon: CheckCircle2,
