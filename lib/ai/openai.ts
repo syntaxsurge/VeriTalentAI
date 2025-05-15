@@ -4,15 +4,12 @@ import {
   strictGraderMessages,
   summariseProfileMessages,
   candidateFitMessages,
-  telegramInsightsMessages,
   telegramInsightsPrompt,
 } from '@/lib/ai/prompts'
 import { validateCandidateFitJson, validateQuizScoreResponse } from '@/lib/ai/validators'
 import { OPENAI_API_KEY } from '@/lib/config'
 import { getVeridaToken } from '@/lib/db/queries/queries'
-import { TELEGRAM_MESSAGE_SCHEMA } from '@/lib/verida/datastore'
 import { searchUniversal, veridaFetch } from '@/lib/verida/server'
-import { base64 } from '../utils'
 
 /* -------------------------------------------------------------------------- */
 /*                           S I N G L E T O N   C L I E N T                  */
@@ -193,34 +190,16 @@ export async function generateCandidateFitSummary(
  */
 export async function generateTelegramInsights(userId: number): Promise<string> {
   const prompt = telegramInsightsPrompt();
-  const dsUrlEncoded = base64(TELEGRAM_MESSAGE_SCHEMA);
 
-  try {
-    const res = await veridaFetch<{ completion?: string }>(userId, '/llm/agent/prompt', {
-      method: 'POST',
-      body: JSON.stringify({
-        prompt,
-        context: {
-          dsUrlEncoded,
-          /* No filters = analyse all available Telegram messages */
-          queryFilters: {},
-        },
-      }),
-    });
+  const res = await veridaFetch<{ response?: { output?: string } }>(userId, '/llm/agent', {
+    method: 'POST',
+    body: JSON.stringify({ prompt }),
+  });
 
-    if (!res?.completion || typeof res.completion !== 'string') {
-      throw new Error('Verida LLM agent returned an empty completion.');
-    }
-
-    return res.completion.trim();
-  } catch (err: any) {
-    const msg: string = err?.message ?? '';
-    if (msg.includes('401') || msg.includes('403') || msg.includes('404')) {
-      throw new Error(
-        'Your Verida connection is missing the api:llm-agent-prompt scope. ' +
-          'Please disconnect and reconnect your Verida wallet to enable Telegram AI insights.',
-      );
-    }
-    throw err;
+  const output = res?.response?.output;
+  if (!output || typeof output !== 'string') {
+    throw new Error('Verida LLM agent returned an empty output.');
   }
+
+  return output.trim();
 }
