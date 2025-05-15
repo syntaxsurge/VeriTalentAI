@@ -7,6 +7,9 @@ import { base64 } from '../utils'
 /*                         D A T A S T O R E   U T I L S                      */
 /* -------------------------------------------------------------------------- */
 
+/** Provider identifier used by Verida for Telegram connections. */
+export const PROVIDER_TELEGRAM = 'telegram'
+
 export const TELEGRAM_GROUP_SCHEMA =
   'https://common.schemas.verida.io/social/chat/group/v0.1.0/schema.json'
 export const TELEGRAM_MESSAGE_SCHEMA =

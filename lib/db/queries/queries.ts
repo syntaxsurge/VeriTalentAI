@@ -188,3 +188,23 @@ export async function getVeridaToken(userId: number) {
 
   return row.length > 0 ? row[0] : null
 }
+
+/* -------------------------------------------------------------------------- */
+/*            V E R I D A   C O N N E C T I O N   P R O V I D E R S           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Retrieve an array of provider identifiers (e.g. 'telegram', 'gmail') that the
+ * specified user has authorised via Verida.
+ *
+ * @param userId Platform user ID.
+ * @returns      Array of providerId strings in lowercase.
+ */
+export async function getVeridaConnectionProviders(userId: number): Promise<string[]> {
+  const rows = await db
+    .select({ providerId: veridaConnections.providerId })
+    .from(veridaConnections)
+    .where(eq(veridaConnections.userId, userId))
+
+  return rows.map((r) => r.providerId)
+}
