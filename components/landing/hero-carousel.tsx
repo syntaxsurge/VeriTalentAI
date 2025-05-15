@@ -29,6 +29,11 @@ const SLIDES = [
     src: '/images/issuer-dashboard.png',
     alt: 'Issuer dashboard screenshot',
   },
+  {
+    role: 'Admin',
+    src: '/images/admin-dashboard.png',
+    alt: 'Admin dashboard screenshot',
+  },
 ] as const
 
 /* -------------------------------------------------------------------------- */

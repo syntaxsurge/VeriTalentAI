@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { UserCheck, Search, Building2 } from 'lucide-react'
+import { UserCheck, Search, Building2, Shield } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -23,6 +23,12 @@ const ROLES = [
     title: 'Issuers',
     intro: 'Verify once, trust everywhere.',
     bullets: ['Domain attestations', 'Batch signatures', 'Real-time revocation'],
+  },
+  {
+    icon: Shield,
+    title: 'Admins',
+    intro: 'Govern with confidence.',
+    bullets: ['Issuer approvals', 'Role upgrades', 'Pricing control'],
   },
 ] as const
 
