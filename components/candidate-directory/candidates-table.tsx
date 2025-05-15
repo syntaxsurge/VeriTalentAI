@@ -49,12 +49,15 @@ export default function CandidatesTable({
         key: 'name',
         header: sortableHeader('Name', 'name'),
         sortable: false,
-        render: (v: unknown, row: CandidateDirectoryRow) => (
-          <div className='flex items-center gap-2'>
-            <UserAvatar name={row.name} email={row.email} className='size-7' />
-            <span className='font-medium'>{v || 'Unnamed'}</span>
-          </div>
-        ),
+        render: (v: unknown, row: CandidateDirectoryRow) => {
+          const displayName = typeof v === 'string' && v.trim().length > 0 ? v : 'Unnamed'
+          return (
+            <div className='flex items-center gap-2'>
+              <UserAvatar name={row.name} email={row.email} className='size-7' />
+              <span className='font-medium'>{displayName}</span>
+            </div>
+          )
+        },
       },
       {
         key: 'email',
