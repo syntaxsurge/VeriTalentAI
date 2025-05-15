@@ -11,22 +11,30 @@ import { veridaConnections } from '@/lib/db/schema/verida'
 
 /**
  * Fetch the list of scopes granted to a Verida auth token.
+ *
+ * Uses the `/auth/token?tokenId=` endpoint (per Verida docs) so we inspect the
+ * scopes actually authorised for this specific token rather than the global
+ * catalogue returned by `/scopes`.
  */
 export async function fetchGrantedScopes(authToken: string): Promise<string[]> {
   try {
-    const res = await fetch(`${VERIDA_API_URL}/${VERIDA_API_VERSION}/scopes`, {
+    const url = `${VERIDA_API_URL}/${VERIDA_API_VERSION}/auth/token?tokenId=${authToken}`
+
+    const res = await fetch(url, {
       headers: {
         Authorization: `Bearer ${authToken}`,
         'Content-Type': 'application/json',
       },
       cache: 'no-store',
     })
+
     if (res.ok) {
       const data = await res.json()
-      if (Array.isArray(data.scopes)) return data.scopes
+      const tokenScopes = Array.isArray(data?.token?.scopes) ? data.token.scopes : []
+      return tokenScopes
     }
   } catch (err) {
-    console.error('Failed to fetch Verida scopes', err)
+    console.error('Failed to fetch Verida token scopes', err)
   }
   return []
 }
