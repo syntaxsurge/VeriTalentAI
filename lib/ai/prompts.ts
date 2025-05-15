@@ -30,6 +30,28 @@ export function strictGraderMessages(quizTitle: string, answer: string): PromptM
   ]
 }
 
+ /* -------------------------------------------------------------------------- */
+ /*             T E L E G R A M   I N S I G H T S   ( P R O M P T )             */
+ /* -------------------------------------------------------------------------- */
+
+ /**
+  * Returns a single-string prompt for the Verida LLM agent that instructs it to
+  * analyse the user’s Telegram messages and emit structured JSON.
+  *
+  * The agent receives datastore context via the <code>context</code> field of
+  * the request, so we do not embed the transcript here.
+  */
+ export function telegramInsightsPrompt(): string {
+   return (
+     `You are an expert communications analyst. Analyse the user's recent Telegram ` +
+     `conversations referenced by the supplied datastore context, detect the most ` +
+     `prevalent discussion topics, overall sentiment (positive, neutral or negative) ` +
+     `and any explicit or implicit action items.  Respond ONLY with valid JSON ` +
+     `conforming exactly to the following schema (do not include markdown):\n` +
+     `{\n  "topTopics": [ "string", … max 5 ],\n  "sentiment": "positive | neutral | negative",\n  "actionItems": [ "string", … ]\n}`
+   );
+ }
+
 /* -------------------------------------------------------------------------- */
 /*                        P R O F I L E   S U M M A R Y                       */
 /* -------------------------------------------------------------------------- */
@@ -113,7 +135,7 @@ export function telegramInsightsMessages(transcript: string): PromptMessage[] {
   "topTopics": [ "string", … max 5 ],
   "sentiment": "positive | neutral | negative",
   "actionItems": [ "string", … ]
-}`
+}`;
 
   return [
     {

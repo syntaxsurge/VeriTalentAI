@@ -5,12 +5,14 @@ import {
   summariseProfileMessages,
   candidateFitMessages,
   telegramInsightsMessages,
+  telegramInsightsPrompt,
 } from '@/lib/ai/prompts'
 import { validateCandidateFitJson, validateQuizScoreResponse } from '@/lib/ai/validators'
 import { OPENAI_API_KEY } from '@/lib/config'
 import { getVeridaToken } from '@/lib/db/queries/queries'
-import { queryDatastore, TELEGRAM_MESSAGE_SCHEMA } from '@/lib/verida/datastore'
+import { TELEGRAM_MESSAGE_SCHEMA } from '@/lib/verida/datastore'
 import { searchUniversal, veridaFetch } from '@/lib/verida/server'
+import { base64 } from '../utils'
 
 /* -------------------------------------------------------------------------- */
 /*                           S I N G L E T O N   C L I E N T                  */
@@ -190,32 +192,35 @@ export async function generateCandidateFitSummary(
  * @returns      Assistant JSON string following telegramInsightsMessages schema.
  */
 export async function generateTelegramInsights(userId: number): Promise<string> {
-  /* Pull up to 1 000 latest Telegram messages (server-side, no PII leakage). */
-  const raw = await queryDatastore<any>(
-    userId,
-    TELEGRAM_MESSAGE_SCHEMA,
-    { sourceApplication: 'https://telegram.com' },
-    { sort: [{ _id: 'desc' }], limit: 1_000 },
-  )
+  const prompt = telegramInsightsPrompt();
+  const dsUrlEncoded = base64(TELEGRAM_MESSAGE_SCHEMA);
 
-  const transcript = raw
-    .map((m) => String(m.messageText ?? m.message ?? m.text ?? m.body ?? m.content ?? '').trim())
-    .filter(Boolean)
-    .join('\n')
-    /* Cap at ~8 000 chars to respect model limits */
-    .slice(0, 8_000)
+  try {
+    const res = await veridaFetch<{ completion?: string }>(userId, '/llm/agent-prompt', {
+      method: 'POST',
+      body: JSON.stringify({
+        prompt,
+        context: {
+          dsUrlEncoded,
+          /* No filters = analyse all available Telegram messages */
+          queryFilters: {},
+        },
+      }),
+    });
 
-  const messages = telegramInsightsMessages(transcript)
+    if (!res?.completion || typeof res.completion !== 'string') {
+      throw new Error('Verida LLM agent returned an empty completion.');
+    }
 
-  /* Delegate to Verida LLM agent so user data never leaves Verida infrastructure. */
-  const res = await veridaFetch<{ completion?: string }>(userId, '/llm/agent-prompt', {
-    method: 'POST',
-    body: JSON.stringify({ messages }),
-  })
-
-  if (!res?.completion || typeof res.completion !== 'string') {
-    throw new Error('Verida LLM agent did not return a completion.')
+    return res.completion.trim();
+  } catch (err: any) {
+    const msg: string = err?.message ?? '';
+    if (msg.includes('404')) {
+      throw new Error(
+        'Your Verida connection is missing the api:llm-agent-prompt scope. ' +
+          'Please disconnect and reconnect your Verida wallet to enable Telegram AI insights.',
+      );
+    }
+    throw err;
   }
-
-  return res.completion.trim()
 }
