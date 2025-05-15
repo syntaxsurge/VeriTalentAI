@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { getUser } from '@/lib/db/queries/queries'
-import { storeVeridaToken, resolveState } from '@/lib/verida/token'
+import { storeVeridaToken, resolveState, syncVeridaConnections } from '@/lib/verida/token'
 
 /**
  * Final Verida Vault redirect target.
@@ -37,6 +37,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   /* Persist token (and its granted scopes) for the user */
   await storeVeridaToken(user.id, authToken)
+
+  /* Snapshot provider list in verida_connections */
+  await syncVeridaConnections(user.id, authToken)
 
   /* Clear temporary cookie (if present) and redirect */
   const response = NextResponse.redirect(new URL(state, request.url))
