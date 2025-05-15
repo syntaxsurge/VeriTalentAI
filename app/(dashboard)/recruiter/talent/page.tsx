@@ -4,9 +4,9 @@ import TalentFilters from '@/components/dashboard/recruiter/talent-filters'
 import TalentTable from '@/components/dashboard/recruiter/talent-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { getCandidateListingPage } from '@/lib/db/queries/candidates-core'
 import type { TalentRow } from '@/lib/types/tables'
 import { getTableParams, getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
-import { getCandidateListingPage } from '@/lib/db/queries/candidates-core'
 
 export const revalidate = 0
 
