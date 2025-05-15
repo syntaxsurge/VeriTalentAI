@@ -38,7 +38,7 @@ export function buildVeridaUrl(endpoint: string, raw = false): string {
  * Centralising this list avoids magic strings and enables strong typing.
  */
 export const KNOWN_PROVIDERS = [
-  'google',     // Gmail, Calendar, Drive, YouTube
+  'google', // Gmail, Calendar, Drive, YouTube
   'telegram',
   'discord',
   'spotify',

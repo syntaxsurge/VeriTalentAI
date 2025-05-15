@@ -1,8 +1,9 @@
-import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
-import { upsertVeridaToken } from '@/lib/db/queries/queries'
-import { db } from '@/lib/db/drizzle'
-import { veridaConnections } from '@/lib/db/schema/verida'
 import { eq } from 'drizzle-orm'
+
+import { VERIDA_API_URL, VERIDA_API_VERSION } from '@/lib/config'
+import { db } from '@/lib/db/drizzle'
+import { upsertVeridaToken } from '@/lib/db/queries/queries'
+import { veridaConnections } from '@/lib/db/schema/verida'
 
 /* -------------------------------------------------------------------------- */
 /*                   S C O P E   &   T O K E N   H E L P E R S                */

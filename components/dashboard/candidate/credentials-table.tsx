@@ -11,10 +11,10 @@ import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { deleteCredentialAction } from '@/lib/actions/delete'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
+import { useDisclosure } from '@/lib/hooks/use-disclosure'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, CandidateCredentialRow } from '@/lib/types/tables'
 import { copyToClipboard } from '@/lib/utils'
-import { useDisclosure } from '@/lib/hooks/use-disclosure'
 
 import SearchTelegramModal from './search-telegram-modal'
 
@@ -33,11 +33,7 @@ export default function CandidateCredentialsTable({
 }: TableProps<CandidateCredentialRow> & { veridaConnected?: boolean }) {
   const router = useRouter()
   /* ---------------------- Verida search modal state ---------------------- */
-  const {
-    isOpen: searchOpen,
-    open: openSearch,
-    onOpenChange: setSearchOpen,
-  } = useDisclosure()
+  const { isOpen: searchOpen, open: openSearch, onOpenChange: setSearchOpen } = useDisclosure()
 
   /* ------------------------ Bulk-selection actions ----------------------- */
   const bulkActions = useBulkActions<CandidateCredentialRow>([
@@ -168,7 +164,7 @@ export default function CandidateCredentialsTable({
   /* ------------------------------ Render ------------------------------- */
   return (
     <>
-      <SearchTelegramModal open={searchOpen} onOpenChange={setSearchOpen} scope="all" />
+      <SearchTelegramModal open={searchOpen} onOpenChange={setSearchOpen} scope='all' />
       <DataTable
         columns={columns}
         rows={rows}

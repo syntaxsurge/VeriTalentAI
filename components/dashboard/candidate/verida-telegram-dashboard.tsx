@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -205,7 +206,7 @@ export default function VeridaTelegramDashboard({ userId, veridaConnected }: Pro
 
           <ScrollArea className='max-h-[70vh] rounded border p-3'>
             {insights ? (
-              <pre className='text-xs whitespace-pre-wrap break-words'>{insights}</pre>
+              <pre className='text-xs break-words whitespace-pre-wrap'>{insights}</pre>
             ) : (
               <p className='text-muted-foreground text-sm'>No insights available.</p>
             )}

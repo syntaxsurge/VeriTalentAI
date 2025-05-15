@@ -2,12 +2,12 @@
 
 import * as React from 'react'
 
+import { useVeridaStatus } from '@/lib/hooks/use-verida-status'
 import { cn } from '@/lib/utils'
 
 import { Badge } from './badge'
 import { HoverCard, HoverCardTrigger, HoverCardContent } from './hover-card'
 import { Tooltip, TooltipTrigger, TooltipContent } from './tooltip'
-import { useVeridaStatus } from '@/lib/hooks/use-verida-status'
 
 /* -------------------------------------------------------------------------- */
 /*                         V E R I D A   W A L L E T   B A D G E              */

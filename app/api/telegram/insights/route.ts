@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { parseUserId, jsonError } from '@/lib/utils/api'
 import { generateTelegramInsights } from '@/lib/ai/openai'
+import { parseUserId, jsonError } from '@/lib/utils/api'
 
 /**
  * GET /api/telegram/insights?userId=123

@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { VeridaWalletBadge } from '@/components/ui/verida-wallet-badge'
-import { useVeridaStatus } from '@/lib/hooks/use-verida-status'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import { useVeridaStatus } from '@/lib/hooks/use-verida-status'
 import type { TableProps, CandidateDirectoryRow } from '@/lib/types/tables'
 
 /* -------------------------------------------------------------------------- */

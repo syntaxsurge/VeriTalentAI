@@ -9,8 +9,8 @@ import {
 import { validateCandidateFitJson, validateQuizScoreResponse } from '@/lib/ai/validators'
 import { OPENAI_API_KEY } from '@/lib/config'
 import { getVeridaToken } from '@/lib/db/queries/queries'
-import { searchUniversal, veridaFetch } from '@/lib/verida/server'
 import { queryDatastore, TELEGRAM_MESSAGE_SCHEMA } from '@/lib/verida/datastore'
+import { searchUniversal, veridaFetch } from '@/lib/verida/server'
 
 /* -------------------------------------------------------------------------- */
 /*                           S I N G L E T O N   C L I E N T                  */
@@ -199,17 +199,7 @@ export async function generateTelegramInsights(userId: number): Promise<string> 
   )
 
   const transcript = raw
-    .map(
-      (m) =>
-        String(
-          m.messageText ??
-            m.message ??
-            m.text ??
-            m.body ??
-            m.content ??
-            '',
-        ).trim(),
-    )
+    .map((m) => String(m.messageText ?? m.message ?? m.text ?? m.body ?? m.content ?? '').trim())
     .filter(Boolean)
     .join('\n')
     /* Cap at ~8 000 chars to respect model limits */

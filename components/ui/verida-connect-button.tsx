@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { mutate } from 'swr'
 
 import { toast } from 'sonner'
+import { mutate } from 'swr'
 
 import { buildAuthUrl } from '@/lib/verida/public'
 

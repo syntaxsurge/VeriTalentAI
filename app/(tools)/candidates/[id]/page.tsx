@@ -1,5 +1,4 @@
 import { eq, asc, and } from 'drizzle-orm'
-import { fetchConnectionStatus } from '@/lib/verida/server'
 
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import AddToPipelineForm from '@/components/recruiter/add-to-pipeline-form'
@@ -26,6 +25,7 @@ import {
   resolveSearchParams,
   type Query,
 } from '@/lib/utils/query'
+import { fetchConnectionStatus } from '@/lib/verida/server'
 
 export const revalidate = 0
 

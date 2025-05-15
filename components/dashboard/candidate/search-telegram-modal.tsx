@@ -4,7 +4,6 @@ import * as React from 'react'
 import type { ReactElement } from 'react'
 
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useVeridaSearch } from '@/lib/hooks/use-verida-search'
+import { cn } from '@/lib/utils'
 
 type SearchTelegramModalProps = {
   open: boolean
@@ -73,7 +73,7 @@ export default function SearchTelegramModal({
           ))}
         </div>
 
-        <form onSubmit={handleSearch} className='flex gap-2 mt-4'>
+        <form onSubmit={handleSearch} className='mt-4 flex gap-2'>
           <Input
             placeholder='e.g. cluster protocol defi'
             value={keywords}

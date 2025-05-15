@@ -67,16 +67,11 @@ export default function ProfileHeader({
               <h1 className='text-2xl leading-tight font-extrabold'>{name || 'Unnamed'}</h1>
 
               <div className='flex flex-wrap items-center justify-center gap-2 sm:justify-start'>
-                <Link
-                  href={`mailto:${email}`}
-                  className='break-all underline underline-offset-4'
-                >
+                <Link href={`mailto:${email}`} className='break-all underline underline-offset-4'>
                   {email}
                 </Link>
 
-                {veridaConnected !== undefined && (
-                  <VeridaWalletBadge connected={veridaConnected} />
-                )}
+                {veridaConnected !== undefined && <VeridaWalletBadge connected={veridaConnected} />}
               </div>
             </div>
           </div>
