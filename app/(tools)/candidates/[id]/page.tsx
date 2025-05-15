@@ -6,6 +6,7 @@ import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
 import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-credentials-core'
 import { getCandidateSkillPassesSection } from '@/lib/db/queries/candidate-skill-passes'
+import { getVeridaToken } from '@/lib/db/queries/queries'
 import { getCandidatePipelineEntriesPage } from '@/lib/db/queries/recruiter-pipeline-entries'
 import { candidates, users } from '@/lib/db/schema'
 import {
@@ -25,7 +26,6 @@ import {
   resolveSearchParams,
   type Query,
 } from '@/lib/utils/query'
-import { getVeridaToken } from '@/lib/db/queries/queries'
 
 export const revalidate = 0
 

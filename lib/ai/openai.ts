@@ -11,27 +11,28 @@ import { OPENAI_API_KEY } from '@/lib/config'
 import { getVeridaToken } from '@/lib/db/queries/queries'
 import { searchUniversal, veridaFetch } from '@/lib/verida/server'
 
-/* -------------------------------------------------------------------------- */
-/*                           S I N G L E T O N   C L I E N T                  */
-/* -------------------------------------------------------------------------- */
-
-export const openAiClient = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-})
+/**
+ * Singleton OpenAI client configured with the platform API key.
+ */
+export const openAiClient = new OpenAI({ apiKey: OPENAI_API_KEY })
 
 /* -------------------------------------------------------------------------- */
-/*                       G E N E R I C   C H A T   W R A P P E R              */
+/*                               core wrapper                                 */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Thin wrapper around <code>openAiClient.chat.completions.create</code> with
- * built-in **validation & automatic retry** for non-streaming requests.
+ * Thin wrapper around {@link OpenAI.Chat.Completions.create} with built-in
+ * validation and automatic retries for non-streaming requests.
  *
- * When <code>stream</code> is <code>true</code> the raw
- * <code>ChatCompletion</code> object is returned untouched.  Otherwise the
- * helper extracts <code>assistant.content</code>, optionally validates it via
- * <code>validate(raw) → string \| null</code> (null = valid) and retries up to
- * <code>maxRetries</code> times before throwing a descriptive error.
+ * When {@link options.stream} is `true`, the raw `ChatCompletion` object is
+ * returned; otherwise the assistant’s `content` string is extracted. If a
+ * `validate` callback is provided its return value must be `null` (success) or
+ * an error message string. Failed validations are automatically retried up to
+ * `maxRetries` times.
+ *
+ * @template Stream Return type selector (`true` → `ChatCompletion`, else `string`).
+ * @param messages   Conversation history.
+ * @param options    OpenAI parameters plus `stream`, `validate`, and `maxRetries`.
  */
 export async function chatCompletion<Stream extends boolean = false>(
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
@@ -43,89 +44,76 @@ export async function chatCompletion<Stream extends boolean = false>(
     ...opts
   }: Partial<OpenAI.Chat.Completions.ChatCompletionCreateParams> & {
     stream?: Stream
-    /** Return <code>null</code> when valid; otherwise error message. */
     validate?: (raw: string) => string | null
-    /** Attempts before giving up (only when <code>validate</code> supplied). */
     maxRetries?: number
   } = {},
 ): Promise<Stream extends true ? OpenAI.Chat.Completions.ChatCompletion : string> {
-  if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not configured or missing.')
+  if (!OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not configured or missing.')
+  }
 
-  /* --------------------------- Stream: passthrough --------------------------- */
+  /* ------------------------ streaming: passthrough ------------------------ */
   if (stream) {
     return (await openAiClient.chat.completions.create({
       model,
       messages,
       stream: true,
       ...opts,
-    } as OpenAI.Chat.Completions.ChatCompletionCreateParams)) as any
+    })) as any
   }
 
-  /* -------------------- Non-stream: validation + retry ---------------------- */
-  let lastError = 'Unknown error'
-  const attempts = Math.max(1, maxRetries)
+  /* ---------------- non-streaming: validate with retries ------------------ */
+  const retries = Math.max(1, maxRetries)
+  let lastError = 'Validation failed'
 
-  for (let i = 1; i <= attempts; i++) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
     const completion = (await openAiClient.chat.completions.create({
       model,
       messages,
       ...opts,
-    } as OpenAI.Chat.Completions.ChatCompletionCreateParams)) as OpenAI.Chat.Completions.ChatCompletion
+    })) as OpenAI.Chat.Completions.ChatCompletion
 
     const raw = (completion.choices[0]?.message?.content ?? '').trim()
 
     if (!validate) {
-      // No validation requested – return immediately
       return raw as any
     }
 
     try {
-      const msg = validate(raw)
-      if (!msg) return raw as any
-      lastError = msg
+      const validationMsg = validate(raw)
+      if (!validationMsg) return raw as any
+      lastError = validationMsg
     } catch (err: any) {
-      lastError = err?.message ?? 'Validator threw an exception.'
+      lastError = err?.message ?? lastError
     }
-    /* retry */
   }
 
   throw new Error(
-    `OpenAI returned an invalid response after ${attempts} attempts. ` +
-      `Last validation error: ${lastError}`,
+    `OpenAI returned an invalid response after ${retries} retries. Last error: ${lastError}`,
   )
 }
 
 /* -------------------------------------------------------------------------- */
-/*                       Q U I Z   A S S E S S M E N T                        */
+/*                            domain-specific APIs                            */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Assess a quiz answer and return the AI score (0-100).
+ */
 export async function openAIAssess(
   answer: string,
   quizTitle: string,
 ): Promise<{ aiScore: number }> {
-  /* Strict grader with auto-validation & up to 3 retries */
   const raw = await chatCompletion(strictGraderMessages(quizTitle, answer), {
     maxRetries: 3,
     validate: validateQuizScoreResponse,
   })
 
-  /* Safe parse (should always succeed after validation) */
-  const parsed = parseInt(raw.replace(/[^0-9]/g, ''), 10)
-  return { aiScore: parsed }
+  return { aiScore: parseInt(raw.replace(/[^0-9]/g, ''), 10) }
 }
 
-/* -------------------------------------------------------------------------- */
-/*                      C A N D I D A T E   P R O F I L E                     */
-/* -------------------------------------------------------------------------- */
-
-/* -------------------------------------------------------------------------- */
-/*                  V E R I D A   C O N T E X T   H E L P E R                 */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Fetches relevant user data from Verida and returns up to 1 000 characters
- * to provide additional context for OpenAI prompts. Returns an empty string
- * when the user has not connected Verida or an error occurs.
+ * Fetch up to 1 000 characters of Verida data to enrich AI prompts.
  */
 export async function buildProfileContext(userId: number): Promise<string> {
   try {
@@ -133,73 +121,54 @@ export async function buildProfileContext(userId: number): Promise<string> {
     if (!tokenRow) return ''
 
     const result = await searchUniversal('resume OR experience', userId)
-    const jsonStr = JSON.stringify(result)
-    return jsonStr.slice(0, 1000)
+    return JSON.stringify(result).slice(0, 1000)
   } catch (err) {
     console.error('buildProfileContext error:', err)
     return ''
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/*                      C A N D I D A T E   P R O F I L E                     */
-/* -------------------------------------------------------------------------- */
-
+/**
+ * Generate a concise candidate profile summary (~`words` words).
+ */
 export async function summariseCandidateProfile(
   profile: string,
   words = 120,
   userId?: number,
 ): Promise<string> {
-  let context = ''
-  if (typeof userId === 'number') {
-    context = await buildProfileContext(userId)
-  }
-
+  const context = typeof userId === 'number' ? await buildProfileContext(userId) : ''
   const input = context ? `${context}\n\n${profile}` : profile
-  return await chatCompletion(summariseProfileMessages(input, words))
+  return chatCompletion(summariseProfileMessages(input, words))
 }
 
-/* -------------------------------------------------------------------------- */
-/*                     R E C R U I T E R   F I T   S U M M A R Y              */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Generate a structured "Why Hire this candidate" summary.
- * Validation & retry is delegated to <chatCompletion/>.
+ * Produce a structured "Why Hire" JSON summary for recruiters.
  */
 export async function generateCandidateFitSummary(
   pipelinesStr: string,
   profileStr: string,
 ): Promise<string> {
-  return await chatCompletion(candidateFitMessages(pipelinesStr, profileStr), {
+  return chatCompletion(candidateFitMessages(pipelinesStr, profileStr), {
     maxRetries: 3,
     validate: validateCandidateFitJson,
   })
 }
 
-/* -------------------------------------------------------------------------- */
-/*                       T E L E G R A M   I N S I G H T S                    */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Generate structured insights from the user’s recent Telegram messages using
- * the Verida <api:llm-agent-prompt> endpoint to preserve data-sovereignty.
- *
- * @param userId Authenticated platform user ID.
- * @returns      Assistant JSON string following telegramInsightsMessages schema.
+ * Run the Verida LLM agent over Telegram messages and return JSON insights.
  */
 export async function generateTelegramInsights(userId: number): Promise<string> {
   const prompt = telegramInsightsPrompt()
 
-  const res = await veridaFetch<{ response?: { output?: string } }>(userId, '/llm/agent', {
+  const data = await veridaFetch<{ response?: { output?: string } }>(userId, '/llm/agent', {
     method: 'POST',
     body: JSON.stringify({ prompt }),
   })
 
-  const output = res?.response?.output
-  if (!output || typeof output !== 'string') {
+  const output = data?.response?.output?.trim()
+  if (!output) {
     throw new Error('Verida LLM agent returned an empty output.')
   }
 
-  return output.trim()
+  return output
 }

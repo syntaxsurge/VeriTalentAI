@@ -71,9 +71,7 @@ export default function ProfileHeader({
                   {email}
                 </Link>
 
-                {veridaConnected !== undefined && (
-                  <VeridaWalletBadge connected={veridaConnected} />
-                )}
+                {veridaConnected !== undefined && <VeridaWalletBadge connected={veridaConnected} />}
               </div>
             </div>
           </div>
