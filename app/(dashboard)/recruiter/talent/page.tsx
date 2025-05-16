@@ -49,6 +49,7 @@ export default async function TalentSearchPage({
 
   const rows: TalentRow[] = candidates.map((c) => ({
     id: c.id,
+    userId: c.userId,
     name: c.name,
     email: c.email,
     bio: c.bio,
