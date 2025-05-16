@@ -204,10 +204,10 @@ You are an expert communications analyst. Analyse the user's recent Telegram con
 ## 🏆 Hackathon Submission Checklist
 
 - **Unique Use-Case** – Fuses on-ledger cheqd proofs with consent-based private data from Verida vaults for holistic talent verification.
-- **cheqd Capability Implementation** – Deterministic DID creation, VC-JWT issuance/verification, Trust Registry entries, DID-Linked Resources, fee-abstracted payments.
+- **cheqd Capability Implementation** – Deterministic DID creation, VC-JWT issuance/verification, Trust Registry entries, DID-Linked Resources.
 - **Verida Capability Implementation** – OAuth Vault flow, Universal & Datastore Search, LLM Agent, granular scope management, token revocation.
 - **Why cheqd + Verida** – cheqd anchors public trust while Verida supplies user-owned private signals, satisfying tracks on agentic economy, content credentials and verified datasets.
-- **3-Minute Demo Video** – See header link or `demo.mp4`.
+- **3-Minute Demo Video** – <https://www.youtube.com/watch?v=hiay-fuhmuk>
 - **Public Repo** – <https://github.com/syntaxsurge/viskify-cheqd>
 
 ## 🎯 Judging Criteria Mapping
