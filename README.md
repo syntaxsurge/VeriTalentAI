@@ -106,13 +106,30 @@ Viskify now super-charges talent verification with **Verida’s encrypted data n
 
 | Layer       | Stack                                                               |
 | ----------- | ------------------------------------------------------------------- |
-| Frontend    | Next.js 14 (App Router), React Server / Client Components           |
+| Frontend    | Next.js 15 (App Router), React Server / Client Components           |
 | Backend     | PostgreSQL via Drizzle ORM, Edge runtime middleware, server actions |
 | Trust layer | Cheqd Studio APIs for DID creation, VC issuance & verification      |
 | Billing     | Stripe Billing for subscriptions & metered verification fees        |
 | AI          | OpenAI GPT-4o for grading, summarisation and fit analysis           |
 
 ---
+
+## 📂 Codebase Tour
+
+A quick orientation of the Viskify project structure and how each part supports the **CHEQD × Verida AI TruthRise** tracks:
+
+- `app/` – Next 15 App-Router routes plus server actions. Role-scoped folders such as `(dashboard)/candidate` and `(tools)` cleanly separate Candidate, Recruiter and Admin flows that demonstrate **agentic economy** use cases.
+- `components/` – Reusable UI and feature widgets (tables, charts, Verida wallets). Keeps React concerns isolated from trust and data layers.
+- `lib/` – Core logic powering the hackathon deliverables:
+  - **`cheqd.ts`** – thin wrappers around Cheqd Studio `/did/*` and `/credential/*` endpoints.
+  - **`verida/`** – REST helpers (`client.ts`, `server.ts`), datastore querying and LLM-agent calls that fulfil the _private-user-data_ bounty.
+  - **`db/`** – Drizzle schema, migrations and composable query helpers for pipelines, credentials, tokens and connections.
+  - **`hooks/`** – Client hooks such as `use-verida-status` that surface Verida connection state in real time.
+  - **`types/`** – Shared TypeScript contracts ensuring end-to-end type safety across server, client and database.
+- `public/` – Static assets and screenshots referenced throughout this README.
+- `docker-compose.yml` – One-command Postgres + pgAdmin for local hacking.
+
+This layered layout cleanly separates **trust infrastructure** (cheqd), **verified datasets** (Verida) and **AI agents** (OpenAI + Verida LLM), making the codebase easy to extend during the hackathon.
 
 ## 🧠 AI Usage and Prompts
 
@@ -164,6 +181,18 @@ strictly:
 {{candidateProfile}}
 
 Return the JSON now:
+
+— Telegram Insights (system) —
+You are an expert communications analyst. Analyse the user's recent Telegram conversations, detect the most prevalent discussion topics, overall sentiment (positive, neutral or negative), and any explicit or implicit action items. Respond ONLY with valid JSON conforming exactly to the following schema (do not include markdown):
+{
+  "topTopics": [ "string", … max 5 ],
+  "sentiment": "positive | neutral | negative",
+  "actionItems": [ "string", … ]
+}
+
+— Telegram Insights (user) —
+[Datastore context automatically provided by Verida]
+
 </pre>
 
 #### Iterative Prompt Improvements
@@ -183,13 +212,13 @@ Return the JSON now:
 
 ## 🎯 Judging Criteria Mapping
 
-| Criterion                   | Implementation Highlights                                                                        |
-| --------------------------- | ------------------------------------------------------------------------------------------------ |
-| **Technical Excellence 40** | Typed Next.js 14, Drizzle ORM, Jest suite, CI-linted; end-to-end Verida & cheqd wrappers.        |
-| **cheqd Capability 30**     | DID creation, VC-JWT issuance/verification, Trust Registry, DLR logos, payment-gated revocation. |
-| **Innovation & Impact 30**  | First platform merging verifiable proofs with behavioural chat insights via Verida AI agent.     |
-| **Business Viability 15**   | Freemium SaaS with subscription + metered verifications; zero on-chain gas for users.            |
-| **Presentation 10**         | Polished landing, video demo, interactive dashboards, clear README.                              |
-| **Bonus 5**                 | Implements full Verida private-data agent matching bounty theme.                                 |
+| Criterion                   | Implementation Highlights                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Technical Excellence 40** | Typed Next.js 15, Drizzle ORM, fully type-safe codebase, CI-linted; end-to-end Verida & cheqd wrappers. |
+| **cheqd Capability 30**     | DID creation, VC-JWT issuance/verification, Trust Registry.                                             |
+| **Innovation & Impact 30**  | First platform merging verifiable proofs with behavioural chat insights via Verida AI agent.            |
+| **Business Viability 15**   | Freemium SaaS with subscription + metered verifications; zero on-chain gas for users.                   |
+| **Presentation 10**         | Polished landing, video demo, interactive dashboards, clear README.                                     |
+| **Bonus 5**                 | Implements full Verida private-data agent matching bounty theme.                                        |
 
 ---
