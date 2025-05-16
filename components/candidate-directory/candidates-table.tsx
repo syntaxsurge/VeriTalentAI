@@ -72,7 +72,7 @@ export default function CandidatesTable({
         sortable: false,
         enableHiding: false,
         render: (_v: unknown, row: CandidateDirectoryRow) => (
-          <WalletBadgeCell userId={(row as any).userId ?? row.id} />
+          <WalletBadgeCell userId={row.userId} />
         ),
       },
       {

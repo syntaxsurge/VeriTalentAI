@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { parseUserId, jsonError } from '@/lib/utils/api'
-import { fetchConnectionStatus } from '@/lib/verida/server'
+import {
+  getVeridaToken,
+  getVeridaConnectionProviders,
+} from '@/lib/db/queries/queries'
+
+/* -------------------------------------------------------------------------- */
+/*                    V E R I D A   S T A T U S   (P U B L I C)               */
+/* -------------------------------------------------------------------------- */
 
 /**
- * GET /api/verida/status
- * Returns { success, connected, providers } for a given userId.
- * Example: /api/verida/status?userId=123
+ * GET /api/verida/status?userId=123
+ *
+ * Returns `{ success, connected, providers }` for the supplied user ID based
+ * solely on database state. This avoids any dependency on the caller’s Verida
+ * credentials so the endpoint functions correctly from public pages.
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const userId = parseUserId(request)
@@ -15,8 +24,29 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const { connected, providers } = await fetchConnectionStatus(userId)
-    return NextResponse.json({ success: true, connected, providers })
+    /* -------------------------------------------------------------------- */
+    /*                 Check for a stored Verida auth_token                 */
+    /* -------------------------------------------------------------------- */
+    const tokenRow = await getVeridaToken(userId)
+    if (!tokenRow) {
+      /* No token ⇒ not connected */
+      return NextResponse.json({
+        success: true,
+        connected: false,
+        providers: [],
+      })
+    }
+
+    /* -------------------------------------------------------------------- */
+    /*         Fetch cached provider list from verida_connections           */
+    /* -------------------------------------------------------------------- */
+    const providers = await getVeridaConnectionProviders(userId)
+
+    return NextResponse.json({
+      success: true,
+      connected: true,
+      providers,
+    })
   } catch (err) {
     console.error('Verida status endpoint error:', err)
     return jsonError('Failed to fetch Verida status', 500)

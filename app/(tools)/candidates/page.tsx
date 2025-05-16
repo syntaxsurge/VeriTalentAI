@@ -41,6 +41,7 @@ export default async function CandidateDirectoryPage({
 
   const rows: CandidateDirectoryRow[] = candidates.map((c) => ({
     id: c.id,
+    userId: c.userId,
     name: c.name,
     email: c.email,
     verified: c.verified,

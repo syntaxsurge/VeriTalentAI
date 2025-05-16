@@ -102,6 +102,7 @@ export async function getCandidateListingPage(
   const baseQuery = db
     .select({
       id: candidates.id,
+      userId: candidates.userId,
       name: users.name,
       email: users.email,
       bio: candidates.bio,

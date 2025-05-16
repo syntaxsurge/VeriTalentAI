@@ -83,7 +83,11 @@ export async function fetchConnectionStatus(
     }
   } catch (err: any) {
     const msg = typeof err?.message === 'string' ? err.message : ''
-    if (msg.includes('(401') || msg.includes('(403')) {
+    if (
+      msg.includes('(401') ||
+      msg.includes('(403') ||
+      msg.toLowerCase().includes('not connected')
+    ) {
       return { connected: false, providers: [] }
     }
     throw err

@@ -34,6 +34,7 @@ export interface TablePaginationProps {
 
 export interface CandidateDirectoryRow {
   id: number
+  userId: number
   name: string | null
   email: string
   verified: number
@@ -133,6 +134,7 @@ export interface CandidateCredentialRow {
 
 export interface TalentRow {
   id: number
+  userId: number
   name: string | null
   email: string
   bio: string | null
