@@ -17,8 +17,8 @@ import type { TableProps, CandidateDirectoryRow } from '@/lib/types/tables'
 
 function WalletBadgeCell({ userId }: { userId: number }) {
   /* Lazy-fetch the status for this user */
-  const { connected } = useVeridaStatus(userId, true)
-  return <VeridaWalletBadge connected={connected} userId={userId} />
+  const { connected, loading } = useVeridaStatus(userId, true)
+  return <VeridaWalletBadge connected={connected} loading={loading} userId={userId} />
 }
 
 /* -------------------------------------------------------------------------- */

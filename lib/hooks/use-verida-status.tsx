@@ -26,7 +26,7 @@ export function useVeridaStatus(
     connected: false,
     providers: [],
   })
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(enabled && typeof userId === 'number')
   const [error, setError] = useState<string | null>(null)
 
   /* Timestamp ref for simple SWR style invalidation */

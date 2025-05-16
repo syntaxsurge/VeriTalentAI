@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { getVeridaToken, getVeridaConnectionProviders } from '@/lib/db/queries/queries'
 import { parseUserId, jsonError } from '@/lib/utils/api'
-import {
-  getVeridaToken,
-  getVeridaConnectionProviders,
-} from '@/lib/db/queries/queries'
 
 /* -------------------------------------------------------------------------- */
 /*                    V E R I D A   S T A T U S   (P U B L I C)               */
