@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import { ActionButton } from '@/components/ui/action-button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -29,45 +28,40 @@ export default function CreatePipelineForm() {
   }
 
   return (
-    <Card id='create-pipeline-form' className='max-w-xl scroll-mt-20'>
-      <CardHeader>
-        <CardTitle>Create New Pipeline</CardTitle>
-      </CardHeader>
+    <div id='create-pipeline-form' className='max-w-xl space-y-5'>
+      {/* Name */}
+      <div>
+        <Label htmlFor='pipeline-name' className='mb-1 block text-sm font-medium'>
+          Name
+        </Label>
+        <Input
+          id='pipeline-name'
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          placeholder='e.g. Backend Engineer May 2025'
+        />
+      </div>
 
-      <CardContent>
-        <div className='space-y-5'>
-          <div>
-            <Label htmlFor='pipeline-name' className='mb-1 block text-sm font-medium'>
-              Name
-            </Label>
-            <Input
-              id='pipeline-name'
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder='e.g. Backend Engineer May 2025'
-            />
-          </div>
+      {/* Description */}
+      <div>
+        <Label htmlFor='pipeline-description' className='mb-1 block text-sm font-medium'>
+          Description
+        </Label>
+        <textarea
+          id='pipeline-description'
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+          className='border-border w-full rounded-md border p-2 text-sm'
+          placeholder='Optional summary of the role, seniority, location, etc.'
+        />
+      </div>
 
-          <div>
-            <Label htmlFor='pipeline-description' className='mb-1 block text-sm font-medium'>
-              Description
-            </Label>
-            <textarea
-              id='pipeline-description'
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              className='border-border w-full rounded-md border p-2 text-sm'
-              placeholder='Optional summary of the role, seniority, location, etc.'
-            />
-          </div>
-
-          <ActionButton onAction={handleCreate} pendingLabel='Creating…'>
-            Create Pipeline
-          </ActionButton>
-        </div>
-      </CardContent>
-    </Card>
+      {/* Action */}
+      <ActionButton onAction={handleCreate} pendingLabel='Creating…'>
+        Create Pipeline
+      </ActionButton>
+    </div>
   )
 }
