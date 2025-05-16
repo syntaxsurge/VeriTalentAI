@@ -1,6 +1,6 @@
-# Viskify — AI-Assisted Talent Verification powered by **cheqd**
+# Viskify — AI-Assisted Talent Verification powered by **Cheqd** and **Verida**
 
-_Verifiable Credentials, deterministic DIDs and usage-based billing with zero smart-contract deployment._
+Powered by cheqd and Verida, Viskify is a decentralized talent platform that issues verifiable credentials and delivers AI insights from private, user-owned data — with deterministic DIDs, usage-based billing, and zero smart contract deployment.
 
 [![Viskify Demo](public/images/viskify-demo.png)](https://youtu.be/hiay-fuhmuk)
 
