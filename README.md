@@ -2,7 +2,7 @@
 
 _Verifiable Credentials, deterministic DIDs and usage-based billing with zero smart-contract deployment._
 
-[![Viskify Demo](public/images/viskify-demo.png)](https://youtu.be/demo-placeholder)
+[![Viskify Demo](public/images/viskify-demo.png)](https://youtu.be/hiay-fuhmuk)
 
 ---
 
